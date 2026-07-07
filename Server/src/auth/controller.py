@@ -56,32 +56,6 @@ def register_user(
     return user
 
 
-@router.post("/update", response_model=UserResponse)
-def update_user(
-    user_data: UserResponse,
-    response: Response,
-    db: Session = Depends(get_db),
-):
-    user = db.query(User).filter(User.user_id == user_data.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not exist!!")
-
-    user.role = user_data.role
-    user.full_name = user_data.full_name
-    user.email = user_data.email
-    user.phone = user_data.phone
-    user.employee_id = user_data.employee_id
-    user.company_name = user_data.company_name
-    user.department = user_data.department
-    user.designation = user_data.designation
-    user.location = user_data.location
-
-    db.commit()
-    db.refresh(user)
-
-    return user
-
-
 @router.get("/user/{user_id}", response_model=UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.user_id == user_id).first()
@@ -133,6 +107,34 @@ def change_password(
 def get_profile(payload: dict = Depends(verify_token), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload["sub"]).first()
     return user
+
+
+
+@router.put("/update_user", response_model=UserResponse)
+def update_user(
+    user_data: UserResponse,
+    payload: dict = Depends(verify_token),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.email == payload["sub"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not exist!!")
+    
+    user.role = user_data.role
+    user.full_name = user_data.full_name
+    user.email = user_data.email
+    user.phone = user_data.phone
+    user.employee_id = user_data.employee_id
+    user.company_name = user_data.company_name
+    user.department = user_data.department
+    user.designation = user_data.designation
+    user.location = user_data.location
+
+    db.commit()
+    db.refresh(user)
+
+    return user
+
 
 
 @router.get("/logout")

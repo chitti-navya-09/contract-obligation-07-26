@@ -5,12 +5,24 @@ import FormInput from '../../components/Form/FormInput';
 import FormSelect from '../../components/Form/FormSelect';
 import { getUsers } from '../../features/authentication/services/getUsers';
 import { changePassword } from '../../features/authentication/services/changePassword';
+import { updateUser } from '../../features/authentication/services/updateUser';
 import './Settings.css';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('account');
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: '',
+    employeeId: '',
+    email: '',
+    phone: '',
+    department: '',
+    designation: '',
+    officeLocation: ''
+  });
+  const [profileStatus, setProfileStatus] = useState({ type: '', message: '' });
+  const [loadingProfile, setLoadingProfile] = useState(false);
   
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
@@ -33,6 +45,15 @@ const Settings = () => {
       try {
         const data = await getUsers();
         setUserProfile(data);
+        setProfileData({
+          name: data.full_name || data.name || '',
+          employeeId: data.employee_id || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          department: data.department || '',
+          designation: data.designation || '',
+          officeLocation: data.location || ''
+        });
       } catch (err) {
         console.error("Failed to load profile:", err);
       } finally {
@@ -54,6 +75,35 @@ const Settings = () => {
   const handlePasswordInputChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProfileInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProfileSave = async (e) => {
+    e.preventDefault();
+    setLoadingProfile(true);
+    setProfileStatus({ type: '', message: '' });
+    try {
+      await updateUser({
+        ...userProfile,
+        name: profileData.name,
+        email: profileData.email,
+        phone: profileData.phone,
+        employeeId: profileData.employeeId,
+        companyName: userProfile?.company_name || "",
+        department: profileData.department,
+        designation: profileData.designation,
+        officeLocation: profileData.officeLocation
+      });
+      setProfileStatus({ type: 'success', message: 'Profile updated successfully!' });
+    } catch (err) {
+      setProfileStatus({ type: 'error', message: err.message || 'Failed to update profile' });
+    } finally {
+      setLoadingProfile(false);
+    }
   };
 
   const handlePasswordChange = async (e) => {
@@ -105,15 +155,15 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <form className="settings-form-grid" onSubmit={(e) => e.preventDefault()}>
-                  <FormInput label="Full Name" type="text" defaultValue={userProfile?.full_name || "Admin User"} />
-                  <FormInput label="Employee ID" type="text" defaultValue={userProfile?.employee_id || "EMP-001"} />
-                  <FormInput label="Email Address" type="email" defaultValue={userProfile?.email || "admin@contractiq.com"} className="settings-form-group full-width" />
-                  <FormInput label="Phone Number" type="text" defaultValue={userProfile?.phone || ""} />
-                  <FormInput label="Role" type="text" defaultValue={userProfile?.role || "Admin"} readOnly disabled />
-                  <FormInput label="Department" type="text" defaultValue={userProfile?.department || "IT & Operations"} />
-                  <FormInput label="Designation" type="text" defaultValue={userProfile?.designation || "System Administrator"} />
-                  <FormInput label="Location" type="text" defaultValue={userProfile?.location || "Headquarters"} />
+                <form className="settings-form-grid" onSubmit={handleProfileSave}>
+                  <FormInput label="Full Name" name="name" type="text" value={profileData.name} onChange={handleProfileInputChange} />
+                  <FormInput label="Employee ID" name="employeeId" type="text" value={profileData.employeeId} onChange={handleProfileInputChange} />
+                  <FormInput label="Email Address" name="email" type="email" value={profileData.email} onChange={handleProfileInputChange} className="settings-form-group full-width" />
+                  <FormInput label="Phone Number" name="phone" type="text" value={profileData.phone} onChange={handleProfileInputChange} />
+                  <FormInput label="Role" name="role" type="text" value={userProfile?.role || "Admin"} readOnly disabled />
+                  <FormInput label="Department" name="department" type="text" value={profileData.department} onChange={handleProfileInputChange} />
+                  <FormInput label="Designation" name="designation" type="text" value={profileData.designation} onChange={handleProfileInputChange} />
+                  <FormInput label="Location" name="officeLocation" type="text" value={profileData.officeLocation} onChange={handleProfileInputChange} />
                   
                   <FormSelect 
                     label="Timezone" 
@@ -124,8 +174,15 @@ const Settings = () => {
                 </form>
                 
                 <div className="settings-footer">
-                  <Button variant="outline">Cancel</Button>
-                  <Button variant="primary" icon={Save}>Save Changes</Button>
+                  {profileStatus.message && (
+                    <div style={{ marginRight: 'auto', color: profileStatus.type === 'error' ? 'var(--color-danger)' : 'var(--color-success)', fontSize: '0.9rem' }}>
+                      {profileStatus.message}
+                    </div>
+                  )}
+                  <Button type="button" variant="outline">Cancel</Button>
+                  <Button type="button" variant="primary" onClick={handleProfileSave} disabled={loadingProfile} icon={Save}>
+                    {loadingProfile ? 'Saving...' : 'Save Changes'}
+                  </Button>
                 </div>
               </>
             )}

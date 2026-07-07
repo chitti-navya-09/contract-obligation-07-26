@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, ChevronDown, Menu, User, Settings, LogOut } from 'lucide-react';
-import { getUsers } from '../features/authentication/services/getUsers';
+import { useAuth } from '../context/AuthContext';
 
 const Header = ({ toggleSidebar }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
+  const { userProfile, logout } = useAuth();
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -17,18 +17,6 @@ const Header = ({ toggleSidebar }) => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getUsers();
-        setUserProfile(data);
-      } catch (err) {
-        console.error("Failed to load profile in Navbar:", err);
-      }
-    };
-    fetchProfile();
   }, []);
 
   const handleNavigation = (path) => {
@@ -100,11 +88,7 @@ const Header = ({ toggleSidebar }) => {
               </button>
               <div style={{ height: '1px', backgroundColor: 'var(--color-bg)', margin: '0.25rem 0' }}></div>
               <button 
-                onClick={() => {
-                  localStorage.removeItem('access_token');
-                  localStorage.removeItem('user_id');
-                  window.location.href = '/login';
-                }}
+                onClick={logout}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', borderRadius: 'var(--radius-sm)', color: '#ef4444' }}
                 className="dropdown-hover-danger"
               >

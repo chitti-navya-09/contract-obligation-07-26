@@ -3,9 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import LoginForm from '../features/authentication/components/LoginForm';
 import { loginService } from '../features/authentication/services/login';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +23,7 @@ const Login = () => {
     setLoading(true);
     try {
       await loginService(credentials);
+      await refreshProfile();
       // Only navigate if login is fully successful
       navigate('/dashboard');
     } catch (err) {
