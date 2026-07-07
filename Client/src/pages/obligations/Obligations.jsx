@@ -45,12 +45,25 @@ const Obligations = () => {
   };
 
   const handleAddObligation = (e) => {
-    e.preventDefault();
-    const id = `OBL-${Math.floor(Math.random() * 900) + 100}`;
-    setObligations([{ id, ...newObligation }, ...obligations]);
-    setIsAddModalOpen(false);
-    setNewObligation({ description: '', contractId: '', dueDate: '', status: 'Pending', priority: 'Medium' });
-  };
+  e.preventDefault();
+
+  const id = `OBL-${Math.floor(Math.random() * 900) + 100}`;
+
+  setObligations([{ id, ...newObligation }, ...obligations]);
+
+  setIsAddModalOpen(false);
+
+  setNewObligation({
+    description: '',
+    contractId: '',
+    dueDate: '',
+    status: 'Pending',
+    priority: 'Medium'
+  });
+
+  // Success message
+  alert("✅ Obligation added successfully!");
+};
 
   const handleStatusChange = (e, id, newStatus) => {
     e.stopPropagation();
