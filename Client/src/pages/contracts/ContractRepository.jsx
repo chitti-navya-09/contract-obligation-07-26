@@ -1,280 +1,244 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Eye, 
-  Archive,
-  FileText,
-  AlertCircle,
-  Clock,
-  MoreVertical,
-  ArrowUpRight,
-  ArrowDownRight,
-  FolderOpen
-} from 'lucide-react';
-import Button from '../../components/Buttons/Button';
-import Modal from '../../components/Modals/Modal';
-import FormInput from '../../components/Form/FormInput';
-import FormSelect from '../../components/Form/FormSelect';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './Contracts.css';
 
 const ContractRepository = () => {
-  const navigate = useNavigate();
+  const [contracts, setContracts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [filterCategory, setFilterCategory] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  
+  // Modal visibility toggler
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [contracts, setContracts] = useState([
-    { id: 'CON-2023-001', name: 'Vendor Agreement', entity: 'TechCorp Solutions', category: 'Vendor Contract', status: 'Active', value: '$120,000', expiry: '2025-12-31' },
-    { id: 'CON-2023-045', name: 'Office Lease', entity: 'Downtown Plaza', category: 'Lease Agreement', status: 'Under Review', value: '$50,000/yr', expiry: '2026-06-30' },
-    { id: 'CON-2023-089', name: 'Software License', entity: 'Adobe Systems', category: 'Service Agreement', status: 'Approved', value: '$12,000', expiry: '2024-10-15' },
-    { id: 'CON-2023-112', name: 'Employment Agreement', entity: 'Jane Doe', category: 'Employment Contract', status: 'Draft', value: '-', expiry: '-' },
-    { id: 'CON-2022-404', name: 'Strategic Partnership', entity: 'GlobalTech', category: 'Partnership Agreement', status: 'Expired', value: '$250,000', expiry: '2023-01-01' },
-  ]);
+  // Dynamic Form Field Payload state
+  const [formData, setFormData] = useState({
+    title: '',
+    vendor: '',
+    type: 'SaaS License',
+    value: '',
+    endDate: '',
+    owner: '',
+    status: 'Active',
+    compliance: 'high'
+  });
 
-  const [newContract, setNewContract] = useState({ name: '', companyName: '', vendorName: '', category: 'Vendor Contract', value: '', expiry: '' });
+  const API_BASE_URL = 'http://127.0.0.1:8000/api/contracts';
 
-  const getStatusBadge = (status) => {
-    switch(status) {
-      case 'Active': return <span className="status-pill status-success"><CheckCircleIcon /> {status}</span>;
-      case 'Under Review': return <span className="status-pill status-warning"><Clock size={14} /> {status}</span>;
-      case 'Draft': return <span className="status-pill status-primary"><FileText size={14} /> {status}</span>;
-      case 'Approved': return <span className="status-pill status-success"><CheckCircleIcon /> {status}</span>;
-      case 'Expired': return <span className="status-pill status-danger"><AlertCircle size={14} /> {status}</span>;
-      case 'Archived': return <span className="status-pill status-muted"><FolderOpen size={14} /> {status}</span>;
-      default: return <span className="status-pill status-default">{status}</span>;
+  const fetchContracts = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(API_BASE_URL, {
+        params: {
+          search: searchTerm || undefined,
+          status: statusFilter !== 'All' ? statusFilter : undefined
+        }
+      });
+      setContracts(response.data);
+    } catch (error) {
+      console.error("Backend connection failed:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const CheckCircleIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-  );
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchContracts();
+    }, 300);
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, statusFilter]);
 
-  const handleRowClick = (id) => {
-    navigate(`/contracts/${id}`);
+  // Handle value tracking for each text or menu change
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleUploadContract = (e) => {
+  // Submit collected layout straight into the active POST configuration
+  const handleSubmitContract = async (e) => {
     e.preventDefault();
-    const id = `CON-2023-${Math.floor(Math.random() * 900) + 100}`;
-    setContracts([{ id, name: newContract.name, entity: newContract.vendorName || newContract.companyName, category: newContract.category, value: newContract.value, expiry: newContract.expiry, status: 'Draft' }, ...contracts]);
-    setIsUploadModalOpen(false);
-    setNewContract({ name: '', companyName: '', vendorName: '', category: 'Vendor Contract', value: '', expiry: '' });
+    try {
+      await axios.post(`${API_BASE_URL}/`, formData);
+      
+      // Clear values and fold the modal back up safely
+      setIsModalOpen(false);
+      setFormData({
+        title: '',
+        vendor: '',
+        type: 'SaaS License',
+        value: '',
+        endDate: '',
+        owner: '',
+        status: 'Active',
+        compliance: 'high'
+      });
+      
+      fetchContracts(); // Refresh data rows immediately
+    } catch (error) {
+      console.error("Error creating contract record:", error);
+    }
   };
-
-  const handleArchive = (e, id) => {
-    e.stopPropagation();
-    setContracts(contracts.map(c => c.id === id ? { ...c, status: 'Archived' } : c));
-  };
-
-  const filteredContracts = contracts.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (c.entity && c.entity.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategory = filterCategory ? c.category === filterCategory : true;
-    const matchesStatus = filterStatus ? c.status === filterStatus : true;
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
 
   return (
-    <div className="cr-dashboard fade-in">
-      {/* Header Section */}
-      <div className="cr-header-section">
-        <div className="cr-header-content">
-          <h1 className="cr-title">Contract Repository</h1>
-          <p className="cr-subtitle">Centralized hub for all your enterprise agreements and legal documents.</p>
+    <div className="repository-container">
+      
+      {/* Title Bar Section */}
+      <div className="header-row">
+        <div>
+          <h1 className="title-main">Contract Repository</h1>
+          <p className="subtitle-count">{contracts.length} contracts total</p>
         </div>
-        <div className="cr-header-actions">
-          <Button variant="primary" onClick={() => setIsUploadModalOpen(true)} icon={Plus}>
-            New Contract
-          </Button>
+        <button className="btn-create" onClick={() => setIsModalOpen(true)}>+ New Contract</button>
+      </div>
+
+      {/* Filter Block Panel */}
+      <div className="filter-panel">
+        <div className="search-wrapper">
+          <span className="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Search contracts, vendors..."
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-group">
+          {['All', 'Active', 'Renewal Due', 'Under Review'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`btn-filter ${statusFilter === status ? 'active' : 'inactive'}`}
+            >
+              {status}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Analytics Cards */}
-      <div className="cr-analytics-grid">
-        <div className="cr-card glass-blue">
-          <div className="cr-card-top">
-            <div className="cr-card-icon"><FileText size={24} /></div>
-            <span className="cr-trend positive"><ArrowUpRight size={14} /> 12</span>
-          </div>
-          <div className="cr-card-data">
-            <h3>Active Contracts</h3>
-            <div className="cr-val">142</div>
-            <p>Currently managing</p>
-          </div>
-        </div>
-
-        <div className="cr-card glass-green">
-          <div className="cr-card-top">
-            <div className="cr-card-icon"><CheckCircleIcon /></div>
-            <span className="cr-trend positive"><ArrowUpRight size={14} /> 5</span>
-          </div>
-          <div className="cr-card-data">
-            <h3>Approved this Month</h3>
-            <div className="cr-val">28</div>
-            <p>Ready for execution</p>
-          </div>
-        </div>
-
-        <div className="cr-card glass-orange">
-          <div className="cr-card-top">
-            <div className="cr-card-icon"><Clock size={24} /></div>
-            <span className="cr-trend neutral">Steady</span>
-          </div>
-          <div className="cr-card-data">
-            <h3>Pending Review</h3>
-            <div className="cr-val">14</div>
-            <p>Awaiting signatures</p>
-          </div>
-        </div>
-        
-        <div className="cr-card glass-purple">
-          <div className="cr-card-top">
-            <div className="cr-card-icon"><FolderOpen size={24} /></div>
-            <span className="cr-trend positive"><ArrowDownRight size={14} /> 2</span>
-          </div>
-          <div className="cr-card-data">
-            <h3>Archived</h3>
-            <div className="cr-val">846</div>
-            <p>Historical records</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Table Area */}
-      <div className="cr-main-area animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        
-        <div className="cr-toolbar">
-          <div className="cr-search">
-            <Search size={18} className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search by ID, name, or counterparty..." 
-              value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} 
-            />
-          </div>
-          
-          <div className="cr-filters">
-            <select 
-              className="cr-select"
-              value={filterCategory} 
-              onChange={(e) => setFilterCategory(e.target.value)}
-            >
-              <option value="">All Categories</option>
-              <option value="Vendor Contract">Vendor Contract</option>
-              <option value="Employment Contract">Employment</option>
-              <option value="Lease Agreement">Lease Agreement</option>
-              <option value="Service Agreement">Service Agreement</option>
-            </select>
-            
-            <select 
-              className="cr-select"
-              value={filterStatus} 
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Draft">Draft</option>
-              <option value="Under Review">Under Review</option>
-              <option value="Expired">Expired</option>
-              <option value="Archived">Archived</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="cr-table-wrapper">
-          <table className="cr-data-table">
+      {/* Data Table */}
+      <div className="table-wrapper">
+        {loading ? (
+          <div className="loading-state">Loading live repository entries...</div>
+        ) : (
+          <table className="data-table">
             <thead>
-              <tr>
-                <th>Contract Details</th>
-                <th>Category & Value</th>
-                <th>Timeline</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+              <tr className="table-header-row">
+                <th className="table-header">ID</th>
+                <th className="table-header">Title / Vendor</th>
+                <th className="table-header">Type</th>
+                <th className="table-header">Value</th>
+                <th className="table-header">End Date</th>
+                <th className="table-header">Status</th>
               </tr>
             </thead>
             <tbody>
-              {filteredContracts.map((contract, index) => (
-                <tr key={contract.id} className="cr-table-row" style={{ animationDelay: `${index * 0.05}s` }} onClick={() => handleRowClick(contract.id)}>
-                  <td>
-                    <div className="cr-entity">{contract.name}</div>
-                    <div className="cr-meta">{contract.entity} • ID: {contract.id}</div>
+              {contracts.map((item) => (
+                <tr key={item.id} className="table-row">
+                  <td className="cell-mono">{item.id}</td>
+                  <td className="cell-data">
+                    <div className="contract-title">{item.title}</div>
+                    <div className="contract-vendor">{item.vendor}</div>
                   </td>
-                  <td>
-                    <div className="cr-value-text">{contract.category}</div>
-                    <div className="cr-meta mt-1">{contract.value}</div>
-                  </td>
-                  <td>
-                    <div className="cr-value-text">Exp: {contract.expiry}</div>
-                  </td>
-                  <td>{getStatusBadge(contract.status)}</td>
-                  <td className="cr-action-cell">
-                    <div className="cr-action-group" onClick={(e) => e.stopPropagation()}>
-                      <button className="cr-icon-btn" onClick={() => handleRowClick(contract.id)} title="View Details">
-                        <Eye size={16} />
-                      </button>
-                      {contract.status !== 'Archived' && (
-                        <button className="cr-icon-btn" onClick={(e) => handleArchive(e, contract.id)} title="Archive">
-                          <Archive size={16} />
-                        </button>
-                      )}
-                      <button className="cr-icon-btn">
-                        <MoreVertical size={16} />
-                      </button>
-                    </div>
+                  <td className="cell-data" style={{ color: '#475569' }}>{item.type}</td>
+                  <td className="cell-data" style={{ fontWeight: '700', color: '#0f172a' }}>{item.value}</td>
+                  <td className="cell-data" style={{ color: '#64748b' }}>{item.endDate}</td>
+                  <td className="cell-data">
+                    <span className={`status-badge ${
+                      item.status === 'Active' ? 'active-status' : 
+                      item.status === 'Renewal Due' ? 'renewal-status' : 'review-status'
+                    }`}>
+                      {item.status}
+                    </span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          
-          {filteredContracts.length === 0 && (
-            <div className="cr-empty-state">
-              <FolderOpen size={48} className="text-muted" style={{ opacity: 0.5, marginBottom: '1rem' }} />
-              <p>No contracts found matching your search.</p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Upload Modal */}
-      <Modal 
-        isOpen={isUploadModalOpen} 
-        onClose={() => setIsUploadModalOpen(false)}
-        title="Upload New Contract"
-        footer={
-          <>
-            <Button type="button" variant="outline" onClick={() => setIsUploadModalOpen(false)}>Cancel</Button>
-            <Button type="button" variant="primary" onClick={handleUploadContract}>Upload & Create Draft</Button>
-          </>
-        }
-      >
-        <form onSubmit={handleUploadContract} id="upload-contract-form">
-          <FormInput label="Contract Name" type="text" placeholder="e.g. Acme Corp NDA" required value={newContract.name} onChange={(e) => setNewContract({...newContract, name: e.target.value})} />
-          <FormInput label="Company/Entity Name" type="text" placeholder="e.g. Global Industries Ltd." required value={newContract.companyName} onChange={(e) => setNewContract({...newContract, companyName: e.target.value})} />
-          <FormSelect 
-            label="Category"
-            value={newContract.category}
-            onChange={(e) => setNewContract({...newContract, category: e.target.value})}
-            options={[
-              { value: 'Vendor Contract', label: 'Vendor Contract' },
-              { value: 'Employment Contract', label: 'Employment Contract' },
-              { value: 'Lease Agreement', label: 'Lease Agreement' },
-              { value: 'Service Agreement', label: 'Service Agreement' }
-            ]}
-          />
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <FormInput label="Value" type="text" placeholder="$0.00" value={newContract.value} onChange={(e) => setNewContract({...newContract, value: e.target.value})} />
-            <FormInput label="Expiry Date" type="date" required value={newContract.expiry} onChange={(e) => setNewContract({...newContract, expiry: e.target.value})} />
+      {/* --- FORM OVERLAY MODAL WINDOW --- */}
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="modal-title">Create New Contract</h2>
+              <button className="btn-close" onClick={() => setIsModalOpen(false)}>×</button>
+            </div>
+            
+            <form onSubmit={handleSubmitContract}>
+              <div className="form-grid">
+                
+                <div className="form-group">
+                  <label className="form-label">Contract Title</label>
+                  <input type="text" name="title" required className="form-input" placeholder="e.g. AWS Production Infrastructure" value={formData.title} onChange={handleInputChange} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Vendor Name</label>
+                  <input type="text" name="vendor" required className="form-input" placeholder="e.g. Amazon Web Services" value={formData.vendor} onChange={handleInputChange} />
+                </div>
+
+                <div className="form-row-half">
+                  <div className="form-group">
+                    <label className="form-label">Contract Type</label>
+                    <select name="type" className="form-select" value={formData.type} onChange={handleInputChange}>
+                      <option>SaaS License</option>
+                      <option>Cloud Services</option>
+                      <option>Database Software</option>
+                      <option>Marketing Services</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Contract Value</label>
+                    <input type="text" name="value" required className="form-input" placeholder="e.g. $1.20M" value={formData.value} onChange={handleInputChange} />
+                  </div>
+                </div>
+
+                <div className="form-row-half">
+                  <div className="form-group">
+                    <label className="form-label">End Date</label>
+                    <input type="date" name="endDate" required className="form-input" value={formData.endDate} onChange={handleInputChange} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Contract Owner</label>
+                    <input type="text" name="owner" required className="form-input" placeholder="e.g. Sarah Chen" value={formData.owner} onChange={handleInputChange} />
+                  </div>
+                </div>
+
+                <div className="form-row-half">
+                  <div className="form-group">
+                    <label className="form-label">Status</label>
+                    <select name="status" className="form-select" value={formData.status} onChange={handleInputChange}>
+                      <option>Active</option>
+                      <option>Renewal Due</option>
+                      <option>Under Review</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Compliance</label>
+                    <select name="compliance" className="form-select" value={formData.compliance} onChange={handleInputChange}>
+                      <option value="high">High Risk</option>
+                      <option value="medium">Medium Risk</option>
+                      <option value="low">Low Risk</option>
+                    </select>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn-submit">Save Contract</button>
+              </div>
+            </form>
           </div>
-          <FormInput label="Attach Document (PDF, DOCX)" type="file" required />
-        </form>
-      </Modal>
+        </div>
+      )}
+
     </div>
   );
 };
