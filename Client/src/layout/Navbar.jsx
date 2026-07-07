@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, ChevronDown, Menu, User, Settings, LogOut } from 'lucide-react';
+import { getUsers } from '../features/authentication/services/getUsers';
 
 const Header = ({ toggleSidebar }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -15,6 +17,18 @@ const Header = ({ toggleSidebar }) => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getUsers();
+        setUserProfile(data);
+      } catch (err) {
+        console.error("Failed to load profile in Navbar:", err);
+      }
+    };
+    fetchProfile();
   }, []);
 
   const handleNavigation = (path) => {
@@ -44,10 +58,10 @@ const Header = ({ toggleSidebar }) => {
 
         <div className="user-profile-wrapper" ref={dropdownRef} style={{ position: 'relative' }}>
           <div className="user-profile" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-            <div className="avatar">JD</div>
+            <div className="avatar">{userProfile?.full_name ? userProfile.full_name.substring(0, 2).toUpperCase() : 'U'}</div>
             <div className="user-info">
-              <span className="user-name">John Doe</span>
-              <span className="user-role">Legal Manager</span>
+              <span className="user-name">{userProfile?.full_name || 'Loading...'}</span>
+              <span className="user-role">{userProfile?.role || '...'}</span>
             </div>
             <ChevronDown size={14} className="text-muted" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
           </div>
@@ -67,8 +81,8 @@ const Header = ({ toggleSidebar }) => {
               animation: 'dropdownIn 0.2s ease'
             }}>
               <div style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--color-bg)', marginBottom: '0.25rem' }}>
-                <p style={{ fontWeight: 600, fontSize: '0.85rem' }}>John Doe</p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>admin@contractiq.com</p>
+                <p style={{ fontWeight: 600, fontSize: '0.85rem' }}>{userProfile?.full_name || 'Loading...'}</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{userProfile?.email || '...'}</p>
               </div>
               <button 
                 onClick={() => handleNavigation('/settings')}
@@ -86,7 +100,11 @@ const Header = ({ toggleSidebar }) => {
               </button>
               <div style={{ height: '1px', backgroundColor: 'var(--color-bg)', margin: '0.25rem 0' }}></div>
               <button 
-                onClick={() => handleNavigation('/login')}
+                onClick={() => {
+                  localStorage.removeItem('access_token');
+                  localStorage.removeItem('user_id');
+                  window.location.href = '/login';
+                }}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', borderRadius: 'var(--radius-sm)', color: '#ef4444' }}
                 className="dropdown-hover-danger"
               >

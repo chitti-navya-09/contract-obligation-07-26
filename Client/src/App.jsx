@@ -15,18 +15,28 @@ import Compliance from './pages/compliance/Compliance';
 import Renewals from './pages/renewals/Renewals';
 import Settings from './pages/settings/Settings';
 
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Default Route */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         
         {/* Protected Routes (Main App) */}
-        <Route path="/" element={<PageContainer />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route element={<ProtectedRoute><PageContainer /></ProtectedRoute>}>
           <Route path="dashboard" element={<AdminDashboard />} />
             
           {/* Contracts Module */}

@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
-import { User, Bell, Shield, Palette, Save, Upload, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Bell, Shield, Palette, Save, Upload, Trash2, Loader2 } from 'lucide-react';
 import Button from '../../components/Buttons/Button';
 import FormInput from '../../components/Form/FormInput';
 import FormSelect from '../../components/Form/FormSelect';
+import { getUsers } from '../../features/authentication/services/getUsers';
+import { changePassword } from '../../features/authentication/services/changePassword';
 import './Settings.css';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('account');
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
     pushNotifications: false,
@@ -14,11 +19,66 @@ const Settings = () => {
     weeklyReports: false
   });
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordStatus, setPasswordStatus] = useState({ type: '', message: '' });
+  const [loadingPassword, setLoadingPassword] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const data = await getUsers();
+        setUserProfile(data);
+      } catch (err) {
+        console.error("Failed to load profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (activeTab === 'account') {
+      fetchProfile();
+    }
+  }, [activeTab]);
+
   const handleToggle = (key) => {
     setNotifications(prev => ({
       ...prev,
       [key]: !prev[key]
     }));
+  };
+
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordStatus({ type: 'error', message: 'New passwords do not match' });
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      setPasswordStatus({ type: 'error', message: 'New password must be at least 6 characters long' });
+      return;
+    }
+    
+    setLoadingPassword(true);
+    setPasswordStatus({ type: '', message: '' });
+    
+    try {
+      await changePassword(passwordData.currentPassword, passwordData.newPassword);
+      setPasswordStatus({ type: 'success', message: 'Password updated successfully!' });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      setPasswordStatus({ type: 'error', message: err.message || 'Failed to update password' });
+    } finally {
+      setLoadingPassword(false);
+    }
   };
 
   const renderContent = () => {
@@ -31,32 +91,44 @@ const Settings = () => {
               <p>Manage your personal information and preferences</p>
             </div>
             
-            <div className="profile-photo-section">
-              <div className="profile-avatar">AD</div>
-              <div className="profile-photo-actions">
-                <Button variant="outline" icon={Upload}>Upload Photo</Button>
-                <Button variant="icon" title="Remove Photo"><Trash2 size={18} className="text-danger" /></Button>
+            {loading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+                <Loader2 className="spinner text-primary" size={32} />
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="profile-photo-section">
+                  <div className="profile-avatar">{userProfile?.full_name ? userProfile.full_name.substring(0, 2).toUpperCase() : 'AD'}</div>
+                  <div className="profile-photo-actions">
+                    <Button variant="outline" icon={Upload}>Upload Photo</Button>
+                    <Button variant="icon" title="Remove Photo"><Trash2 size={18} className="text-danger" /></Button>
+                  </div>
+                </div>
 
-            <form className="settings-form-grid" onSubmit={(e) => e.preventDefault()}>
-              <FormInput label="First Name" type="text" defaultValue="Admin" />
-              <FormInput label="Last Name" type="text" defaultValue="User" />
-              <FormInput label="Email Address" type="email" defaultValue="admin@contractiq.com" className="settings-form-group full-width" />
-              <FormInput label="Job Title" type="text" defaultValue="System Administrator" />
-              <FormInput label="Department" type="text" defaultValue="IT & Operations" />
-              <FormSelect 
-                label="Timezone" 
-                options={[{value: 'UTC', label: 'UTC (GMT+0)'}, {value: 'EST', label: 'EST (GMT-5)'}, {value: 'IST', label: 'IST (GMT+5:30)'}]} 
-                defaultValue="UTC"
-                className="settings-form-group full-width"
-              />
-            </form>
-            
-            <div className="settings-footer">
-              <Button variant="outline">Cancel</Button>
-              <Button variant="primary" icon={Save}>Save Changes</Button>
-            </div>
+                <form className="settings-form-grid" onSubmit={(e) => e.preventDefault()}>
+                  <FormInput label="Full Name" type="text" defaultValue={userProfile?.full_name || "Admin User"} />
+                  <FormInput label="Employee ID" type="text" defaultValue={userProfile?.employee_id || "EMP-001"} />
+                  <FormInput label="Email Address" type="email" defaultValue={userProfile?.email || "admin@contractiq.com"} className="settings-form-group full-width" />
+                  <FormInput label="Phone Number" type="text" defaultValue={userProfile?.phone || ""} />
+                  <FormInput label="Role" type="text" defaultValue={userProfile?.role || "Admin"} readOnly disabled />
+                  <FormInput label="Department" type="text" defaultValue={userProfile?.department || "IT & Operations"} />
+                  <FormInput label="Designation" type="text" defaultValue={userProfile?.designation || "System Administrator"} />
+                  <FormInput label="Location" type="text" defaultValue={userProfile?.location || "Headquarters"} />
+                  
+                  <FormSelect 
+                    label="Timezone" 
+                    options={[{value: 'UTC', label: 'UTC (GMT+0)'}, {value: 'EST', label: 'EST (GMT-5)'}, {value: 'IST', label: 'IST (GMT+5:30)'}]} 
+                    defaultValue="UTC"
+                    className="settings-form-group full-width"
+                  />
+                </form>
+                
+                <div className="settings-footer">
+                  <Button variant="outline">Cancel</Button>
+                  <Button variant="primary" icon={Save}>Save Changes</Button>
+                </div>
+              </>
+            )}
           </div>
         );
       
@@ -128,14 +200,44 @@ const Settings = () => {
               <p>Manage your password and security settings</p>
             </div>
             
-            <form className="settings-form-grid" onSubmit={(e) => e.preventDefault()}>
-              <FormInput label="Current Password" type="password" className="settings-form-group full-width" />
-              <FormInput label="New Password" type="password" />
-              <FormInput label="Confirm New Password" type="password" />
+            {passwordStatus.message && (
+              <div style={{ backgroundColor: passwordStatus.type === 'error' ? '#fee2e2' : '#dcfce7', color: passwordStatus.type === 'error' ? '#b91c1c' : '#166534', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', fontSize: '0.85rem', border: `1px solid ${passwordStatus.type === 'error' ? '#f87171' : '#86efac'}` }}>
+                {passwordStatus.message}
+              </div>
+            )}
+            
+            <form className="settings-form-grid" onSubmit={handlePasswordChange}>
+              <FormInput 
+                label="Current Password" 
+                type="password" 
+                name="currentPassword"
+                value={passwordData.currentPassword}
+                onChange={handlePasswordInputChange}
+                className="settings-form-group full-width" 
+                required
+              />
+              <FormInput 
+                label="New Password" 
+                type="password" 
+                name="newPassword"
+                value={passwordData.newPassword}
+                onChange={handlePasswordInputChange}
+                required
+              />
+              <FormInput 
+                label="Confirm New Password" 
+                type="password" 
+                name="confirmPassword"
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordInputChange}
+                required
+              />
             </form>
             
             <div className="settings-footer">
-              <Button variant="primary" icon={Save}>Update Password</Button>
+              <Button variant="primary" icon={Save} onClick={handlePasswordChange} disabled={loadingPassword}>
+                {loadingPassword ? 'Updating...' : 'Update Password'}
+              </Button>
             </div>
           </div>
         );

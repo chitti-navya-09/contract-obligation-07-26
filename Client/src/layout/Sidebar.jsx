@@ -50,10 +50,19 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
             <Settings size={20} />
             <span>Settings</span>
           </NavLink>
-          <NavLink to="/login" className="nav-item nav-item-danger" onClick={closeSidebar}>
+          <button 
+            className="nav-item nav-item-danger" 
+            style={{ width: '100%', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
+            onClick={() => {
+              closeSidebar();
+              localStorage.removeItem('access_token');
+              localStorage.removeItem('user_id');
+              window.location.href = '/login';
+            }}
+          >
             <LogOut size={20} />
             <span>Logout</span>
-          </NavLink>
+          </button>
         </nav>
       </div>
     </aside>
