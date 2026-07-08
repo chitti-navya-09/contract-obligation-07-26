@@ -23,69 +23,45 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
   const { role, logout } = useAuth();
 
   const getNavItemsByRole = (userRole) => {
-    const commonItems = [
-      { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    ];
-
     const normalizedRole = userRole ? userRole.toLowerCase().trim() : '';
 
     if (normalizedRole === 'admin' || normalizedRole === 'administrator') {
         return [
-          ...commonItems,
-          { path: '/users', label: 'User Management', icon: <Users size={20} /> },
-          { path: '/contracts', label: 'Contracts', icon: <Files size={20} /> },
-          { path: '/archived', label: 'Contract Repository', icon: <Archive size={20} /> },
-          { path: '/obligations', label: 'Obligations', icon: <CheckSquare size={20} /> },
-          { path: '/renewals', label: 'Renewals', icon: <CalendarClock size={20} /> },
-          { path: '/compliance', label: 'Compliance', icon: <ShieldCheck size={20} /> },
-          { path: '/reports', label: 'Reports', icon: <BarChart3 size={20} /> },
+          { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
           { path: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
           { path: '/audit-logs', label: 'Audit Logs', icon: <Activity size={20} /> },
+          { path: '/users', label: 'User Management', icon: <Users size={20} /> },
         ];
     } else if (normalizedRole === 'legal manager' || normalizedRole === 'legal') {
         return [
-          ...commonItems,
-          { path: '/archived', label: 'Contract Repository', icon: <Archive size={20} /> },
-          { path: '/contracts', label: 'Contract Management', icon: <Files size={20} /> },
-          { path: '/approvals', label: 'Contract Approval', icon: <FileSignature size={20} /> },
-          { path: '/renewals', label: 'Renewals', icon: <CalendarClock size={20} /> },
-          { path: '/reports', label: 'Reports', icon: <BarChart3 size={20} /> },
+          { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+          { path: '/contracts', label: 'Contract Repository', icon: <Archive size={20} /> },
+          { path: '/obligations', label: 'Obligation Tracker', icon: <CheckSquare size={20} /> },
+          { path: '/renewals', label: 'Renewal Dashboard', icon: <CalendarClock size={20} /> },
+          { path: '/compliance', label: 'Compliance', icon: <ShieldCheck size={20} /> },
+          { path: '/reports', label: 'Reports & Analytics', icon: <BarChart3 size={20} /> },
           { path: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
         ];
     } else if (normalizedRole === 'compliance officer' || normalizedRole === 'compliance') {
         return [
-          ...commonItems,
-          { path: '/compliance', label: 'Compliance Monitoring', icon: <ShieldCheck size={20} /> },
-          { path: '/obligations', label: 'Obligations', icon: <CheckSquare size={20} /> },
-          { path: '/renewals', label: 'Renewals', icon: <CalendarClock size={20} /> },
-          { path: '/reports', label: 'Compliance Reports', icon: <BarChart3 size={20} /> },
+          { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+          { path: '/contracts', label: 'Contract Repository', icon: <Archive size={20} /> },
+          { path: '/obligations', label: 'Obligation Tracker', icon: <CheckSquare size={20} /> },
+          { path: '/renewals', label: 'Renewal Dashboard', icon: <CalendarClock size={20} /> },
+          { path: '/compliance', label: 'Compliance', icon: <ShieldCheck size={20} /> },
           { path: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
         ];
     } else if (normalizedRole === 'contract manager' || normalizedRole === 'contract') {
         return [
-          ...commonItems,
-          { path: '/contracts', label: 'Contracts', icon: <Files size={20} /> },
-          { path: '/archived', label: 'Repository', icon: <Archive size={20} /> },
-          { path: '/obligations', label: 'Obligations', icon: <CheckSquare size={20} /> },
-          { path: '/renewals', label: 'Renewals', icon: <CalendarClock size={20} /> },
-          { path: '/reports', label: 'Reports', icon: <BarChart3 size={20} /> },
-          { path: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
-        ];
-    } else if (normalizedRole === 'department head') {
-        return [
-          ...commonItems,
-          { path: '/contracts', label: 'Department Contracts', icon: <Briefcase size={20} /> },
-          { path: '/approvals', label: 'Approvals', icon: <FileSignature size={20} /> },
-          { path: '/obligations', label: 'Obligations', icon: <CheckSquare size={20} /> },
-          { path: '/reports', label: 'Reports', icon: <BarChart3 size={20} /> },
+          { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+          { path: '/contracts', label: 'Contract Repository', icon: <Archive size={20} /> },
+          { path: '/obligations', label: 'Obligation Tracker', icon: <CheckSquare size={20} /> },
+          { path: '/renewals', label: 'Renewal Dashboard', icon: <CalendarClock size={20} /> },
           { path: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
         ];
     } else {
         return [
-          ...commonItems,
-          { path: '/my-contracts', label: 'My Contracts', icon: <Files size={20} /> },
-          { path: '/my-obligations', label: 'My Obligations', icon: <CheckSquare size={20} /> },
-          { path: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
+          { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
         ];
     }
   };

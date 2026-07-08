@@ -12,6 +12,11 @@ class Token(BaseModel):
     token_type: str
 
 
+class VerifyOTPRequest(BaseModel):
+    email: str
+    otp: int
+
+
 class UserCreate(BaseModel):
     role: UserRole
     full_name: str
@@ -33,6 +38,11 @@ class UserLogin(BaseModel):
 
 class ChangePassword(BaseModel):
     old_password: str
+    new_password: str
+
+
+class NewPassword(BaseModel):
+    email: str
     new_password: str
 
 
