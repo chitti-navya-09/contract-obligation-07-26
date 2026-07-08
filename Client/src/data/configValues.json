@@ -1,7 +1,0 @@
-{
-  "theme": "light",
-  "itemsPerPage": 10,
-  "defaultCurrency": "USD",
-  "enableNotifications": true,
-  "sessionTimeoutMinutes": 30
-}
