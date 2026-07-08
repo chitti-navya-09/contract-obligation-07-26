@@ -24,7 +24,15 @@ const Obligations = () => {
     { id: 'OBL-105', description: 'Data Processing Addendum Review', contractId: 'CON-2021-112', dueDate: '2023-10-15', status: 'Pending', priority: 'Medium' },
   ]);
 
-  const [newObligation, setNewObligation] = useState({ description: '', contractId: '', dueDate: '', status: 'Pending', priority: 'Medium' });
+  const [newObligation, setNewObligation] = useState({
+  description: '',
+  contractId: '',
+  dueDate: '',
+  assignedTo: '',
+  progress: '0%',
+  status: 'Pending',
+  priority: 'Medium'
+});
 
   const getStatusBadge = (status) => {
     switch(status) {
@@ -171,6 +179,7 @@ const Obligations = () => {
                 <th>Obligation Details</th>
                 <th>Due Date</th>
                 <th>Priority</th>
+                <th>Progress</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -180,7 +189,11 @@ const Obligations = () => {
                 <tr key={obligation.id} className="obl-table-row" style={{ animationDelay: `${index * 0.05}s` }}>
                   <td>
                     <div className="obl-entity">{obligation.description}</div>
-                    <div className="obl-meta">ID: {obligation.id} • Contract: {obligation.contractId}</div>
+                   <div className="obl-meta">
+  ID: {obligation.id} • Contract: {obligation.contractId}
+  <br />
+  Assigned To: {obligation.assignedTo || "Not Assigned"}
+</div>
                   </td>
                   <td>
                     <div className="obl-value-text flex items-center gap-2">
@@ -188,7 +201,14 @@ const Obligations = () => {
                     </div>
                   </td>
                   <td>{getPriorityBadge(obligation.priority)}</td>
-                  <td>{getStatusBadge(obligation.status)}</td>
+
+<td>
+  <span className="status-pill status-default">
+    {obligation.progress}
+  </span>
+</td>
+
+<td>{getStatusBadge(obligation.status)}</td>
                   <td className="obl-action-cell">
                     <div className="obl-action-group">
                       {obligation.status !== 'Completed' && (
@@ -255,16 +275,41 @@ const Obligations = () => {
               value={newObligation.dueDate}
               onChange={(e) => setNewObligation({...newObligation, dueDate: e.target.value})}
             />
-            <FormSelect 
-              label="Priority"
-              value={newObligation.priority}
-              onChange={(e) => setNewObligation({...newObligation, priority: e.target.value})}
-              options={[
-                { value: 'Low', label: 'Low' },
-                { value: 'Medium', label: 'Medium' },
-                { value: 'High', label: 'High' }
-              ]}
-            />
+           <FormSelect
+  label="Assigned To"
+  value={newObligation.assignedTo}
+  onChange={(e) =>
+    setNewObligation({
+      ...newObligation,
+      assignedTo: e.target.value,
+    })
+  }
+  options={[
+    { value: '', label: 'Select Employee' },
+    { value: 'John', label: 'John' },
+    { value: 'Alice', label: 'Alice' },
+    { value: 'David', label: 'David' },
+    { value: 'Sarah', label: 'Sarah' },
+    { value: 'Michael', label: 'Michael' },
+  ]}
+/>
+<FormSelect
+  label="Progress"
+  value={newObligation.progress}
+  onChange={(e) =>
+    setNewObligation({
+      ...newObligation,
+      progress: e.target.value,
+    })
+  }
+  options={[
+    { value: '0%', label: '0%' },
+    { value: '25%', label: '25%' },
+    { value: '50%', label: '50%' },
+    { value: '75%', label: '75%' },
+    { value: '100%', label: '100%' },
+  ]}
+/>
           </div>
         </form>
       </Modal>
