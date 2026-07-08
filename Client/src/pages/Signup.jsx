@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, UserPlus } from 'lucide-react';
 import SignupForm from '../features/authentication/components/SignupForm';
 import { signupService } from '../features/authentication/services/signup';
 
@@ -31,25 +31,39 @@ const Signup = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
-      {/* Page Header */}
-      <header style={{ padding: '1rem 2rem', backgroundColor: 'var(--color-surface)', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)' }}>
-          <ShieldCheck size={28} />
-          <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--color-text)' }}>Contract<span style={{ color: 'var(--color-primary)' }}>IQ</span></span>
-        </div>
-        <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem' }}>
-          <Link to="#" className="text-muted" style={{ textDecoration: 'none', fontWeight: '500', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='var(--color-primary)'} onMouseOut={e => e.target.style.color='var(--color-text-muted)'}>Help Center</Link>
-          <Link to="#" className="text-muted" style={{ textDecoration: 'none', fontWeight: '500', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='var(--color-primary)'} onMouseOut={e => e.target.style.color='var(--color-text-muted)'}>Support</Link>
-        </div>
-      </header>
+    <div className="auth-container fade-in">
+      <div className="auth-card-wide" style={{ margin: '0 auto', padding: 0, overflow: 'hidden', display: 'flex', boxShadow: 'var(--shadow-lg)', width: '100%', maxWidth: '900px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)' }}>
 
-      {/* Auth Container */}
-      <div className="auth-container fade-in" style={{ flex: 1, minHeight: 'auto', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="auth-card-wide" style={{ padding: '1.5rem 2rem', boxShadow: 'var(--shadow-md)', borderRadius: 'var(--radius-lg)' }}>
-          <div className="auth-header" style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Join Contract<span>IQ</span></h1>
-            <p className="text-muted" style={{ fontSize: '0.85rem', margin: 0 }}>Request access to the platform</p>
+        {/* Card Left - Graphic Area */}
+        <div className="hidden-on-mobile" style={{
+          flex: 1,
+          background: 'linear-gradient(135deg, var(--color-primary-dark), var(--color-primary))',
+          color: 'white',
+          padding: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center',
+          position: 'relative'
+        }}>
+          <ShieldCheck size={250} style={{ position: 'absolute', opacity: 0.05, transform: 'rotate(-20deg)', top: '10%', left: '-10%' }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.1)', marginBottom: '1rem', backdropFilter: 'blur(10px)' }}>
+              <UserPlus size={32} color="white" />
+            </div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', marginBottom: '0.75rem', letterSpacing: '-0.5px' }}>Join ContractIQ</h2>
+            <p style={{ opacity: 0.85, fontSize: '1rem', lineHeight: 1.5, maxWidth: '280px', margin: '0 auto' }}>
+              Create an account to streamline your contract management and compliance tracking.
+            </p>
+          </div>
+        </div>
+
+        {/* Card Right - Form Area */}
+        <div className="auth-form-area">
+          <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-text)', marginBottom: '0.25rem' }}>Create Account</h1>
+            <p className="text-muted" style={{ fontSize: '0.85rem' }}>Fill in the details below to get started</p>
           </div>
 
           {error && (
@@ -60,23 +74,14 @@ const Signup = () => {
 
           <SignupForm onSubmit={handleSignupSubmit} disabled={loading} />
 
-          <div className="auth-footer" style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem' }}>
-            <p style={{ margin: 0 }}>Already have an account? <Link to="/login" style={{ color: 'var(--color-primary)', fontWeight: '600', textDecoration: 'none' }}>Sign In</Link></p>
+          <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.85rem', paddingTop: '1.5rem', borderTop: '1px solid var(--color-border)' }}>
+            <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>
+              Already have an account? <Link to="/login" style={{ color: 'var(--color-primary)', fontWeight: '600', textDecoration: 'none' }}>Sign In</Link>
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Page Footer */}
-      <footer style={{ padding: '1.5rem 2rem', backgroundColor: 'var(--color-surface)', borderTop: '1px solid var(--color-border)', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto', flexWrap: 'wrap', gap: '1rem' }}>
-          <p style={{ margin: 0 }}>&copy; {new Date().getFullYear()} ContractIQ. All rights reserved.</p>
-          <div style={{ display: 'flex', gap: '1.5rem' }}>
-            <Link to="#" className="text-muted" style={{ textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='var(--color-primary)'} onMouseOut={e => e.target.style.color='var(--color-text-muted)'}>Privacy Policy</Link>
-            <Link to="#" className="text-muted" style={{ textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='var(--color-primary)'} onMouseOut={e => e.target.style.color='var(--color-text-muted)'}>Terms of Service</Link>
-            <Link to="#" className="text-muted" style={{ textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='var(--color-primary)'} onMouseOut={e => e.target.style.color='var(--color-text-muted)'}>Contact</Link>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 };

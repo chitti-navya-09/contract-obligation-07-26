@@ -30,7 +30,7 @@ const LoginForm = ({ onSubmit }) => {
       
       <div className="input-group" style={{ marginBottom: '1rem' }}>
         <label className="input-label" style={{ marginBottom: '0.75rem', display: 'block', textAlign: 'center' }}>Select Your Role</label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: '0.5rem' }}>
           {rolesList.map(r => {
             const isSelected = role === r.id;
             return (

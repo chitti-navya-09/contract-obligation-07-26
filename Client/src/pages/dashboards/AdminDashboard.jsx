@@ -1,21 +1,17 @@
 import React, { useState } from 'react';
 import { 
-  Files, 
-  AlertTriangle, 
-  CalendarClock, 
-  CheckCircle,
-  TrendingUp,
-  Activity,
-  Plus,
-  Search,
-  FileSignature,
-  FileWarning
+  Users, 
+  Activity, 
+  Bell, 
+  Settings,
+  UserPlus,
+  ShieldAlert,
+  Server,
+  TerminalSquare
 } from 'lucide-react';
 import ButtonGroup from '../../components/Buttons/ButtonGroup';
 import Dropdown from '../../components/Buttons/Dropdown';
 import Button from '../../components/Buttons/Button';
-import Card from '../../components/DataDisplay/Card';
-import Table from '../../components/DataDisplay/Table';
 import Badge from '../../components/DataDisplay/Badge';
 import Modal from '../../components/Modals/Modal';
 import FormInput from '../../components/Form/FormInput';
@@ -35,7 +31,6 @@ import {
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
 import './Dashboard.css';
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -50,46 +45,42 @@ ChartJS.register(
 
 const AdminDashboard = () => {
   const [timeFilter, setTimeFilter] = useState('30D');
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [newContract, setNewContract] = useState({ name: '', companyName: '', vendorName: '', category: 'Vendor Contract', value: '', expiry: '' });
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Admin' });
   const [showAllActivities, setShowAllActivities] = useState(false);
 
   const [activities, setActivities] = useState([
-    { id: 1, user: 'Sarah Smith', avatar: 'SS', action: 'Approved', target: 'Vendor Agreement V2', time: '2 hours ago', status: 'Completed', type: 'success' },
-    { id: 2, user: 'John Doe', avatar: 'JD', action: 'Created', target: 'NDA - TechCorp', time: '4 hours ago', status: 'Pending', type: 'warning' },
-    { id: 3, user: 'System', avatar: 'SY', action: 'Flagged', target: 'Missed Obligation #1042', time: '1 day ago', status: 'Critical', type: 'danger' },
-    { id: 4, user: 'Alex Johnson', avatar: 'AJ', action: 'Renewed', target: 'Office Lease 2026', time: '2 days ago', status: 'Completed', type: 'success' },
+    { id: 1, user: 'Sarah Smith', avatar: 'SS', action: 'Changed role for', target: 'John Doe', time: '2 hours ago', status: 'Success', type: 'success' },
+    { id: 2, user: 'System', avatar: 'SY', action: 'Generated', target: 'Weekly Audit Report', time: '4 hours ago', status: 'Completed', type: 'primary' },
+    { id: 3, user: 'Alex Johnson', avatar: 'AJ', action: 'Failed login attempt', target: 'IP 192.168.1.5', time: '1 day ago', status: 'Warning', type: 'warning' },
+    { id: 4, user: 'Admin User', avatar: 'AU', action: 'Updated', target: 'System Settings', time: '2 days ago', status: 'Success', type: 'success' },
   ]);
 
-  const handleUploadContract = (e) => {
+  const handleCreateUser = (e) => {
     e.preventDefault();
-    alert('Contract successfully submitted for draft!');
-    
-    // Add new activity
+    alert('User created successfully!');
     const newActivity = {
       id: Date.now(),
       user: 'Current User', 
       avatar: 'CU',
-      action: 'Created',
-      target: newContract.name || 'New Contract',
+      action: 'Created user',
+      target: newUser.name || 'New User',
       time: 'Just now',
-      status: 'Draft',
-      type: 'primary'
+      status: 'Success',
+      type: 'success'
     };
     setActivities([newActivity, ...activities]);
-
-    setIsUploadModalOpen(false);
-    setNewContract({ name: '', companyName: '', vendorName: '', category: 'Vendor Contract', value: '', expiry: '' });
+    setIsUserModalOpen(false);
+    setNewUser({ name: '', email: '', role: 'Admin' });
   };
 
   const stats = [
-    { label: 'Active Contracts', value: '1,245', icon: <Files size={24} />, color: 'var(--color-primary)', trend: '+12.5%', trendType: 'positive', subtext: 'vs last month' },
-    { label: 'Upcoming Renewals', value: '38', icon: <CalendarClock size={24} />, color: 'var(--color-warning)', trend: '4 critical', trendType: 'warning', subtext: 'needs attention' },
-    { label: 'Pending Obligations', value: '112', icon: <AlertTriangle size={24} />, color: 'var(--color-danger)', trend: '-5.2%', trendType: 'positive', subtext: 'vs last month' },
-    { label: 'Overall Compliant', value: '94%', icon: <CheckCircle size={24} />, color: 'var(--color-success)', trend: '+2.1%', trendType: 'positive', subtext: 'across portfolio' },
+    { label: 'Total Users', value: '284', icon: <Users size={24} />, color: 'var(--color-primary)', trend: '+12', trendType: 'positive', subtext: 'new this month' },
+    { label: 'Active Sessions', value: '42', icon: <Activity size={24} />, color: 'var(--color-success)', trend: 'Stable', trendType: 'neutral', subtext: 'current users' },
+    { label: 'Unread Notifications', value: '15', icon: <Bell size={24} />, color: 'var(--color-warning)', trend: '+5', trendType: 'warning', subtext: 'needs attention' },
+    { label: 'System Errors', value: '3', icon: <Server size={24} />, color: 'var(--color-danger)', trend: '-2', trendType: 'positive', subtext: 'since yesterday' },
   ];
 
-  // Dummy logic to simulate data changes
   const multiplyData = (dataArray, factor) => dataArray.map(d => Math.round(d * factor));
   const filterFactor = timeFilter === '7D' ? 0.3 : timeFilter === '1Y' ? 3 : 1;
 
@@ -97,8 +88,8 @@ const AdminDashboard = () => {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
-        label: 'New Contracts',
-        data: multiplyData([65, 59, 80, 81, 56, 120], filterFactor),
+        label: 'New Users',
+        data: multiplyData([12, 19, 15, 25, 22, 30], filterFactor),
         borderColor: '#6B8EB1',
         backgroundColor: 'rgba(107, 142, 177, 0.15)',
         fill: true,
@@ -114,16 +105,6 @@ const AdminDashboard = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: {
-        backgroundColor: '#fff',
-        titleColor: '#444B53',
-        bodyColor: '#444B53',
-        borderColor: 'rgba(107, 142, 177, 0.2)',
-        borderWidth: 1,
-        padding: 12,
-        boxPadding: 4,
-        usePointStyle: true,
-      }
     },
     scales: {
       x: { grid: { display: false } },
@@ -132,11 +113,11 @@ const AdminDashboard = () => {
   };
 
   const doughnutData = {
-    labels: ['Compliant', 'Pending', 'Non-Compliant'],
+    labels: ['Legal Managers', 'Compliance Officers', 'Contract Managers', 'Admins'],
     datasets: [
       {
-        data: multiplyData([300, 50, 20], filterFactor),
-        backgroundColor: ['#2ecc71', '#f1c40f', '#e74c3c'],
+        data: multiplyData([45, 30, 20, 5], filterFactor),
+        backgroundColor: ['#3498db', '#f1c40f', '#2ecc71', '#9b59b6'],
         borderWidth: 0,
         hoverOffset: 4
       }
@@ -152,18 +133,12 @@ const AdminDashboard = () => {
   };
 
   const barChartData = {
-    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [
       {
-        label: 'Obligations Met',
-        data: multiplyData([120, 190, 150, 220], filterFactor),
+        label: 'Logins',
+        data: multiplyData([120, 150, 140, 180, 160, 40, 50], filterFactor),
         backgroundColor: '#2ecc71',
-        borderRadius: 4
-      },
-      {
-        label: 'Obligations Missed',
-        data: multiplyData([15, 25, 10, 30], filterFactor),
-        backgroundColor: '#e74c3c',
         borderRadius: 4
       }
     ]
@@ -172,7 +147,7 @@ const AdminDashboard = () => {
   const barChartOptions = {
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle' } }
+      legend: { display: false }
     },
     scales: {
       x: { grid: { display: false } },
@@ -187,7 +162,7 @@ const AdminDashboard = () => {
       <div className="dashboard-header mb-2 stagger-1">
         <div>
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted mt-1">Welcome back, here is what's happening with your contracts today.</p>
+          <p className="text-muted mt-1">System overview, user management, and audit logs.</p>
         </div>
         <div className="dashboard-header-actions">
           <ButtonGroup className="time-filters">
@@ -196,11 +171,8 @@ const AdminDashboard = () => {
             <button className={`filter-btn ${timeFilter === '1Y' ? 'active' : ''}`} onClick={() => setTimeFilter('1Y')}>1Y</button>
           </ButtonGroup>
           <div className="header-buttons">
-            <Button variant="outline" icon={TrendingUp}>
-              Generate Report
-            </Button>
-            <Button variant="primary" icon={Plus} onClick={() => setIsUploadModalOpen(true)}>
-              New Contract
+            <Button variant="primary" icon={UserPlus} onClick={() => setIsUserModalOpen(true)}>
+              New User
             </Button>
           </div>
         </div>
@@ -230,8 +202,8 @@ const AdminDashboard = () => {
         <div className="dashboard-card main-chart-card">
           <div className="dashboard-card-header">
             <div>
-              <h3>Contract Growth</h3>
-              <p>Monthly contract additions and renewals</p>
+              <h3>User Growth</h3>
+              <p>Monthly new user registrations</p>
             </div>
           </div>
           <div className="chart-wrapper">
@@ -242,31 +214,31 @@ const AdminDashboard = () => {
         <div className="flex flex-col gap-6">
           <div className="dashboard-card quick-actions-card glow-card">
             <div className="dashboard-card-header">
-              <h3>Quick Actions</h3>
+              <h3>Admin Actions</h3>
             </div>
             <div className="quick-actions-grid">
-              <button className="quick-action-btn" onClick={() => setIsUploadModalOpen(true)}>
-                <div className="qa-icon" style={{ color: 'var(--color-primary)', backgroundColor: 'rgba(107, 142, 177, 0.15)' }}><Plus size={20}/></div>
-                <span>Create NDA</span>
+              <button className="quick-action-btn" onClick={() => setIsUserModalOpen(true)}>
+                <div className="qa-icon" style={{ color: 'var(--color-primary)', backgroundColor: 'rgba(107, 142, 177, 0.15)' }}><UserPlus size={20}/></div>
+                <span>Create User</span>
               </button>
               <button className="quick-action-btn">
-                <div className="qa-icon" style={{ color: 'var(--color-warning)', backgroundColor: 'rgba(241, 196, 15, 0.15)' }}><Search size={20}/></div>
-                <span>Search Contracts</span>
+                <div className="qa-icon" style={{ color: 'var(--color-warning)', backgroundColor: 'rgba(241, 196, 15, 0.15)' }}><TerminalSquare size={20}/></div>
+                <span>Audit Logs</span>
               </button>
               <button className="quick-action-btn">
-                <div className="qa-icon" style={{ color: 'var(--color-success)', backgroundColor: 'rgba(46, 204, 113, 0.15)' }}><FileSignature size={20}/></div>
-                <span>Review Approvals</span>
+                <div className="qa-icon" style={{ color: 'var(--color-success)', backgroundColor: 'rgba(46, 204, 113, 0.15)' }}><Bell size={20}/></div>
+                <span>Broadcast</span>
               </button>
               <button className="quick-action-btn">
-                <div className="qa-icon" style={{ color: 'var(--color-danger)', backgroundColor: 'rgba(231, 76, 60, 0.15)' }}><FileWarning size={20}/></div>
-                <span>Check Obligations</span>
+                <div className="qa-icon" style={{ color: 'var(--color-danger)', backgroundColor: 'rgba(231, 76, 60, 0.15)' }}><Settings size={20}/></div>
+                <span>System Config</span>
               </button>
             </div>
           </div>
           
           <div className="dashboard-card flex-1">
             <div className="dashboard-card-header">
-              <h3>Compliance Status</h3>
+              <h3>Role Distribution</h3>
             </div>
             <div className="chart-wrapper doughnut-wrapper">
               <Doughnut data={doughnutData} options={doughnutOptions} />
@@ -279,8 +251,8 @@ const AdminDashboard = () => {
         <div className="dashboard-card">
           <div className="dashboard-card-header">
             <div>
-              <h3>Obligations Performance</h3>
-              <p>Met vs Missed obligations over time</p>
+              <h3>System Activity</h3>
+              <p>User logins and sessions over the week</p>
             </div>
           </div>
           <div className="chart-wrapper">
@@ -292,7 +264,7 @@ const AdminDashboard = () => {
           <div className="dashboard-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <div className="flex items-center gap-2">
               <Activity size={20} className="text-primary" />
-              <h3 style={{ margin: 0 }}>Recent Activities</h3>
+              <h3 style={{ margin: 0 }}>Recent Audit Logs</h3>
             </div>
             <Button variant="outline" size="sm" onClick={() => setShowAllActivities(!showAllActivities)}>
               {showAllActivities ? 'Show Less' : 'View All'}
@@ -332,10 +304,10 @@ const AdminDashboard = () => {
                     <td>
                       <Dropdown 
                         label="Manage" 
-                        onSelect={(item) => alert(`${item.label} selected for activity ID: ${act.id} (User: ${act.user})`)}
+                        onSelect={(item) => alert(`${item.label} selected for activity ID: ${act.id}`)}
                         items={[
-                          { label: 'View User' },
-                          { label: 'Audit Trail' }
+                          { label: 'View Details' },
+                          { label: 'Export Log' }
                         ]}
                       />
                     </td>
@@ -347,37 +319,31 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Upload Modal */}
       <Modal 
-        isOpen={isUploadModalOpen} 
-        onClose={() => setIsUploadModalOpen(false)}
-        title="Upload New Contract"
+        isOpen={isUserModalOpen} 
+        onClose={() => setIsUserModalOpen(false)}
+        title="Create New User"
         footer={
           <>
-            <Button type="button" variant="outline" onClick={() => setIsUploadModalOpen(false)}>Cancel</Button>
-            <Button type="button" variant="primary" onClick={handleUploadContract}>Upload & Create Draft</Button>
+            <Button type="button" variant="outline" onClick={() => setIsUserModalOpen(false)}>Cancel</Button>
+            <Button type="button" variant="primary" onClick={handleCreateUser}>Create User</Button>
           </>
         }
       >
-        <form onSubmit={handleUploadContract} id="upload-contract-form">
-          <FormInput label="Contract Name" type="text" placeholder="e.g. Acme Corp NDA" required value={newContract.name} onChange={(e) => setNewContract({...newContract, name: e.target.value})} />
-          <FormInput label="Company/Entity Name" type="text" placeholder="e.g. Global Industries Ltd." required value={newContract.companyName} onChange={(e) => setNewContract({...newContract, companyName: e.target.value})} />
+        <form onSubmit={handleCreateUser} id="create-user-form">
+          <FormInput label="Full Name" type="text" placeholder="e.g. Jane Doe" required value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} />
+          <FormInput label="Email Address" type="email" placeholder="e.g. jane@company.com" required value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} />
           <FormSelect 
-            label="Category"
-            value={newContract.category}
-            onChange={(e) => setNewContract({...newContract, category: e.target.value})}
+            label="Role"
+            value={newUser.role}
+            onChange={(e) => setNewUser({...newUser, role: e.target.value})}
             options={[
-              { value: 'Vendor Contract', label: 'Vendor Contract' },
-              { value: 'Employment Contract', label: 'Employment Contract' },
-              { value: 'Lease Agreement', label: 'Lease Agreement' },
-              { value: 'Service Agreement', label: 'Service Agreement' }
+              { value: 'Admin', label: 'Administrator' },
+              { value: 'Legal Manager', label: 'Legal Manager' },
+              { value: 'Compliance Officer', label: 'Compliance Officer' },
+              { value: 'Contract Manager', label: 'Contract Manager' }
             ]}
           />
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <FormInput label="Value" type="text" placeholder="$0.00" value={newContract.value} onChange={(e) => setNewContract({...newContract, value: e.target.value})} />
-            <FormInput label="Expiry Date" type="date" required value={newContract.expiry} onChange={(e) => setNewContract({...newContract, expiry: e.target.value})} />
-          </div>
-          <FormInput label="Attach Document (PDF, DOCX)" type="file" required />
         </form>
       </Modal>
     </div>

@@ -377,12 +377,8 @@ h3 {
 
 /* ===== Auth Cards ===== */
 .auth-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--color-bg-light) 0%, var(--color-bg) 100%);
-  padding: 1rem;
+  padding: 1rem 0;
+  width: 100%;
 }
 
 .auth-card {
@@ -408,6 +404,28 @@ h3 {
 @media (max-width: 900px) {
   .hidden-on-mobile {
     display: none !important;
+  }
+}
+
+.auth-form-area {
+  flex: 0 0 450px;
+  padding: 2.5rem 3rem;
+  background-color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .auth-form-area {
+    flex: 1;
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-form-area {
+    padding: 1.5rem 1rem;
   }
 }
 
