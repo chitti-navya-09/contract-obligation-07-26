@@ -1,18 +1,39 @@
-# Open: src/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api import api_router  # Import the grouped api_router
 
-app = FastAPI(title="ContractIQ API")
+from src.database.core import Base, engine
+from src.api import api_router
 
-# Ensure CORS middleware is attached properly
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+
+Base.metadata.create_all(
+    bind=engine
 )
 
-# THIS IS THE CRITICAL LINE: It mounts your paths to the main application engine
-app.include_router(api_router, prefix="/api")
+
+app = FastAPI(
+    title="Contract Obligation Tracking API"
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+
+app.include_router(
+    api_router
+)
+
+
+@app.get("/")
+def home():
+
+    return {
+        "message":"Backend running"
+    }

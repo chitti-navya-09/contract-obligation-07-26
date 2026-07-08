@@ -1,36 +1,117 @@
-# Open: src/todos/service.py
+from sqlalchemy.orm import Session
+from src.entities.contract import Contract
+from src.todos.models import ContractCreate, ContractUpdate
 
-# Live local array tracking inside your existing layer
-MOCK_DATA = [
-    {
-        "id": "CNT-2025-001",
-        "title": "Microsoft Azure Enterprise Agreement",
-        "vendor": "Microsoft Corp",
-        "type": "Cloud Services",
-        "value": "$2.40M",
-        "endDate": "2026-01-14",
-        "owner": "Sarah Chen",
-        "status": "Active",
-        "compliance": "high"
-    }
-]
 
-class TodoService:
-    @staticmethod
-    def get_all(search: str = None, status: str = None):
-        results = MOCK_DATA
-        if status and status != "All":
-            results = [item for item in results if item["status"] == status]
-        if search:
-            results = [
-                item for item in results 
-                if search.lower() in item["title"].lower() or search.lower() in item["vendor"].lower()
-            ]
-        return results
 
-    @staticmethod
-    def create(data: dict):
-        new_id = f"CNT-2025-{str(len(MOCK_DATA) + 1).zfill(3)}"
-        data["id"] = new_id
-        MOCK_DATA.append(data)
-        return data
+def create_contract(
+        db: Session,
+        contract: ContractCreate
+):
+
+    new_contract = Contract(
+        **contract.model_dump()
+    )
+
+    db.add(new_contract)
+    db.commit()
+    db.refresh(new_contract)
+
+    return new_contract
+
+
+
+def get_contracts(db: Session):
+
+    return db.query(Contract).all()
+
+
+
+def get_contract_by_id(
+        db: Session,
+        contract_id:int
+):
+
+    return db.query(Contract)\
+        .filter(
+            Contract.id == contract_id
+        ).first()
+
+
+
+def update_contract(
+        db:Session,
+        contract_id:int,
+        data:ContractUpdate
+):
+
+    contract = get_contract_by_id(
+        db,
+        contract_id
+    )
+
+    if contract:
+
+        for key,value in data.model_dump(
+            exclude_unset=True
+        ).items():
+
+            setattr(
+                contract,
+                key,
+                value
+            )
+
+
+        db.commit()
+        db.refresh(contract)
+
+
+    return contract
+
+
+
+def delete_contract(
+        db:Session,
+        contract_id:int
+):
+
+    contract = get_contract_by_id(
+        db,
+        contract_id
+    )
+
+    if contract:
+
+        db.delete(contract)
+        db.commit()
+
+        return True
+
+    return False
+
+
+
+def search_contract(
+        db:Session,
+        keyword:str
+):
+
+    return db.query(Contract)\
+        .filter(
+            Contract.title.ilike(
+                f"%{keyword}%"
+            )
+        ).all()
+
+
+
+def filter_status(
+        db:Session,
+        status:str
+):
+
+    return db.query(Contract)\
+        .filter(
+            Contract.status == status
+        ).all()
