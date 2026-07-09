@@ -3,7 +3,7 @@ import { Eye } from "lucide-react";
 import { useState } from "react";
 
 function ExpiringContracts({ data }) {
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(true);
   const [selectedId, setSelectedId] = useState(null);
   const [actionMessage, setActionMessage] = useState("");
 
@@ -55,7 +55,7 @@ function ExpiringContracts({ data }) {
           type="button"
           onClick={() => setShowAll((prev) => !prev)}
         >
-          {showAll ? "Show Less" : `View All (${contracts.length})`}
+          {showAll ? "Show Less" : "Show All"}
         </button>
       </div>
 

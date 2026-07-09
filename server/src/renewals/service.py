@@ -90,7 +90,7 @@ class RenewalService:
                         break
 
         predictions = []
-        for renewal in renewals[:3]:
+        for renewal in renewals:
             confidence = renewal.confidence or 0
             if confidence >= 85:
                 badge = "High Confidence"
