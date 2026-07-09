@@ -3,6 +3,20 @@ from src.entities.contract import Contract
 from src.todos.models import ContractCreate, ContractUpdate
 
 
+def get_contracts(db: Session, search=None, status=None):
+    query = db.query(Contract)
+
+    if search:
+        query = query.filter(
+            Contract.title.ilike(f"%{search}%")
+        )
+
+    if status:
+        query = query.filter(
+            Contract.status == status
+        )
+
+    return query.all()
 
 def create_contract(
         db: Session,

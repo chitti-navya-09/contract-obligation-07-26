@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import * as XLSX from "xlsx";
+
+import { saveAs } from "file-saver";
 import axios from 'axios';
 import './Contracts.css';
 import ContractDetails from './ContractDetails';
@@ -14,6 +17,58 @@ const ContractRepository = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentContractId, setCurrentContractId] = useState(null);
   const [selectedContract, setSelectedContract] = useState(null);
+  const exportData = contracts
+  .filter((item) => {
+    const matchesStatus =
+      statusFilter === "All" || item.status === statusFilter;
+
+    const matchesSearch =
+      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.vendor.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesStatus && matchesSearch;
+  })
+  .map((contract) => ({
+    ID: contract.id,
+    Title: contract.title,
+    Vendor: contract.vendor,
+    Type: contract.type,
+    Value: contract.value,
+    "End Date": contract.end_date,
+    Owner: contract.owner,
+    Status: contract.status,
+    Compliance: contract.compliance
+  }));
+  const handleExport = () => {
+  const exportData = contracts.map((contract) => ({
+    ID: contract.id,
+    Title: contract.title,
+    Vendor: contract.vendor,
+    Type: contract.type,
+    Value: contract.value,
+    "End Date": contract.end_date,
+    Owner: contract.owner,
+    Status: contract.status,
+    Compliance: contract.compliance
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Contracts");
+
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array"
+  });
+
+  const file = new Blob([excelBuffer], {
+    type:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"
+  });
+
+  saveAs(file, "Contracts.xlsx");
+};
 
   // Dynamic Form Field Payload state
   const [formData, setFormData] = useState({
@@ -21,7 +76,7 @@ const ContractRepository = () => {
     vendor: '',
     type: 'SaaS License',
     value: '',
-    endDate: '',
+    end_date: '',
     owner: '',
     status: 'Active',
     compliance: 90
@@ -82,7 +137,7 @@ const ContractRepository = () => {
       vendor: formData.vendor,
       type: formData.type,
       value: numericValue,
-      end_date: formData.endDate, 
+      end_date: formData.end_date, 
       owner: formData.owner,
       status: formData.status,
       compliance: complianceString
@@ -133,7 +188,7 @@ const ContractRepository = () => {
       vendor: contract.vendor,
       type: contract.type,
       value: contract.value,
-      endDate: contract.end_date || '',
+      end_date: contract.end_date || '',
       owner: contract.owner || '',
       status: contract.status,
       compliance: isNaN(cleanCompliance) ? 90 : cleanCompliance
@@ -147,7 +202,7 @@ const ContractRepository = () => {
     setIsEditing(false);
     setCurrentContractId(null);
     setFormData({
-      title: '', vendor: '', type: 'SaaS License', value: '', endDate: '', owner: '', status: 'Active', compliance: 90
+      title: '', vendor: '', type: 'SaaS License', value: '', end_date: '', owner: '', status: 'Active', compliance: 90
     });
   };
 
@@ -179,9 +234,9 @@ const ContractRepository = () => {
           <p className="subtitle-count">{contracts.length} contracts total</p>
         </div>
         <div className="action-button-group">
-          <button className="btn-export">
-            <span className="icon-spacing">📥</span> Export
-          </button>
+          <button className="btn-export" onClick={handleExport}>
+    📄 Export
+</button>
           <button
             className="btn-create"
             onClick={() => {
@@ -192,7 +247,7 @@ const ContractRepository = () => {
                 vendor: '',
                 type: 'SaaS License',
                 value: '',
-                endDate: '',
+                end_date: '',
                 owner: '',
                 status: 'Active',
                 compliance: 90
@@ -361,8 +416,8 @@ const ContractRepository = () => {
                 <div className="form-row-half">
                   <div className="form-group">
                     <label className="form-label">End Date</label>
-                    {/* FIXED VALUE KEY MATCH FROM end_date TO endDate */}
-                    <input type="date" name="endDate" required className="form-input" value={formData.end_date} onChange={handleInputChange} />
+                    
+                    <input type="date" name="end_date" required className="form-input" value={formData.end_date} onChange={handleInputChange} />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Contract Owner</label>

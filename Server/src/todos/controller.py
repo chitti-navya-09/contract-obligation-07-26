@@ -2,14 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from src.database.core import get_db
+from src.todos import service
 from src.todos.models import (
     ContractCreate,
     ContractUpdate,
     ContractResponse
 )
-
-from src.todos import service
-
 
 router = APIRouter(
     prefix="/contracts",
@@ -17,21 +15,15 @@ router = APIRouter(
 )
 
 
-
 @router.post(
     "/",
     response_model=ContractResponse
 )
 def create(
-    contract:ContractCreate,
-    db:Session=Depends(get_db)
+    contract: ContractCreate,
+    db: Session = Depends(get_db)
 ):
-
-    return service.create_contract(
-        db,
-        contract
-    )
-
+    return service.create_contract(db, contract)
 
 
 @router.get(
@@ -39,11 +31,9 @@ def create(
     response_model=list[ContractResponse]
 )
 def get_all(
-    db:Session=Depends(get_db)
+    db: Session = Depends(get_db)
 ):
-
     return service.get_contracts(db)
-
 
 
 @router.get(
@@ -51,23 +41,18 @@ def get_all(
     response_model=ContractResponse
 )
 def get_one(
-    id:int,
-    db:Session=Depends(get_db)
+    id: int,
+    db: Session = Depends(get_db)
 ):
-
-    contract = service.get_contract_by_id(
-        db,
-        id
-    )
+    contract = service.get_contract_by_id(db, id)
 
     if not contract:
         raise HTTPException(
-            404,
-            "Contract not found"
+            status_code=404,
+            detail="Contract not found"
         )
 
     return contract
-
 
 
 @router.put(
@@ -75,60 +60,50 @@ def get_one(
     response_model=ContractResponse
 )
 def update(
-    id:int,
-    data:ContractUpdate,
-    db:Session=Depends(get_db)
+    id: int,
+    data: ContractUpdate,
+    db: Session = Depends(get_db)
 ):
+    contract = service.update_contract(db, id, data)
 
-    return service.update_contract(
-        db,
-        id,
-        data
-    )
+    if not contract:
+        raise HTTPException(
+            status_code=404,
+            detail="Contract not found"
+        )
 
+    return contract
 
 
 @router.delete("/{id}")
 def delete(
-    id:int,
-    db:Session=Depends(get_db)
+    id: int,
+    db: Session = Depends(get_db)
 ):
+    contract = service.delete_contract(db, id)
 
-    service.delete_contract(
-        db,
-        id
-    )
+    if not contract:
+        raise HTTPException(
+            status_code=404,
+            detail="Contract not found"
+        )
 
     return {
-        "message":"Contract deleted"
+        "message": "Contract deleted successfully"
     }
 
 
-
-@router.get(
-    "/search/{keyword}"
-)
+@router.get("/search/{keyword}")
 def search(
-    keyword:str,
-    db:Session=Depends(get_db)
+    keyword: str,
+    db: Session = Depends(get_db)
 ):
-
-    return service.search_contract(
-        db,
-        keyword
-    )
+    return service.search_contract(db, keyword)
 
 
-
-@router.get(
-    "/status/{status}"
-)
+@router.get("/status/{status}")
 def status_filter(
-    status:str,
-    db:Session=Depends(get_db)
+    status: str,
+    db: Session = Depends(get_db)
 ):
-
-    return service.filter_status(
-        db,
-        status
-    )
+    return service.filter_status(db, status)
