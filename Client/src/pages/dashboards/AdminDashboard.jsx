@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   Activity, 
@@ -16,6 +17,11 @@ import Badge from '../../components/DataDisplay/Badge';
 import Modal from '../../components/Modals/Modal';
 import FormInput from '../../components/Form/FormInput';
 import FormSelect from '../../components/Form/FormSelect';
+import SignupForm from '../../features/authentication/components/SignupForm';
+import { signupService } from '../../features/authentication/services/signup';
+import { getAllUsers } from '../../features/authentication/services/getAllUsers';
+import { getAuditLogs } from '../../features/auditLogs/services/getAuditLogs';
+import { getUserNotifications } from '../../features/notifications/services/notificationAPI';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -44,52 +50,89 @@ ChartJS.register(
 );
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [timeFilter, setTimeFilter] = useState('30D');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Admin' });
-  const [showAllActivities, setShowAllActivities] = useState(false);
 
-  const [activities, setActivities] = useState([
-    { id: 1, user: 'Sarah Smith', avatar: 'SS', action: 'Changed role for', target: 'John Doe', time: '2 hours ago', status: 'Success', type: 'success' },
-    { id: 2, user: 'System', avatar: 'SY', action: 'Generated', target: 'Weekly Audit Report', time: '4 hours ago', status: 'Completed', type: 'primary' },
-    { id: 3, user: 'Alex Johnson', avatar: 'AJ', action: 'Failed login attempt', target: 'IP 192.168.1.5', time: '1 day ago', status: 'Warning', type: 'warning' },
-    { id: 4, user: 'Admin User', avatar: 'AU', action: 'Updated', target: 'System Settings', time: '2 days ago', status: 'Success', type: 'success' },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
 
-  const handleCreateUser = (e) => {
-    e.preventDefault();
-    alert('User created successfully!');
-    const newActivity = {
-      id: Date.now(),
-      user: 'Current User', 
-      avatar: 'CU',
-      action: 'Created user',
-      target: newUser.name || 'New User',
-      time: 'Just now',
-      status: 'Success',
-      type: 'success'
+  React.useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [usersData, logsData, notifsData] = await Promise.all([
+          getAllUsers().catch(() => []),
+          getAuditLogs().catch(() => []),
+          getUserNotifications().catch(() => [])
+        ]);
+        setUsers(usersData);
+        setAuditLogs(logsData);
+        setNotifications(notifsData);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
     };
-    setActivities([newActivity, ...activities]);
-    setIsUserModalOpen(false);
-    setNewUser({ name: '', email: '', role: 'Admin' });
+    fetchData();
+  }, []);
+
+  const handleCreateUserFull = async (formData) => {
+    setIsCreating(true);
+    setCreateError('');
+    try {
+      await signupService(formData);
+      alert(`User ${formData.name || 'New User'} registered successfully!`);
+      setIsUserModalOpen(false);
+      // Re-fetch users to update dashboard
+      const newUsers = await getAllUsers();
+      setUsers(newUsers);
+    } catch (err) {
+      setCreateError(err.message || 'Registration failed.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
+  const totalUsers = users.length;
+  const activeSessions = users.filter(u => u.is_active).length;
+  const unreadNotifs = notifications.filter(n => !n.is_read && !n.read).length;
+  const systemErrors = auditLogs.filter(l => (l.status || '').toLowerCase() === 'error' || (l.status || '').toLowerCase() === 'danger').length;
+
   const stats = [
-    { label: 'Total Users', value: '284', icon: <Users size={24} />, color: 'var(--color-primary)', trend: '+12', trendType: 'positive', subtext: 'new this month' },
-    { label: 'Active Sessions', value: '42', icon: <Activity size={24} />, color: 'var(--color-success)', trend: 'Stable', trendType: 'neutral', subtext: 'current users' },
-    { label: 'Unread Notifications', value: '15', icon: <Bell size={24} />, color: 'var(--color-warning)', trend: '+5', trendType: 'warning', subtext: 'needs attention' },
-    { label: 'System Errors', value: '3', icon: <Server size={24} />, color: 'var(--color-danger)', trend: '-2', trendType: 'positive', subtext: 'since yesterday' },
+    { label: 'Total Users', value: totalUsers.toString(), icon: <Users size={24} />, color: 'var(--color-primary)', trend: 'Live', trendType: 'positive', subtext: 'registered users' },
+    { label: 'Active Users', value: activeSessions.toString(), icon: <Activity size={24} />, color: 'var(--color-success)', trend: 'Live', trendType: 'neutral', subtext: 'currently active' },
+    { label: 'Unread Notifications', value: unreadNotifs.toString(), icon: <Bell size={24} />, color: 'var(--color-warning)', trend: 'Live', trendType: 'warning', subtext: 'needs attention' },
+    { label: 'System Errors', value: systemErrors.toString(), icon: <Server size={24} />, color: 'var(--color-danger)', trend: 'Live', trendType: 'positive', subtext: 'total errors logged' },
   ];
 
   const multiplyData = (dataArray, factor) => dataArray.map(d => Math.round(d * factor));
   const filterFactor = timeFilter === '7D' ? 0.3 : timeFilter === '1Y' ? 3 : 1;
 
+  // Real User Growth
+  const currentYear = new Date().getFullYear();
+  const monthCounts = new Array(12).fill(0);
+  users.forEach(u => {
+    if (u.join_date || u.created_at) {
+      const d = new Date(u.join_date || u.created_at);
+      if (d.getFullYear() === currentYear) {
+        monthCounts[d.getMonth()] += 1;
+      }
+    }
+  });
+
   const lineChartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     datasets: [
       {
         label: 'New Users',
-        data: multiplyData([12, 19, 15, 25, 22, 30], filterFactor),
+        data: monthCounts,
         borderColor: '#6B8EB1',
         backgroundColor: 'rgba(107, 142, 177, 0.15)',
         fill: true,
@@ -103,21 +146,29 @@ const AdminDashboard = () => {
 
   const lineChartOptions = {
     maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-    },
+    plugins: { legend: { display: false } },
     scales: {
       x: { grid: { display: false } },
-      y: { grid: { color: 'rgba(68, 75, 83, 0.05)', borderDash: [5, 5] }, beginAtZero: true }
+      y: { grid: { color: 'rgba(68, 75, 83, 0.05)', borderDash: [5, 5] }, beginAtZero: true, ticks: { precision: 0 } }
     }
   };
 
+  // Real Role Distribution
+  const roleCounts = users.reduce((acc, user) => {
+    const r = user.role || 'Unknown';
+    acc[r] = (acc[r] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const roleLabels = Object.keys(roleCounts);
+  const roleData = Object.values(roleCounts);
+
   const doughnutData = {
-    labels: ['Legal Managers', 'Compliance Officers', 'Contract Managers', 'Admins'],
+    labels: roleLabels.length ? roleLabels : ['No Data'],
     datasets: [
       {
-        data: multiplyData([45, 30, 20, 5], filterFactor),
-        backgroundColor: ['#3498db', '#f1c40f', '#2ecc71', '#9b59b6'],
+        data: roleData.length ? roleData : [1],
+        backgroundColor: ['#3498db', '#f1c40f', '#2ecc71', '#9b59b6', '#e74c3c', '#34495e'],
         borderWidth: 0,
         hoverOffset: 4
       }
@@ -132,12 +183,39 @@ const AdminDashboard = () => {
     }
   };
 
+  // Real System Activity (last 7 days of audit logs)
+  const today = new Date();
+  const last7DaysLabels = [];
+  const activityCounts = [0, 0, 0, 0, 0, 0, 0];
+  
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    last7DaysLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+  }
+
+  auditLogs.forEach(log => {
+    if (log.created_at || log.timestamp) {
+      const logDate = new Date(log.created_at || log.timestamp);
+      // Reset hours to strictly compare dates
+      const logDayStart = new Date(logDate.getFullYear(), logDate.getMonth(), logDate.getDate());
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      const diffTime = todayStart - logDayStart;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays >= 0 && diffDays < 7) {
+        activityCounts[6 - diffDays] += 1;
+      }
+    }
+  });
+
   const barChartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: last7DaysLabels,
     datasets: [
       {
-        label: 'Logins',
-        data: multiplyData([120, 150, 140, 180, 160, 40, 50], filterFactor),
+        label: 'Activities',
+        data: activityCounts,
         backgroundColor: '#2ecc71',
         borderRadius: 4
       }
@@ -146,16 +224,28 @@ const AdminDashboard = () => {
 
   const barChartOptions = {
     maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false }
-    },
+    plugins: { legend: { display: false } },
     scales: {
       x: { grid: { display: false } },
       y: { grid: { color: 'rgba(68, 75, 83, 0.05)', borderDash: [5, 5] }, beginAtZero: true }
     }
   };
 
-  const displayedActivities = showAllActivities ? activities : activities.slice(0, 4);
+  const dynamicActivities = auditLogs
+    .sort((a, b) => new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp))
+    .slice(0, 10)
+    .map(log => ({
+      id: log.audit_id || log.id || Math.random(),
+      user: log.user_name || log.user || 'System',
+      avatar: (log.user_name || log.user || 'SY').substring(0, 2).toUpperCase(),
+      action: log.action || 'Performed action',
+      target: log.resource || log.module || '',
+      time: log.created_at || log.timestamp ? new Date(log.created_at || log.timestamp).toLocaleString() : 'Recently',
+      status: log.status || 'Success',
+      type: (log.status || '').toLowerCase().includes('error') ? 'danger' : (log.status || '').toLowerCase().includes('warning') ? 'warning' : 'success'
+    }));
+
+  const displayedActivities = dynamicActivities.slice(0, 4);
 
   return (
     <div className="dashboard-container fade-in">
@@ -221,15 +311,15 @@ const AdminDashboard = () => {
                 <div className="qa-icon" style={{ color: 'var(--color-primary)', backgroundColor: 'rgba(107, 142, 177, 0.15)' }}><UserPlus size={20}/></div>
                 <span>Create User</span>
               </button>
-              <button className="quick-action-btn">
+              <button className="quick-action-btn" onClick={() => navigate('/audit-logs')}>
                 <div className="qa-icon" style={{ color: 'var(--color-warning)', backgroundColor: 'rgba(241, 196, 15, 0.15)' }}><TerminalSquare size={20}/></div>
                 <span>Audit Logs</span>
               </button>
-              <button className="quick-action-btn">
+              <button className="quick-action-btn" onClick={() => navigate('/notifications')}>
                 <div className="qa-icon" style={{ color: 'var(--color-success)', backgroundColor: 'rgba(46, 204, 113, 0.15)' }}><Bell size={20}/></div>
                 <span>Broadcast</span>
               </button>
-              <button className="quick-action-btn">
+              <button className="quick-action-btn" onClick={() => navigate('/settings')}>
                 <div className="qa-icon" style={{ color: 'var(--color-danger)', backgroundColor: 'rgba(231, 76, 60, 0.15)' }}><Settings size={20}/></div>
                 <span>System Config</span>
               </button>
@@ -263,11 +353,11 @@ const AdminDashboard = () => {
         <div className="dashboard-card activity-dashboard-card" style={{ display: 'flex', flexDirection: 'column' }}>
           <div className="dashboard-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <div className="flex items-center gap-2">
-              <Activity size={20} className="text-primary" />
+               <Activity size={20} className="text-primary" />
               <h3 style={{ margin: 0 }}>Recent Audit Logs</h3>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowAllActivities(!showAllActivities)}>
-              {showAllActivities ? 'Show Less' : 'View All'}
+            <Button variant="outline" size="sm" onClick={() => navigate('/audit-logs')}>
+              View All
             </Button>
           </div>
           <div className="activity-table-wrapper" style={{ flex: 1 }}>
@@ -278,7 +368,6 @@ const AdminDashboard = () => {
                   <th>Action</th>
                   <th>Status</th>
                   <th>Time</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -301,16 +390,6 @@ const AdminDashboard = () => {
                       <Badge variant={act.type}>{act.status}</Badge>
                     </td>
                     <td className="text-muted text-sm">{act.time}</td>
-                    <td>
-                      <Dropdown 
-                        label="Manage" 
-                        onSelect={(item) => alert(`${item.label} selected for activity ID: ${act.id}`)}
-                        items={[
-                          { label: 'View Details' },
-                          { label: 'Export Log' }
-                        ]}
-                      />
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -322,29 +401,16 @@ const AdminDashboard = () => {
       <Modal 
         isOpen={isUserModalOpen} 
         onClose={() => setIsUserModalOpen(false)}
-        title="Create New User"
-        footer={
-          <>
-            <Button type="button" variant="outline" onClick={() => setIsUserModalOpen(false)}>Cancel</Button>
-            <Button type="button" variant="primary" onClick={handleCreateUser}>Create User</Button>
-          </>
-        }
+        title="Register New User"
       >
-        <form onSubmit={handleCreateUser} id="create-user-form">
-          <FormInput label="Full Name" type="text" placeholder="e.g. Jane Doe" required value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} />
-          <FormInput label="Email Address" type="email" placeholder="e.g. jane@company.com" required value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} />
-          <FormSelect 
-            label="Role"
-            value={newUser.role}
-            onChange={(e) => setNewUser({...newUser, role: e.target.value})}
-            options={[
-              { value: 'Admin', label: 'Administrator' },
-              { value: 'Legal Manager', label: 'Legal Manager' },
-              { value: 'Compliance Officer', label: 'Compliance Officer' },
-              { value: 'Contract Manager', label: 'Contract Manager' }
-            ]}
-          />
-        </form>
+        <div style={{ padding: '0.5rem 0' }}>
+          {createError && (
+            <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', fontSize: '0.85rem', textAlign: 'center', border: '1px solid #f87171' }}>
+              {createError}
+            </div>
+          )}
+          <SignupForm onSubmit={handleCreateUserFull} disabled={isCreating} />
+        </div>
       </Modal>
     </div>
   );

@@ -47,15 +47,20 @@ class NewPassword(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    full_name: Optional[str] = None
-    phone: Optional[str] = None
+    user_id: int
+    role: str
+    full_name: str
+    email: EmailStr
+    phone: str
 
-    company_name: Optional[str] = None
-    department: Optional[str] = None
-    designation: Optional[str] = None
-    location: Optional[str] = None
+    employee_id: str
+    company_name: str
+    department: str
+    designation: str
+    location: str
+    join_date: datetime
 
-    is_active: Optional[bool] = None
+    is_active: bool
 
 
 class UserResponse(BaseModel):

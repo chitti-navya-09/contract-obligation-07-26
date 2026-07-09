@@ -1,5 +1,3 @@
-import uuid
-from typing import Optional
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Cookie, Response
 from sqlalchemy.orm import Session
@@ -9,7 +7,8 @@ from database.core import get_db, SessionLocal
 from entities.user import User
 from entities.otp import OTP
 from core.config import settings
-from auth.service import send_otp
+from audit_logs.service import create_audit_log
+from auth.utils import send_otp
 from auth.service import (
     hash_password,
     verify_password,
@@ -24,7 +23,6 @@ from auth.models import (
     ChangePassword,
     VerifyOTPRequest,
     NewPassword,
-    UserUpdate,
 )
 
 router = APIRouter(
@@ -56,7 +54,17 @@ def register_user(
         db.commit()
         db.refresh(user)
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail="User allready exist!!")
+
+    create_audit_log(
+        db=db,
+        user_id=user.user_id,
+        user_name=user.full_name,
+        action="register user",
+        status="success",
+        module="Authentication",
+        description="register new user.",
+    )
 
     return user
 
@@ -77,7 +85,26 @@ def login_user(request: UserLogin, response: Response, db: Session = Depends(get
         raise HTTPException(status_code=404, detail="User not exist!!")
 
     if not verify_password(request.password, user.password):
+        create_audit_log(
+            db=db,
+            user_id=user.user_id,
+            user_name=user.full_name,
+            action="change password",
+            status="warning!!",
+            module="Authentication",
+            description="User your login password.but Incorect password!!",
+        )
         raise HTTPException(status_code=404, detail="Incorect password!!")
+
+    create_audit_log(
+        db=db,
+        user_id=user.user_id,
+        user_name=user.full_name,
+        status="success",
+        action="LOGIN",
+        module="Authentication",
+        description="User logged in successfully",
+    )
 
     token = create_access_token(
         {"sub": user.email, "user_id": user.user_id, "role": user.role}
@@ -115,6 +142,16 @@ def update_user(
     db.commit()
     db.refresh(user)
 
+    create_audit_log(
+        db=db,
+        user_id=user.user_id,
+        user_name=user.full_name,
+        status="success",
+        action="update profile",
+        module="update",
+        description="User update your profile details.",
+    )
+
     return user
 
 
@@ -137,12 +174,31 @@ def change_password(
         raise HTTPException(status_code=404, detail="User not exist!!")
 
     if not verify_password(request.old_password, user.password):
+        create_audit_log(
+            db=db,
+            user_id=user.user_id,
+            user_name=user.full_name,
+            action="change password",
+            status="warning",
+            module="Authentication",
+            description="User change your login password.but incorrect old password!!",
+        )
         raise HTTPException(status_code=404, detail="incorrect old password!!")
 
     user.password = hash_password(request.new_password)
 
     db.commit()
     db.refresh(user)
+
+    create_audit_log(
+        db=db,
+        user_id=user.user_id,
+        user_name=user.full_name,
+        action="change password",
+        status="success",
+        module="Authentication",
+        description="User change your login password.",
+    )
 
     return user
 
@@ -164,6 +220,15 @@ async def change_password(
     db.add(otp_data)
     db.commit()
     await send_otp(user.full_name, user.email, otp=generatedOTP)
+    create_audit_log(
+        db=db,
+        user_id=user.user_id,
+        user_name=user.full_name,
+        action="send otp",
+        status="success",
+        module="Authentication",
+        description="OTP has been sent to your registered email.",
+    )
 
     return {"success": True, "message": "OTP has been sent to your registered email."}
 
@@ -214,6 +279,16 @@ def change_password(
 
     if not user:
         raise HTTPException(status_code=404, detail="User not exist!!")
+
+    create_audit_log(
+        db=db,
+        user_id=user.user_id,
+        user_name=user.full_name,
+        action="reset password",
+        status="success",
+        module="Authentication",
+        description="reset login password.",
+    )
 
     user.password = hash_password(request.new_password)
     record.is_verified = False
