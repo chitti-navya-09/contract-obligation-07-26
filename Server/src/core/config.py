@@ -1,7 +1,6 @@
 from typing import List
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from fastapi_mail import ConnectionConfig
 
 
 class Setting(BaseSettings):
@@ -38,16 +37,5 @@ class Setting(BaseSettings):
         case_sensitive=True,
     )
 
-
-conf = ConnectionConfig(
-    MAIL_USERNAME="your_email@gmail.com",
-    MAIL_PASSWORD="your_app_password",
-    MAIL_FROM="your_email@gmail.com",
-    MAIL_PORT=587,
-    MAIL_SERVER="smtp.gmail.com",
-    MAIL_STARTTLS=True,
-    MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=True,
-)
 
 settings = Setting()

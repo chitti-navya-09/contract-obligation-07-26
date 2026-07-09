@@ -15,6 +15,7 @@ import Reports from './pages/reports/Reports';
 import Obligations from './pages/obligations/Obligations';
 import Compliance from './pages/compliance/Compliance';
 import Renewals from './pages/renewals/Renewals';
+import AuditLogs from './pages/auditLogs/AuditLogs';
 import Settings from './pages/settings/Settings';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -124,7 +125,7 @@ function App() {
 
             {/* Role-Specific New Routes (Placeholders except users) */}
             <Route path="users" element={<RoleProtectedRoute module="User Management"><UserManagement /></RoleProtectedRoute>} />
-            <Route path="audit-logs" element={<RoleProtectedRoute module="Audit Logs"><PlaceholderPage title="Audit Logs" /></RoleProtectedRoute>} />
+            <Route path="audit-logs" element={<RoleProtectedRoute module="Audit Logs"><AuditLogs /></RoleProtectedRoute>} />
             <Route path="approvals" element={<PlaceholderPage title="Contract Approvals" />} />
             <Route path="my-contracts" element={<PlaceholderPage title="My Contracts" />} />
             <Route path="my-obligations" element={<PlaceholderPage title="My Obligations" />} />
