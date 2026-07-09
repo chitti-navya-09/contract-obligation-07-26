@@ -1,5 +1,7 @@
+import { API_BASE_URL } from '../../../data/constants';
+
 export const signupService = async (userData) => {
-  const response = await fetch('http://localhost:8000/api/v1/users/', {
+  const response = await fetch(`${API_BASE_URL}/users/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
