@@ -1,11 +1,15 @@
 from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 
 from app.db.database import get_db
 from app.models.user import User
 from app.core.config import settings
-from app.routes.auth import oauth2_scheme
+
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="auth/login"
+)
 
 
 def get_current_user(
@@ -20,6 +24,12 @@ def get_current_user(
         )
 
         email = payload.get("sub")
+
+        if email is None:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token"
+            )
 
         user = db.query(User).filter(
             User.email == email

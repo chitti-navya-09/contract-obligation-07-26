@@ -1,19 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.models.user import User
-from app.schemas.user import RegisterRequest, LoginRequest
+from app.schemas.user import (
+    RegisterRequest,
+    LoginRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest
+)
 from app.core.security import (
     hash_password,
     verify_password,
     create_access_token
 )
+from app.core.dependencies import get_current_user
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
 
 
 @router.post("/register")
@@ -31,12 +37,16 @@ def register(
             detail="Email already registered"
         )
 
+    hashed_password = hash_password(user.password)
+
     new_user = User(
-        full_name=user.name,
+        name=user.name,
+        organization=user.organization,
+        department=user.department,
+        phone=user.phone,
         email=user.email,
-        password=hash_password(user.password),
-        role="Employee",
-        is_active=True
+        password=hashed_password,
+        role=user.role
     )
 
     db.add(new_user)
@@ -50,7 +60,8 @@ def register(
     return {
         "message": "User registered successfully",
         "access_token": token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "role": new_user.role
     }
 
 
@@ -84,11 +95,53 @@ def login(
 
     return {
         "access_token": token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "role": existing_user.role,
+        "name": existing_user.name
     }
 
 
-from app.core.dependencies import get_current_user
+@router.post("/forgot-password")
+def forgot_password(
+    data: ForgotPasswordRequest,
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(
+        User.email == data.email
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    return {
+        "message": "User verified. You can reset your password."
+    }
+
+
+@router.post("/reset-password")
+def reset_password(
+    data: ResetPasswordRequest,
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(
+        User.email == data.email
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    user.password = hash_password(data.new_password)
+    db.commit()
+
+    return {
+        "message": "Password reset successful"
+    }
 
 
 @router.get("/me")
@@ -97,10 +150,12 @@ def get_me(
 ):
     return {
         "id": current_user.id,
-        "full_name": current_user.full_name,
+        "name": current_user.name,
+        "organization": current_user.organization,
+        "department": current_user.department,
+        "phone": current_user.phone,
         "email": current_user.email,
-        "role": current_user.role,
-        "is_active": current_user.is_active
+        "role": current_user.role
     }
 
 

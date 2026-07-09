@@ -14,11 +14,12 @@ from app.routes.contracts import router as contract_router
 # Create all tables
 Base.metadata.create_all(bind=engine)
 
-# FastAPI app
 app = FastAPI(
     title="ContractIQ API",
-    version="1.0.0"
-)
+    version="1.0.0",
+    debug=True
+)# FastAPI app
+
 
 # Authentication routes
 app.include_router(
