@@ -1,152 +1,126 @@
 
-import {
-  CalendarDays,
-  Building2,
-  DollarSign,
-  Clock3,
-  ArrowRight,
-  Eye,
-} from "lucide-react";
+import { Eye } from "lucide-react";
+import { useState } from "react";
 
-const contracts = [
-  {
-    id: 1,
-    name: "HR Analytics Platform",
-    vendor: "Darwinbox Inc.",
-    expiry: "Jul 30, 2024",
-    amount: "$48,000",
-    days: 25,
-    status: "Critical",
-    color: "bg-red-100 text-red-700",
-  },
-  {
-    id: 2,
-    name: "Microsoft 365 Enterprise",
-    vendor: "Microsoft",
-    expiry: "Aug 15, 2024",
-    amount: "$120,000",
-    days: 41,
-    status: "Upcoming",
-    color: "bg-amber-100 text-amber-700",
-  },
-  {
-    id: 3,
-    name: "AWS Cloud Hosting",
-    vendor: "Amazon AWS",
-    expiry: "Sep 10, 2024",
-    amount: "$92,000",
-    days: 68,
-    status: "Upcoming",
-    color: "bg-blue-100 text-blue-700",
-  },
-];
+function ExpiringContracts({ data }) {
+  const [showAll, setShowAll] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [actionMessage, setActionMessage] = useState("");
 
-function ExpiringContracts() {
+  const contracts = Array.isArray(data) && data.length
+    ? data
+        .map((contract) => ({
+          id: contract.id,
+          name: contract.contract_name || contract.name || "Unnamed Contract",
+          vendor: contract.vendor || "Unknown Vendor",
+          expiry: contract.expiry_date || contract.expiry || "TBD",
+          amount: contract.contract_value
+            ? `$${Number(contract.contract_value).toLocaleString()}`
+            : "$0",
+          days: contract.expiry_date
+            ? Math.max(0, Math.ceil((new Date(contract.expiry_date) - new Date()) / (1000 * 60 * 60 * 24)))
+            : 0,
+          status: contract.status || "Upcoming",
+          chipColor: contract.status === "Critical"
+            ? "bg-red-100 text-red-700"
+            : contract.status === "Approved"
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-amber-100 text-amber-700",
+        }))
+        .sort((a, b) => a.days - b.days)
+    : [];
+
+  const visibleContracts = showAll ? contracts : contracts.slice(0, 3);
+
+  const handleView = (id) => {
+    setSelectedId((current) => (current === id ? null : id));
+    setActionMessage("");
+  };
+
+  const handleInitiate = (contract) => {
+    setSelectedId(contract.id);
+    setActionMessage(`Initiated renewal for ${contract.name}.`);
+    setTimeout(() => setActionMessage(""), 4000);
+  };
+
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
-
-      <div className="mb-8 flex items-center justify-between">
-
+    <section className="renewal-card renewal-card--contracts">
+      <div className="section-heading renewal-contracts-heading">
         <div>
-
-          <h2 className="text-2xl font-bold text-slate-900">
-            Contracts Expiring Soon
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Review contracts that need attention
-          </p>
-
+          <h2>Contracts Expiring Soon</h2>
+          <p className="mt-1 text-sm font-medium text-slate-500">Review contracts that need attention</p>
         </div>
-
-        <button className="rounded-xl border border-slate-200 px-5 py-2 text-sm font-semibold hover:bg-slate-100">
-          View All
+        <button
+          className="rounded-xl border border-slate-200 px-5 py-2 text-sm font-semibold hover:bg-slate-100"
+          type="button"
+          onClick={() => setShowAll((prev) => !prev)}
+        >
+          {showAll ? "Show Less" : `View All (${contracts.length})`}
         </button>
-
       </div>
 
-      <div className="space-y-5">
+      {contracts.length === 0 ? (
+        <div className="mx-7 mb-7 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
+          No expiring contracts to display right now.
+        </div>
+      ) : (
+        <div className="contract-list">
+          {visibleContracts.map((contract) => (
+            <article key={contract.id} className="contract-row">
+                      <div className="contract-row__content">
+                <div>
+                  <div className="contract-row__main">
+                    <div>
+                      <h3 className="contract-item__title">{contract.name}</h3>
+                      <p className="contract-item__subtitle">{contract.vendor}</p>
+                    </div>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${contract.chipColor}`}>
+                      {contract.status}
+                    </span>
+                  </div>
 
-        {contracts.map((contract) => (
+                  <div className="contract-row__details">
+                    <div>
+                      <strong>{contract.days}</strong> days left
+                    </div>
+                    <div>{contract.expiry}</div>
+                    <div>{contract.amount}</div>
+                  </div>
+                </div>
 
-          <div
-            key={contract.id}
-            className="rounded-2xl border border-slate-200 p-6 transition hover:shadow-md"
-          >
-
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-
-              <div>
-
-                <div className="flex items-center gap-3">
-
-                  <h3 className="text-xl font-bold text-slate-900">
-                    {contract.name}
-                  </h3>
-
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${contract.color}`}
+                <div className="contract-row__actions">
+                  <button
+                    className="contract-row__button contract-row__button--view"
+                    type="button"
+                    onClick={() => handleView(contract.id)}
                   >
-                    {contract.status}
-                  </span>
-
+                    <Eye size={16} /> View
+                  </button>
+                  <button
+                    className="contract-row__button contract-row__button--renew"
+                    type="button"
+                    onClick={() => handleInitiate(contract)}
+                  >
+                    Initiate Renewal
+                  </button>
                 </div>
-
-                <div className="mt-5 flex flex-wrap gap-6 text-sm text-slate-500">
-
-                  <div className="flex items-center gap-2">
-                    <Building2 size={18} />
-                    {contract.vendor}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <CalendarDays size={18} />
-                    {contract.expiry}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <DollarSign size={18} />
-                    {contract.amount}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Clock3 size={18} />
-                    {contract.days} Days Left
-                  </div>
-
-                </div>
-
               </div>
 
-              <div className="flex gap-3">
+              {selectedId === contract.id && (
+                <div className="contract-details-panel">
+                  <p className="contract-details-panel__text">Review this contract details and confirm renewal action. Status: {contract.status}.</p>
+                  <p className="contract-details-panel__text">Vendor: {contract.vendor}</p>
+                  <p className="contract-details-panel__text">Expiry date: {contract.expiry}</p>
+                  <p className="contract-details-panel__text">Amount: {contract.amount}</p>
+                </div>
+              )}
+            </article>
+          ))}
 
-                <button className="flex items-center gap-2 rounded-xl border border-slate-200 px-5 py-3 font-semibold hover:bg-slate-100">
-
-                  <Eye size={18} />
-
-                  View
-
-                </button>
-
-                <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700">
-
-                  Initiate Renewal
-
-                  <ArrowRight size={18} />
-
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        ))}
-
-      </div>
-
-    </div>
+          {actionMessage && <div className="contract-action-message">{actionMessage}</div>}
+        </div>
+      )}
+    </section>
   );
 }
 

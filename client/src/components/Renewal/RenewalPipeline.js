@@ -9,28 +9,33 @@ import {
   Legend,
 } from "recharts";
 
-const pipelineData = [
-  { month: "Jul", contracts: 3, color: "#2563EB" },
-  { month: "Aug", contracts: 5, color: "#2563EB" },
-  { month: "Sep", contracts: 2, color: "#2563EB" },
-  { month: "Oct", contracts: 7, color: "#2563EB" },
-  { month: "Nov", contracts: 4, color: "#2563EB" },
-  { month: "Dec", contracts: 8, color: "#2563EB" },
+const defaultPipeline = [
+  { month: "Jul", contracts: 0 },
+  { month: "Aug", contracts: 0 },
+  { month: "Sep", contracts: 0 },
+  { month: "Oct", contracts: 0 },
+  { month: "Nov", contracts: 0 },
+  { month: "Dec", contracts: 0 },
 ];
 
-export default function RenewalPipeline() {
+export default function RenewalPipeline({ data }) {
+  const pipelineData = Array.isArray(data) && data.length ? data : defaultPipeline;
+
   return (
     <section className="renewal-card renewal-card--pipeline">
       <div className="section-heading">
-        <h2>Renewal Pipeline</h2>
+        <div>
+          <h2>Renewal Pipeline</h2>
+          <p className="mt-1 text-sm font-medium text-slate-500">Upcoming renewal volume by month</p>
+        </div>
       </div>
 
-      <div className="chart-wrapper">
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={pipelineData} margin={{ top: 12, right: 0, left: -26, bottom: 0 }}>
+      <div className="chart-wrapper chart-wrapper--compact">
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={pipelineData} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
             <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
             <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#94A3B8" />
-            <YAxis axisLine={false} tickLine={false} stroke="#94A3B8" tickCount={5} />
+            <YAxis axisLine={false} tickLine={false} stroke="#94A3B8" tickCount={5} domain={[0, 'dataMax']} padding={{ top: 0.05, bottom: 0.02 }} />
             <Tooltip
               cursor={{ fill: "rgba(59, 130, 246, 0.08)" }}
               contentStyle={{
