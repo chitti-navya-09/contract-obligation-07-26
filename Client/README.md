@@ -1,37 +1,14 @@
-# React + Vite
+                                                       ## Output Screens
+## ContractRepository.jsx
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+<img width="1918" height="1078" alt="Screenshot 2026-07-08 174949" src="https://github.com/user-attachments/assets/b5ff98aa-e19f-434d-b1b7-eaad8f115270" />
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+!!
+## Contract Details.jsx
 
 
+<img width="1918" height="1020" alt="Screenshot 2026-07-08 175211" src="https://github.com/user-attachments/assets/6f955d03-b840-42d0-b055-c745ddd2783d" />
 
-## 🎨 UI/UX Design
+## create new Contract Form 
 
-The complete UI/UX wireframes and prototype for the **ContractIQ** project are available on Figma.
-
-🔗 **Figma Design:**
-https://www.figma.com/design/ijFi89rf2f2GV8GSv5g6HW/ContractIQ---UI-wireframes?node-id=36-2&p=f&t=J4PEbfrKvLjg6LZt-0
-
-🔗 **Figma Design Public:**
-https://pivot-jury-03978791.figma.site/
-
-> The design includes:
-> - Admin Dashboard
-> - Contract Repository
-> - Contract Details
-> - Document Upload
-> - Search & Filters
-> - Archive Management
-> - Responsive UI Wireframes
+ <img width="1913" height="1078" alt="image" src="https://github.com/user-attachments/assets/25f95f7f-dfa6-4eb2-b43a-a825fb7672cc" />
