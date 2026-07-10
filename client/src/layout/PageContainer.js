@@ -1,3 +1,5 @@
+import React from "react";
+
 export default function PageContainer({ children }) {
-  return children || null;
+  return <main className="page-container fade-in">{children}</main>;
 }

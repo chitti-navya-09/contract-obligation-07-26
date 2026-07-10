@@ -1,10 +1,20 @@
+import React from "react";
+import Sidebar from "./layout/Sidebar";
+import Navbar from "./layout/Navbar";
+import PageContainer from "./layout/PageContainer";
+import Home from "./pages/Home";
 import "./assets/global.css";
 
 function App() {
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>Client App</h1>
-      <p>Default scaffold running successfully.</p>
+    <div className="app-container">
+      <Sidebar />
+      <div className="main-content">
+        <Navbar />
+        <PageContainer>
+          <Home />
+        </PageContainer>
+      </div>
     </div>
   );
 }
