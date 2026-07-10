@@ -6,7 +6,7 @@ from app.db.database import Base, engine
 # Models (import them before create_all)
 from app.models.user import User
 from app.models.contract import Contract
-
+from fastapi.middleware.cors import CORSMiddleware
 # Routers
 from app.routes.auth import router as auth_router
 from app.routes.contracts import router as contract_router
@@ -19,7 +19,13 @@ app = FastAPI(
     version="1.0.0",
     debug=True
 )# FastAPI app
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Authentication routes
 app.include_router(

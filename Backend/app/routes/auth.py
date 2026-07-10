@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from sqlalchemy.orm import Session
-
+from app.core.permissions import ROLE_PERMISSIONS
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import (
@@ -171,4 +171,16 @@ def admin_dashboard(
 
     return {
         "message": "Welcome Admin"
+    }
+@router.get("/permissions")
+def get_permissions(
+    current_user: User = Depends(get_current_user)
+):
+    return {
+        "role": current_user.role,
+        "permissions":
+            ROLE_PERMISSIONS.get(
+                current_user.role,
+                []
+            )
     }
