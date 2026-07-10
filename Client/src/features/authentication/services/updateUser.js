@@ -4,20 +4,20 @@ export const updateUser = async (userData) => {
     const payload = {
         user_id: userData.user_id,
         role: userData.role,
-        full_name: userData.name,
+        full_name: userData.name || userData.full_name,
         email: userData.email,
-        phone: userData.phone,
-        employee_id: userData.employeeId,
-        company_name: userData.companyName || "",
-        department: userData.department,
-        designation: userData.designation,
-        location: userData.officeLocation,
-        join_date: userData.join_date,
-        is_active: userData.is_active
+        phone: userData.phone || "0000000000",
+        employee_id: userData.employee_id || "EMP000",
+        company_name: userData.company_name || "",
+        department: userData.department || "",
+        designation: userData.designation || "",
+        location: userData.location || "",
+        join_date: userData.join_date || new Date().toISOString(),
+        is_active: userData.is_active !== false
     };
     try {
         const token = localStorage.getItem("access_token");
-        const response = await fetch(`${BASE_URL}/auth/update_user`, {
+        const response = await fetch(`${BASE_URL}/user/update_user`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

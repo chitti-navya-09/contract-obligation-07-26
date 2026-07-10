@@ -15,6 +15,12 @@ import Dropdown from '../../components/Buttons/Dropdown';
 import Modal from '../../components/Modals/Modal';
 import FormInput from '../../components/Form/FormInput';
 import FormSelect from '../../components/Form/FormSelect';
+import SignupForm from '../../features/authentication/components/SignupForm';
+import { signupService } from '../../features/authentication/services/signup';
+import { getAllUsers } from '../../features/authentication/services/getAllUsers';
+import { deleteUser as deleteUserService } from '../../features/authentication/services/deleteUser';
+import { updateUser as updateUserService } from '../../features/authentication/services/updateUser';
+import { toggleUserStatus as toggleUserStatusService } from '../../features/authentication/services/toggleUserStatus';
 
 const mockUsers = [
   { id: 1, name: 'Alice Smith', email: 'alice.smith@contractiq.com', role: 'Administrator', department: 'IT', status: 'Active' },
@@ -26,53 +32,87 @@ const mockUsers = [
 ];
 
 const UserManagement = () => {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Employee', department: '' });
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [editingUser, setEditingUser] = useState(null);
+
+  React.useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const data = await getAllUsers();
+      setUsers(data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to fetch users');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const nameMatch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const emailMatch = user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const roleMatch = user.role?.toLowerCase().includes(searchTerm.toLowerCase());
+    const deptMatch = user.department?.toLowerCase().includes(searchTerm.toLowerCase());
+    return nameMatch || emailMatch || roleMatch || deptMatch;
+  });
 
-  const handleAddUser = (e) => {
-    e.preventDefault();
-    if (!newUser.name || !newUser.email || !newUser.department) {
-      alert('Please fill out all fields.');
-      return;
+  const handleCreateUserFull = async (formData) => {
+    setIsCreating(true);
+    setCreateError('');
+    try {
+      await signupService(formData);
+      alert(`User ${formData.name || 'New User'} registered successfully!`);
+      fetchUsers();
+      setIsAddUserModalOpen(false);
+    } catch (err) {
+      setCreateError(err.message || 'Registration failed.');
+    } finally {
+      setIsCreating(false);
     }
-
-    const nextId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
-    const userToAdd = {
-      id: nextId,
-      ...newUser,
-      status: 'Active'
-    };
-
-    setUsers([...users, userToAdd]);
-    setIsAddUserModalOpen(false);
-    setNewUser({ name: '', email: '', role: 'Employee', department: '' });
   };
 
-  const toggleUserStatus = (id) => {
-    setUsers(users.map(user => {
-      if (user.id === id) {
-        return { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' };
-      }
-      return user;
-    }));
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    try {
+      await updateUserService(editingUser);
+      alert('User updated successfully!');
+      fetchUsers();
+      setEditingUser(null);
+    } catch (err) {
+      alert(err.message || 'Failed to update user');
+    }
   };
 
-  const deleteUser = (id) => {
+  const handleToggleUserStatus = async (user) => {
+    try {
+      await toggleUserStatusService(user.user_id);
+      fetchUsers();
+    } catch (err) {
+      alert(err.message || 'Failed to change user status');
+    }
+  };
+
+  const handleDeleteUser = async (user_id) => {
     if (window.confirm("Are you sure you want to remove this user?")) {
-      setUsers(users.filter(user => user.id !== id));
+      try {
+        await deleteUserService(user_id);
+        fetchUsers();
+      } catch (err) {
+        alert(err.message || 'Failed to delete user');
+      }
     }
   };
 
@@ -124,7 +164,7 @@ const UserManagement = () => {
             </div>
           </div>
           <div className="stat-content">
-            <h3>{users.filter(u => u.status === 'Active').length}</h3>
+            <h3>{users.filter(u => u.is_active !== false).length}</h3>
           </div>
         </div>
         <div className="stat-card">
@@ -135,7 +175,7 @@ const UserManagement = () => {
             </div>
           </div>
           <div className="stat-content">
-            <h3>{users.filter(u => u.status === 'Inactive').length}</h3>
+            <h3>{users.filter(u => u.is_active === false).length}</h3>
           </div>
         </div>
         <div className="stat-card">
@@ -146,7 +186,7 @@ const UserManagement = () => {
             </div>
           </div>
           <div className="stat-content">
-            <h3>{users.filter(u => u.role === 'Administrator').length}</h3>
+            <h3>{users.filter(u => u.role === 'Admin').length}</h3>
           </div>
         </div>
       </div>
@@ -165,16 +205,22 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--color-text-muted)' }}>
+                    Loading users...
+                  </td>
+                </tr>
+              ) : filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => (
-                  <tr key={user.id}>
+                  <tr key={user.user_id || user.email}>
                     <td>
                       <div className="table-user">
                         <div className="table-avatar" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-primary)', fontWeight: 'bold' }}>
-                          {user.name.substring(0, 2).toUpperCase()}
+                          {(user.full_name || 'U').substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-semibold" style={{ marginBottom: '0.1rem', color: 'var(--color-text)' }}>{user.name}</p>
+                          <p className="font-semibold" style={{ marginBottom: '0.1rem', color: 'var(--color-text)' }}>{user.full_name || 'Unknown User'}</p>
                           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             <Mail size={12} /> {user.email}
                           </p>
@@ -182,25 +228,26 @@ const UserManagement = () => {
                       </div>
                     </td>
                     <td>
-                      <Badge variant={user.role === 'Administrator' ? 'warning' : 'primary'}>{user.role}</Badge>
+                      <Badge variant={user.role === 'Admin' ? 'warning' : 'primary'}>{user.role || 'Unassigned'}</Badge>
                     </td>
                     <td>
-                      <span style={{ fontSize: '0.9rem', color: 'var(--color-text-dark)' }}>{user.department}</span>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--color-text-dark)' }}>{user.department || 'N/A'}</span>
                     </td>
                     <td>
-                      <Badge variant={user.status === 'Active' ? 'success' : 'danger'}>{user.status}</Badge>
+                      <Badge variant={user.is_active !== false ? 'success' : 'danger'}>{user.is_active !== false ? 'Active' : 'Inactive'}</Badge>
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <Dropdown 
                         label={<MoreVertical size={16} />}
                         hideArrow
                         onSelect={(item) => {
-                          if (item.action === 'toggleStatus') toggleUserStatus(user.id);
-                          if (item.action === 'delete') deleteUser(user.id);
+                          if (item.action === 'edit') setEditingUser({ name: user.full_name, ...user });
+                          if (item.action === 'toggleStatus') handleToggleUserStatus(user);
+                          if (item.action === 'delete') handleDeleteUser(user.user_id);
                         }}
                         items={[
                           { label: 'Edit Profile', action: 'edit' },
-                          { label: user.status === 'Active' ? 'Deactivate' : 'Activate', action: 'toggleStatus' },
+                          { label: user.is_active !== false ? 'Deactivate Account' : 'Activate Account', action: 'toggleStatus' },
                           { label: 'Remove User', action: 'delete', danger: true }
                         ]}
                       />
@@ -223,54 +270,113 @@ const UserManagement = () => {
       <Modal 
         isOpen={isAddUserModalOpen} 
         onClose={() => setIsAddUserModalOpen(false)}
-        title="Add New User"
-        footer={
-          <>
-            <Button type="button" variant="outline" onClick={() => setIsAddUserModalOpen(false)}>Cancel</Button>
-            <Button type="button" variant="primary" onClick={handleAddUser}>Create User</Button>
-          </>
-        }
+        title="Register New User"
       >
-        <form onSubmit={handleAddUser} id="add-user-form">
-          <FormInput 
-            label="Full Name" 
-            type="text" 
-            placeholder="e.g. John Doe" 
-            required 
-            value={newUser.name} 
-            onChange={(e) => setNewUser({...newUser, name: e.target.value})} 
-          />
-          <FormInput 
-            label="Email Address" 
-            type="email" 
-            placeholder="e.g. john.doe@contractiq.com" 
-            required 
-            value={newUser.email} 
-            onChange={(e) => setNewUser({...newUser, email: e.target.value})} 
-          />
-          <FormSelect 
-            label="System Role"
-            value={newUser.role}
-            onChange={(e) => setNewUser({...newUser, role: e.target.value})}
-            options={[
-              { value: 'Administrator', label: 'Administrator' },
-              { value: 'Legal Manager', label: 'Legal Manager' },
-              { value: 'Compliance Officer', label: 'Compliance Officer' },
-              { value: 'Contract Manager', label: 'Contract Manager' },
-              { value: 'Department Head', label: 'Department Head' },
-              { value: 'Employee', label: 'Employee' }
-            ]}
-          />
-          <FormInput 
-            label="Department" 
-            type="text" 
-            placeholder="e.g. Finance, Legal, Operations" 
-            required 
-            value={newUser.department} 
-            onChange={(e) => setNewUser({...newUser, department: e.target.value})} 
-          />
-        </form>
+        <div style={{ padding: '0.5rem 0' }}>
+          {createError && (
+            <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', fontSize: '0.85rem', textAlign: 'center', border: '1px solid #f87171' }}>
+              {createError}
+            </div>
+          )}
+          <SignupForm onSubmit={handleCreateUserFull} disabled={isCreating} />
+        </div>
       </Modal>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <Modal 
+          isOpen={!!editingUser} 
+          onClose={() => setEditingUser(null)}
+          title="Edit User Profile"
+          footer={
+            <>
+              <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+              <Button type="button" variant="primary" onClick={handleUpdateUser}>Save Changes</Button>
+            </>
+          }
+        >
+          <form onSubmit={handleUpdateUser} id="edit-user-form">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <FormInput 
+                label="Full Name" 
+                type="text" 
+                required 
+                value={editingUser.name || editingUser.full_name || ''} 
+                onChange={(e) => setEditingUser({...editingUser, name: e.target.value})} 
+              />
+              <FormInput 
+                label="Employee ID" 
+                type="text" 
+                required 
+                value={editingUser.employee_id || ''} 
+                onChange={(e) => setEditingUser({...editingUser, employee_id: e.target.value})} 
+              />
+              <FormInput 
+                label="Email Address" 
+                type="email" 
+                required 
+                readOnly
+                value={editingUser.email || ''} 
+                style={{ backgroundColor: 'var(--color-bg)' }}
+              />
+              <FormInput 
+                label="Phone Number" 
+                type="tel" 
+                required 
+                value={editingUser.phone || ''} 
+                onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})} 
+              />
+              <FormSelect 
+                label="System Role"
+                value={editingUser.role || 'Employee'}
+                onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
+                options={[
+                  { value: 'Admin', label: 'Admin' },
+                  { value: 'Legal Manager', label: 'Legal Manager' },
+                  { value: 'Compliance Officer', label: 'Compliance Officer' },
+                  { value: 'Contract Manager', label: 'Contract Manager' },
+                  { value: 'Employee', label: 'Employee' }
+                ]}
+              />
+              <FormInput 
+                label="Company Name" 
+                type="text" 
+                value={editingUser.company_name || ''} 
+                onChange={(e) => setEditingUser({...editingUser, company_name: e.target.value})} 
+              />
+              <FormInput 
+                label="Department" 
+                type="text" 
+                value={editingUser.department || ''} 
+                onChange={(e) => setEditingUser({...editingUser, department: e.target.value})} 
+              />
+              <FormInput 
+                label="Designation" 
+                type="text" 
+                value={editingUser.designation || ''} 
+                onChange={(e) => setEditingUser({...editingUser, designation: e.target.value})} 
+              />
+              <FormInput 
+                label="Office Location" 
+                type="text" 
+                value={editingUser.location || ''} 
+                onChange={(e) => setEditingUser({...editingUser, location: e.target.value})} 
+              />
+              
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '1.75rem' }}>
+                <input 
+                  type="checkbox" 
+                  id="isActiveCheck"
+                  checked={editingUser.is_active !== false}
+                  onChange={(e) => setEditingUser({...editingUser, is_active: e.target.checked})}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+                <label htmlFor="isActiveCheck" style={{ cursor: 'pointer', fontWeight: '500' }}>Account is Active</label>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 };

@@ -11,7 +11,7 @@ const rolesList = [
   { id: 'Employee', title: 'Employee', desc: 'View assigned obligations', icon: <User size={24} /> },
 ];
 
-const SignupForm = ({ onSubmit }) => {
+const SignupForm = ({ onSubmit, disabled }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     role: '',
@@ -75,7 +75,7 @@ const SignupForm = ({ onSubmit }) => {
         <p className="text-muted" style={{ marginTop: '0.25rem', fontSize: '0.85rem' }}>Select the account type that best describes your responsibilities.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
         {rolesList.map(r => {
           const isSelected = formData.role === r.id;
           return (
@@ -223,11 +223,11 @@ const SignupForm = ({ onSubmit }) => {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <button type="button" onClick={handleBack} className="btn btn-outline" style={{ padding: '0.75rem 1.5rem' }}>
+          <button type="button" onClick={handleBack} disabled={disabled} className="btn btn-outline" style={{ padding: '0.75rem 1.5rem' }}>
             <ChevronLeft size={18} /> Back
           </button>
-          <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}>
-            Create Account <CheckCircle2 size={18} />
+          <button type="submit" disabled={disabled} className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}>
+            {disabled ? 'Creating...' : 'Create Account'} <CheckCircle2 size={18} />
           </button>
         </div>
       </div>

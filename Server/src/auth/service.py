@@ -41,3 +41,5 @@ def verify_token(token: str = Depends(oauth2_scheme)):
 
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+
