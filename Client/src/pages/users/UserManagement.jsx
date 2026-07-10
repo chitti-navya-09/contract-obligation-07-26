@@ -23,12 +23,12 @@ import { updateUser as updateUserService } from '../../features/authentication/s
 import { toggleUserStatus as toggleUserStatusService } from '../../features/authentication/services/toggleUserStatus';
 
 const mockUsers = [
-  { id: 1, name: 'Alice Smith', email: 'alice.smith@contractiq.com', role: 'Administrator', department: 'IT', status: 'Active' },
+  { id: 1, name: 'Alice Smith', email: 'alice.smith@contractiq.com', role: 'Admin', department: 'IT', status: 'Active' },
   { id: 2, name: 'Bob Jones', email: 'bob.jones@contractiq.com', role: 'Legal Manager', department: 'Legal', status: 'Active' },
   { id: 3, name: 'Charlie Davis', email: 'charlie.davis@contractiq.com', role: 'Compliance Officer', department: 'Compliance', status: 'Inactive' },
   { id: 4, name: 'Diana Prince', email: 'diana.prince@contractiq.com', role: 'Contract Manager', department: 'Operations', status: 'Active' },
-  { id: 5, name: 'Evan Wright', email: 'evan.wright@contractiq.com', role: 'Department Head', department: 'Sales', status: 'Active' },
-  { id: 6, name: 'Fiona Gallagher', email: 'fiona.g@contractiq.com', role: 'Employee', department: 'Marketing', status: 'Active' },
+  { id: 5, name: 'Evan Wright', email: 'evan.wright@contractiq.com', role: 'Admin', department: 'Sales', status: 'Active' },
+  { id: 6, name: 'Fiona Gallagher', email: 'fiona.g@contractiq.com', role: 'Contract Manager', department: 'Marketing', status: 'Active' },
 ];
 
 const UserManagement = () => {
@@ -328,14 +328,13 @@ const UserManagement = () => {
               />
               <FormSelect 
                 label="System Role"
-                value={editingUser.role || 'Employee'}
+                value={editingUser.role || 'Admin'}
                 onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
                 options={[
                   { value: 'Admin', label: 'Admin' },
                   { value: 'Legal Manager', label: 'Legal Manager' },
                   { value: 'Compliance Officer', label: 'Compliance Officer' },
-                  { value: 'Contract Manager', label: 'Contract Manager' },
-                  { value: 'Employee', label: 'Employee' }
+                  { value: 'Contract Manager', label: 'Contract Manager' }
                 ]}
               />
               <FormInput 
