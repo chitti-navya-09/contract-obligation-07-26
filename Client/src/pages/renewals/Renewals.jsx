@@ -7,8 +7,7 @@ import {
 } from 'lucide-react';
 import Button from '../../components/Buttons/Button';
 import './Renewals.css';
-
-const API_BASE = 'http://localhost:8000/api';
+import { API_BASE } from "../../constants";
 
 const Renewals = () => {
   const navigate = useNavigate();
