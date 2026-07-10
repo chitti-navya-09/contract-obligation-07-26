@@ -10,8 +10,8 @@ const defaultPredictions = [
   },
 ];
 
-function RenewalPrediction({ data, defaultVisibleCount = 6, onRefresh, isRefreshing = false }) {
-  const [showAll, setShowAll] = useState(true);
+function RenewalPrediction({ data, defaultVisibleCount = 3, onRefresh, isRefreshing = false }) {
+  const [showAll, setShowAll] = useState(false);
   const predictions = Array.isArray(data) && data.length ? data : defaultPredictions;
   const visiblePredictions = showAll ? predictions : predictions.slice(0, defaultVisibleCount);
 
@@ -41,6 +41,9 @@ function RenewalPrediction({ data, defaultVisibleCount = 6, onRefresh, isRefresh
             onClick={() => setShowAll((prev) => !prev)}
           >
             {showAll ? "Show Less" : "Show All"}
+            <span className="prediction-count">
+              {predictions.length}
+            </span>
           </button>
         </div>
       </div>
@@ -93,5 +96,6 @@ function RenewalPrediction({ data, defaultVisibleCount = 6, onRefresh, isRefresh
     </section>
   );
 }
+//console.log(predictions.length);
 
 export default RenewalPrediction;

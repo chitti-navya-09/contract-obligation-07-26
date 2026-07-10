@@ -55,7 +55,7 @@ function ExpiringContracts({ data }) {
           type="button"
           onClick={() => setShowAll((prev) => !prev)}
         >
-          {showAll ? "Show Less" : "Show All"}
+          {showAll ? "Show Less" : "Show All"} ({contracts.length})
         </button>
       </div>
 

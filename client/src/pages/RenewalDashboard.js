@@ -113,7 +113,7 @@ export default function RenewalDashboard() {
             <RenewalPipeline data={dashboard?.pipeline} />
             <RenewalPrediction
               data={dashboard?.predictions}
-              defaultVisibleCount={dashboard?.pipeline?.length ?? 6}
+              defaultVisibleCount={3}
               onRefresh={loadDashboard}
               isRefreshing={loading}
             />
