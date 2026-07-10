@@ -25,14 +25,14 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
   const getNavItemsByRole = (userRole) => {
     const normalizedRole = userRole ? userRole.toLowerCase().trim() : '';
 
-    if (normalizedRole === 'admin' || normalizedRole === 'administrator') {
+    if (normalizedRole === 'admin') {
         return [
           { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
           { path: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
           { path: '/audit-logs', label: 'Audit Logs', icon: <Activity size={20} /> },
           { path: '/users', label: 'User Management', icon: <Users size={20} /> },
         ];
-    } else if (normalizedRole === 'legal manager' || normalizedRole === 'legal') {
+    } else if (normalizedRole === 'legal manager') {
         return [
           { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
           { path: '/contracts', label: 'Contract Repository', icon: <Archive size={20} /> },
@@ -42,7 +42,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           { path: '/reports', label: 'Reports & Analytics', icon: <BarChart3 size={20} /> },
           { path: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
         ];
-    } else if (normalizedRole === 'compliance officer' || normalizedRole === 'compliance') {
+    } else if (normalizedRole === 'compliance officer') {
         return [
           { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
           { path: '/contracts', label: 'Contract Repository', icon: <Archive size={20} /> },
@@ -51,7 +51,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           { path: '/compliance', label: 'Compliance', icon: <ShieldCheck size={20} /> },
           { path: '/notifications', label: 'Notifications', icon: <Bell size={20} /> },
         ];
-    } else if (normalizedRole === 'contract manager' || normalizedRole === 'contract') {
+    } else if (normalizedRole === 'contract manager') {
         return [
           { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
           { path: '/contracts', label: 'Contract Repository', icon: <Archive size={20} /> },
