@@ -3,12 +3,10 @@ import { User, Mail, Lock, Phone, Building, Briefcase, BadgeCheck, MapPin, Users
 import FormInput from '../../../components/Form/FormInput';
 
 const rolesList = [
-  { id: 'Administrator', title: 'Administrator', desc: 'System setup & management', icon: <User size={24} /> },
+  { id: 'Admin', title: 'Admin', desc: 'System setup & management', icon: <User size={24} /> },
   { id: 'Legal Manager', title: 'Legal Manager', desc: 'Manage legal obligations', icon: <Briefcase size={24} /> },
   { id: 'Compliance Officer', title: 'Compliance Officer', desc: 'Ensure regulatory compliance', icon: <BadgeCheck size={24} /> },
   { id: 'Contract Manager', title: 'Contract Manager', desc: 'Handle contract lifecycles', icon: <Building size={24} /> },
-  { id: 'Department Head', title: 'Department Head', desc: 'Oversee department contracts', icon: <Users size={24} /> },
-  { id: 'Employee', title: 'Employee', desc: 'View assigned obligations', icon: <User size={24} /> },
 ];
 
 const SignupForm = ({ onSubmit, disabled }) => {
@@ -32,7 +30,8 @@ const SignupForm = ({ onSubmit, disabled }) => {
     if (name === 'role') {
       if (value === 'Legal Manager') newFormData.department = 'Legal';
       else if (value === 'Compliance Officer') newFormData.department = 'Compliance';
-      else if (value === 'Administrator') newFormData.department = 'Administration';
+      else if (value === 'Admin') newFormData.department = 'Administration';
+      else if (value === 'Contract Manager') newFormData.department = 'Contracts';
       else newFormData.department = '';
     }
     
@@ -179,14 +178,14 @@ const SignupForm = ({ onSubmit, disabled }) => {
   );
 
   const renderStep3 = () => {
-    const isAutoDepartment = ['Administrator', 'Legal Manager', 'Compliance Officer'].includes(formData.role);
+    const isAutoDepartment = ['Admin', 'Legal Manager', 'Compliance Officer', 'Contract Manager'].includes(formData.role);
     return (
       <div className="animate-fade-in">
         <div style={{ marginBottom: '1rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--color-text)', borderBottom: '2px solid var(--color-bg)', paddingBottom: '0.5rem' }}>Organization Details</h3>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          {formData.role === 'Administrator' && (
+          {formData.role === 'Admin' && (
             <div className="input-group" style={{ marginBottom: 0 }}>
               <label className="input-label">Company Name</label>
               <div className="input-with-icon">

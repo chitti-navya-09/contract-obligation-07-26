@@ -17,8 +17,7 @@ class UserRole(str, Enum):
     ADMIN = "Admin"
     LEGAL_MANAGER = "Legal Manager"
     COMPLIANCE_OFFICER = "Compliance Officer"
-    PROCUREMENT_MANAGER = "Procurement Manager"
-    BUSINESS_USER = "Business User"
+    CONTRACT_MANAGER = "Contract Manager"
 
 
 class User(Base):
@@ -29,7 +28,7 @@ class User(Base):
     role = Column(SQLEnum(UserRole), nullable=False)
     full_name = Column(String(200), nullable=False)
     email = Column(String(255), unique=True, index=True)
-    phone = Column(String(12), nullable=False)
+    phone = Column(String(15), nullable=False)
     password = Column(String(255), nullable=False)
     employee_id = Column(String(20), nullable=False)
 
@@ -40,8 +39,5 @@ class User(Base):
     location = Column(String(255), nullable=False)
     join_date = Column(DateTime(timezone=True), server_default=func.now())
 
-    notifications = relationship(
-        "Notification",
-        back_populates="user"
-    )
+    notifications = relationship("Notification", back_populates="user")
     is_active = Column(Boolean, default=True)

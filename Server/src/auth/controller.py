@@ -8,7 +8,7 @@ from entities.user import User
 from entities.otp import OTP
 from core.config import settings
 from audit_logs.service import create_audit_log
-from auth.utils import send_otp
+from auth.mail import send_otp
 from auth.service import (
     hash_password,
     verify_password,
@@ -27,7 +27,7 @@ from auth.models import (
 
 router = APIRouter(
     prefix="/auth",
-    tags=["auth"],
+    tags=["Authentication"],
 )
 
 
@@ -54,7 +54,7 @@ def register_user(
         db.commit()
         db.refresh(user)
     except Exception as e:
-        raise HTTPException(status_code=404, detail="User allready exist!!")
+        raise HTTPException(status_code=404, detail=e)
 
     create_audit_log(
         db=db,
