@@ -11,6 +11,20 @@ from sqlalchemy import (
 
 
 from database.core import Base
+from entities.compliance import Compliance
+from entities.user import User
+from entities.obligation import Obligation
+from entities.renewal import Renewal
+
+
+class ContractStatus(str, Enum):
+    DRAFT = "Draft"
+    PENDING = "Pending"
+    UNDER_REVIEW = "Under Review"
+    ACTIVE = "Active"
+    RENEWAL_DUE = "Renewal Due"
+    EXPIRED = "Expired"
+    TERMINATED = "Terminated"
 
 
 class ContractCategories(str, Enum):
@@ -35,7 +49,7 @@ class Contract(Base):
     responsible_person = Column(String(250), nullable=False)
     contract_value = Column(Integer, nullable=False)
     description = Column(String(500), nullable=False)
-    status = Column(String(100), default="Pending")
+    status = Column(String(100), default=ContractStatus.PENDING,nullable=False)
 
     approval_date = Column(DateTime, nullable=True)
     sent_review_date = Column(DateTime, nullable=True)
