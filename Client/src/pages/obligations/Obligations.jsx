@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  Plus, Search, Filter, CheckCircle, Clock, 
-  AlertTriangle, MoreVertical, Calendar, 
+  Plus, Search, Filter, CheckCircle, Clock,Eye, Edit,
+  Trash2,
+  AlertTriangle, MoreVertical, Calendar,
+Grid3X3,
   ArrowRight, LayoutList 
 } from 'lucide-react';
 import FormInput from '../../components/Form/FormInput';
@@ -24,6 +26,7 @@ const Obligations = () => {
     { id: 'OBL-105', description: 'Data Processing Addendum Review', contractId: 'CON-2021-112', dueDate: '2023-10-15', status: 'Pending', priority: 'Medium' },
   ]);
   const [menuOpen, setMenuOpen] = useState(null);
+  const [viewMode, setViewMode] = useState("table");
 const [selectedObligation, setSelectedObligation] = useState(null);
 
   const [newObligation, setNewObligation] = useState({
@@ -38,22 +41,68 @@ const [selectedObligation, setSelectedObligation] = useState(null);
 });
 
   const getStatusBadge = (status) => {
-    switch(status) {
-      case 'Completed': return <span className="status-pill status-success"><CheckCircle size={14} /> {status}</span>;
-      case 'Pending': return <span className="status-pill status-warning"><Clock size={14} /> {status}</span>;
-      case 'Overdue': return <span className="status-pill status-danger"><AlertTriangle size={14} /> {status}</span>;
-      default: return <span className="status-pill status-default">{status}</span>;
-    }
-  };
-  
+  switch (status) {
+    case "Completed":
+      return (
+        <span className="status-pill status-success">
+          <CheckCircle size={14} /> Completed
+        </span>
+      );
+
+    case "Pending":
+      return (
+        <span className="status-pill status-pending">
+          <Clock size={14} /> Pending
+        </span>
+      );
+
+    case "In Progress":
+      return (
+        <span className="status-pill status-progress">
+          <Clock size={14} /> In Progress
+        </span>
+      );
+
+    case "Due Soon":
+      return (
+        <span className="status-pill status-due">
+          <Clock size={14} /> Due Soon
+        </span>
+      );
+
+    case "Overdue":
+      return (
+        <span className="status-pill status-danger">
+          <AlertTriangle size={14} /> Overdue
+        </span>
+      );
+
+    default:
+      return (
+        <span className="status-pill status-default">
+          {status}
+        </span>
+      );
+  }
+};
   const getPriorityBadge = (priority) => {
-    switch(priority) {
-      case 'High': return <span className="priority-dot dot-danger">High</span>;
-      case 'Medium': return <span className="priority-dot dot-warning">Medium</span>;
-      case 'Low': return <span className="priority-dot dot-success">Low</span>;
-      default: return <span className="priority-dot">{priority}</span>;
-    }
-  };
+  switch (priority) {
+    case "High":
+      return <span className="priority-badge priority-high">High</span>;
+
+    case "Medium":
+      return <span className="priority-badge priority-medium">Medium</span>;
+
+    case "Low":
+      return <span className="priority-badge priority-low">Low</span>;
+
+    case "Critical":
+      return <span className="priority-badge priority-critical">Critical</span>;
+
+    default:
+      return <span className="priority-badge">{priority}</span>;
+  }
+};
 
   const getDueDateStatus = (dueDate) => {
   const today = new Date();
@@ -131,37 +180,94 @@ const completedCount = obligations.filter(
       <div className="obl-header-section">
         <div className="obl-header-content">
           <h1 className="obl-title">Obligation Tracking</h1>
-          <p className="obl-subtitle">Monitor and manage all contractual obligations, deliverables, and deadlines.</p>
+          <p className="obl-subtitle"><p>
+  {obligations.length} Obligations • {overdueCount} Overdue
+</p></p>
         </div>
-        <div className="obl-header-actions">
-          <Button variant="primary" onClick={() => setIsAddModalOpen(true)} icon={Plus}>
-            New Obligation
-          </Button>
-        </div>
+       <div className="obl-header-actions">
+
+  
+    <button
+  className={`view-toggle ${viewMode === "table" ? "active" : ""}`}
+  onClick={() => setViewMode("table")}
+>
+  <LayoutList size={16} />
+</button>
+
+<button
+  className={`view-toggle ${viewMode === "grid" ? "active" : ""}`}
+  onClick={() => setViewMode("grid")}
+>
+  <Grid3X3 size={16} />
+</button>
+
+
+
+  <Button
+    variant="primary"
+    onClick={() => setIsAddModalOpen(true)}
+    icon={Plus}
+  >
+    Add Obligation
+  </Button>
+
+</div>
       </div>
 
       <div className="obl-analytics-grid">
-        <div className="obl-card glass-orange">
-          <div className="obl-card-top">
-            <div className="obl-card-icon"><AlertTriangle size={24} /></div>
-          </div>
-          <div className="obl-card-data">
-            <h3>Overdue Actions</h3>
-            <div className="obl-val">{overdueCount}</div>
-            <p>Immediate attention required</p>
-          </div>
-        </div>
+        <div className="obl-card glass-red">
+  <div className="obl-card-top">
+    <div className="obl-card-icon">
+      <AlertTriangle size={24} />
+    </div>
+  </div>
 
-        <div className="obl-card glass-blue">
-          <div className="obl-card-top">
-            <div className="obl-card-icon"><Clock size={24} /></div>
-          </div>
-          <div className="obl-card-data">
-            <h3>Pending Deliverables</h3>
-            <div className="obl-val">{pendingCount}</div>
-            <p>Upcoming in next 30 days</p>
-          </div>
-        </div>
+  <div className="obl-card-data">
+    <div className="obl-val">{overdueCount}</div>
+    <h3>Overdue</h3>
+    <p>Past due obligations</p>
+  </div>
+</div>
+
+        <div className="obl-card glass-orange">
+  <div className="obl-card-top">
+    <div className="obl-card-icon">
+      <Clock size={24} />
+    </div>
+  </div>
+
+  <div className="obl-card-data">
+    <div className="obl-val">2</div>
+    <h3>Due Soon</h3>
+    <p>Due within 7 days</p>
+  </div>
+</div>
+<div className="obl-card glass-blue">
+  <div className="obl-card-top">
+    <div className="obl-card-icon">
+      <Clock size={24} />
+    </div>
+  </div>
+
+  <div className="obl-card-data">
+    <div className="obl-val">1</div>
+    <h3>In Progress</h3>
+    <p>Currently being worked on</p>
+  </div>
+</div>
+<div className="obl-card glass-gray">
+  <div className="obl-card-top">
+    <div className="obl-card-icon">
+      <Clock size={24} />
+    </div>
+  </div>
+
+  <div className="obl-card-data">
+    <div className="obl-val">{pendingCount}</div>
+    <h3>Pending</h3>
+    <p>Waiting to start</p>
+  </div>
+</div>
 
         <div className="obl-card glass-green">
           <div className="obl-card-top">
@@ -181,7 +287,7 @@ const completedCount = obligations.filter(
             <Search size={18} className="search-icon" />
             <input 
               type="text" 
-              placeholder="Search description or ID..." 
+              placeholder="Search contracts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -211,116 +317,128 @@ const completedCount = obligations.filter(
           </div>
         </div>
 
-        <div className="obl-table-wrapper">
+        <div
+  className="obl-table-wrapper"
+  style={{
+    display: viewMode === "table" ? "block" : "none",
+  }}
+>
           <table className="obl-data-table">
             <thead>
-              <tr>
-                <th>Obligation Details</th>
-                <th>Due Date</th>
-                <th>Priority</th>
-                <th>Progress</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
+  <tr>
+    <th>ID</th>
+    <th>TITLE / TYPE</th>
+    <th>CONTRACT</th>
+    <th>DUE DATE</th>
+    <th>PRIORITY</th>
+    <th>STATUS</th>
+    <th>PROGRESS</th>
+    <th>ASSIGNEE</th>
+    <th style={{ textAlign: "right" }}>ACTIONS</th>
+  </tr>
+</thead>
             <tbody>
               {filteredObligations.map((obligation, index) => (
               <tr
   key={obligation.id}
   className="obl-table-row"
   style={{
-    animationDelay: `${index * 0.05}s`,
-    backgroundColor:
-      obligation.status === "Overdue" ? "#ffeaea" : "transparent",
-  }}
+  animationDelay: `${index * 0.05}s`,
+}}
 >
-                  <td>
-                    <div className="obl-entity">{obligation.description}</div>
-                   <div className="obl-meta">
-  ID: {obligation.id} • Contract: {obligation.contractId}
-</div>
+<td>
+  <strong>{obligation.id}</strong>
+</td>
 
-<div className="obl-meta">
-  Assigned To: {obligation.assignedTo || "Not Assigned"}
-</div>
+<td>
+  <div className="obl-entity">
+    {obligation.description}
+  </div>
 
-<div className="obl-meta">
-  Progress: {obligation.progress}
-</div>
+  <div className="obl-meta">
+    {obligation.obligationType}
+  </div>
+</td>
 
-<div className="obl-meta">
-  Type: {obligation.obligationType}
-</div>
-                  </td>
-                  <td>
-  <div className="obl-value-text flex items-center gap-2">
-    <Calendar size={14} className="text-muted" />
+<td>
+  {obligation.contractId}
+</td>
+
+<td>
+  <div className="obl-value-text">
+    <Calendar size={14} />
     {obligation.dueDate}
   </div>
 
-  <div style={{ marginTop: "4px", fontSize: "12px" }}>
+  <div className="obl-meta">
     {getDueDateStatus(obligation.dueDate)}
   </div>
 </td>
+                  
+  
                   <td>{getPriorityBadge(obligation.priority)}</td>
-
+                  <td>
+  {getStatusBadge(obligation.status)}
+</td>
 <td>
-  <span className="status-pill status-default">
-    {obligation.progress}
-  </span>
+  <div className="progress-wrapper">
+    <div className="progress-bar">
+      <div
+        className="progress-fill"
+        style={{ width: obligation.progress }}
+      ></div>
+    </div>
+
+    <span className="progress-text">
+      {obligation.progress}
+    </span>
+  </div>
+</td>
+<td>
+  {obligation.assignedTo || "Not Assigned"}
 </td>
 
-<td>{getStatusBadge(obligation.status)}</td>
-                  <td className="obl-action-cell">
-                    <div className="obl-action-group">
-                      {obligation.status !== 'Completed' && (
-                        <button 
-                          className="obl-action-btn complete-btn" 
-                          title="Mark Completed" 
-                          onClick={(e) => handleStatusChange(e, obligation.id, 'Completed')}
-                        >
-                          <CheckCircle size={14} /> Done
-                        </button>
-                      )}
-                      <div style={{ position: "relative" }}>
-  <button
-    className="obl-icon-btn"
-    onClick={() =>
-      setMenuOpen(menuOpen === obligation.id ? null : obligation.id)
-    }
-  >
-    <MoreVertical size={16} />
-  </button>
+                 <td className="obl-action-cell">
+  <div className="obl-action-group">
 
-  {menuOpen === obligation.id && (
-    <div className="action-menu">
-      <button
-  onClick={() => {
-    setSelectedObligation(obligation);
-    setNewObligation(obligation);
-    setIsAddModalOpen(true);
-    setMenuOpen(null);
-  }}
->
-  ✏️ Edit
-</button>
-      <button
-  onClick={() => {
-    if (window.confirm("Are you sure you want to delete this obligation?")) {
-      setObligations(
-        obligations.filter((o) => o.id !== obligation.id)
-      );
-    }
-    setMenuOpen(null);
-  }}
->
-  🗑️ Delete
-</button>
-    </div>
-  )}
-</div>
-                    </div>
-                  </td>
+    {/* View */}
+    <button
+      className="obl-icon-btn"
+      title="View"
+    >
+      <Eye size={16} />
+    </button>
+
+    {/* Edit */}
+    <button
+      className="obl-icon-btn"
+      title="Edit"
+      onClick={() => {
+        setSelectedObligation(obligation);
+        setNewObligation(obligation);
+        setIsAddModalOpen(true);
+      }}
+    >
+      <Edit size={16} />
+    </button>
+
+    {/* Delete */}
+    <button
+      className="obl-icon-btn delete-btn"
+      title="Delete"
+      onClick={() => {
+        if (window.confirm("Are you sure you want to delete this obligation?")) {
+          setObligations(
+            obligations.filter((o) => o.id !== obligation.id)
+          );
+        }
+      }}
+    >
+      <Trash2 size={16} />
+    </button>
+
+  </div>
+</td>
                 </tr>
               ))}
             </tbody>
@@ -334,8 +452,35 @@ const completedCount = obligations.filter(
           )}
         </div>
       </div>
+{viewMode === "grid" && (
+  <div className="obl-grid-view">
 
-      <Modal 
+    {filteredObligations.map((obligation) => (
+
+      <div className="obl-grid-card" key={obligation.id}>
+
+        <h4>{obligation.description}</h4>
+
+        <p>{obligation.contractId}</p>
+
+        {getPriorityBadge(obligation.priority)}
+
+        {getStatusBadge(obligation.status)}
+
+        <div className="progress-bar">
+          <div
+            className="progress-fill"
+            style={{ width: obligation.progress }}
+          ></div>
+        </div>
+
+      </div>
+
+    ))}
+
+  </div>
+)}
+   <Modal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)}
         title="Add New Obligation"
