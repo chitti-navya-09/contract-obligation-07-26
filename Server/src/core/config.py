@@ -10,9 +10,19 @@ class Setting(BaseSettings):
     ALLOWED_ORIGINS: List[str] = []
 
     DATABASE_URL: str = ""
+
+    # JWT
     SECRET_KEY: str = ""
     ALGORITHM: str = ""
     ACCESS_TOKEN_EXPIRE_MINUTES: int = ""
+
+    # Send Mail
+    EMAIL_BACKEND: str = ""
+    EMAIL_HOST: str = ""
+    EMAIL_USE_TLS: bool = True
+    EMAIL_PORT: int = 587
+    EMAIL_HOST_USER: str = ""
+    EMAIL_HOST_PASSWORD: str = ""
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod

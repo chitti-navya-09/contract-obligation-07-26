@@ -5,12 +5,10 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     Enum as SQLEnum,
-    ForeignKey,
-    JSON,
 )
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
 from enum import Enum
+from sqlalchemy.orm import relationship
 
 from database.core import Base
 
@@ -42,4 +40,8 @@ class User(Base):
     location = Column(String(255), nullable=False)
     join_date = Column(DateTime(timezone=True), server_default=func.now())
 
+    notifications = relationship(
+        "Notification",
+        back_populates="user"
+    )
     is_active = Column(Boolean, default=True)
