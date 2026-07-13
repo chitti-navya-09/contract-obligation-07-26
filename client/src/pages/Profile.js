@@ -49,7 +49,15 @@ const TABS = [
 export default function Profile() {
   const { setUser: setGlobalUser } = useUI();
   const [tab, setTab] = useState("personal");
-  const [user, setUser] = useState(MOCK_USER);
+  const [user, setUser] = useState({
+    full_name: "",
+    email: "",
+    role: "",
+    department: "",
+    job_title: "",
+    phone: "",
+    bio: "",
+  });
   const [mfa, setMfa] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
@@ -78,9 +86,13 @@ export default function Profile() {
           const data = await res.json();
           setUser(prev => ({ ...prev, ...data }));
           setGlobalUser({ name: data.full_name, role: data.role, email: data.email });
+        } else {
+          setUser(MOCK_USER);
+          setGlobalUser({ name: MOCK_USER.full_name, role: MOCK_USER.role, email: MOCK_USER.email });
         }
       } catch {
-        /* backend offline — use mock */
+        setUser(MOCK_USER);
+        setGlobalUser({ name: MOCK_USER.full_name, role: MOCK_USER.role, email: MOCK_USER.email });
       }
     }
     loadProfile();

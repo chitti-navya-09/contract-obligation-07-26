@@ -22,9 +22,9 @@ const FILTERS = ["All", "Contracts", "Compliance", "Renewals", "Workflow", "Risk
 export default function Notifications() {
   const { setNotificationCount } = useUI();
   const [filter, setFilter] = useState("All");
-  const [notifs, setNotifs] = useState(MOCK_NOTIFICATIONS);
+  const [notifs, setNotifs] = useState([]);
   const [dismissingIds, setDismissingIds] = useState([]);
-  const [upcomingRenewals] = useState(MOCK_UPCOMING_RENEWALS);
+  const [upcomingRenewals, setUpcomingRenewals] = useState([]);
 
   // Fetch from live database if available
   useEffect(() => {
@@ -36,9 +36,15 @@ export default function Notifications() {
           setNotifs(data);
           const unreadCount = data.filter(n => !n.is_read).length;
           setNotificationCount(unreadCount);
+          setUpcomingRenewals(MOCK_UPCOMING_RENEWALS); // Renewals are client-side only
+        } else {
+          setNotifs(MOCK_NOTIFICATIONS);
+          setUpcomingRenewals(MOCK_UPCOMING_RENEWALS);
         }
       } catch (err) {
         console.warn("Backend unavailable, using localized mock data");
+        setNotifs(MOCK_NOTIFICATIONS);
+        setUpcomingRenewals(MOCK_UPCOMING_RENEWALS);
       }
     }
     loadNotifications();

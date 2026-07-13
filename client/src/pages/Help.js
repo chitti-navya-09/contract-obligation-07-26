@@ -23,7 +23,7 @@ function FaqAccordionItem({ item }) {
 }
 
 export default function Help() {
-  const [faqs, setFaqs] = useState(MOCK_FAQS);
+  const [faqs, setFaqs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Ticket States
@@ -41,9 +41,12 @@ export default function Help() {
         if (res.ok) {
           const data = await res.json();
           setFaqs(data);
+        } else {
+          setFaqs(MOCK_FAQS);
         }
       } catch (err) {
         console.warn("Backend unavailable, using default FAQ database");
+        setFaqs(MOCK_FAQS);
       }
     }
     loadFaqs();

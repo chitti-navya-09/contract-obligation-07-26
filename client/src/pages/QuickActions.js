@@ -16,34 +16,43 @@ const ICON_MAP = {
 };
 
 export default function QuickActions() {
-  const actions = MOCK_QUICK_ACTIONS;
+  const [actions, setActions] = useState([]);
   const [logs, setLogs] = useState([]);
   const [executingId, setExecutingId] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Load execution logs if available
+  // Load execution actions & logs
   useEffect(() => {
-    async function loadLogs() {
+    async function loadData() {
       try {
-        const res = await fetch("/api/quick-actions/logs");
-        if (res.ok) {
-          const data = await res.json();
-          setLogs(data);
+        const [resActions, resLogs] = await Promise.all([
+          fetch("/api/quick-actions"),
+          fetch("/api/quick-actions/logs")
+        ]);
+        if (resActions.ok) {
+          const actionData = await resActions.json();
+          setActions(actionData);
         } else {
-          // Setup initial mock logs
+          setActions(MOCK_QUICK_ACTIONS);
+        }
+        if (resLogs.ok) {
+          const logData = await resLogs.json();
+          setLogs(logData);
+        } else {
           setLogs([
             { id: 1, label: "Ping Overdue Owners", time: "10 mins ago", status: "Success" },
             { id: 2, label: "Trigger Backup snapshot", time: "1 hr ago", status: "Success" },
           ]);
         }
       } catch (err) {
+        setActions(MOCK_QUICK_ACTIONS);
         setLogs([
           { id: 1, label: "Ping Overdue Owners", time: "10 mins ago", status: "Success" },
           { id: 2, label: "Trigger Backup snapshot", time: "1 hr ago", status: "Success" },
         ]);
       }
     }
-    loadLogs();
+    loadData();
   }, []);
 
   async function handleExecute(action) {

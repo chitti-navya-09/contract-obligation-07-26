@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { MOCK_USER } from '../data/mockData';
 
 const UIContext = createContext(null);
 
 export function UIProvider({ children }){
   const [notificationCount, setNotificationCount] = useState(2);
-  const [user, setUser] = useState({name:'Arjun Mehta', role:'Administrator', email:'arjun.mehta@contractiq.com'});
+  const [user, setUser] = useState({ name: '', role: '', email: '' });
   const [theme, setTheme] = useState('light');
   const [toast, setToast] = useState({ visible: false, message: "" });
 
@@ -19,9 +20,11 @@ export function UIProvider({ children }){
         if (res.ok) {
           const data = await res.json();
           setUser({ name: data.full_name, role: data.role, email: data.email });
+        } else {
+          setUser({ name: MOCK_USER.full_name, role: MOCK_USER.role, email: MOCK_USER.email });
         }
       } catch (err) {
-        // Fallback to default state
+        setUser({ name: MOCK_USER.full_name, role: MOCK_USER.role, email: MOCK_USER.email });
       }
     }
     loadUserProfile();

@@ -61,20 +61,23 @@ export default function Settings() {
   const [connectingKey, setConnectingKey] = useState(null);
 
   // People State
-  const [invitedUsers, setInvitedUsers] = useState(MOCK_INVITED_USERS);
+  const [invitedUsers, setInvitedUsers] = useState([]);
   const [inviteForm, setInviteForm] = useState({ email: "", role: "Viewer", department: "", message: "" });
 
   // Page level messaging
   const [saved, setSaved] = useState(false);
   const [billingMsg, setBillingMsg] = useState("");
 
-  // Fetch live settings if backend is reachable
+  // Fetch live settings and invitations if backend is reachable
   useEffect(() => {
-    async function loadSettings() {
+    async function loadData() {
       try {
-        const res = await fetch("/api/settings");
-        if (res.ok) {
-          const data = await res.json();
+        const [resSettings, resInvites] = await Promise.all([
+          fetch("/api/settings"),
+          fetch("/api/users/invitations")
+        ]);
+        if (resSettings.ok) {
+          const data = await resSettings.json();
           setOrgName(data.org_name || "Acme Corp");
           setCurrency(data.currency || "USD");
           setDateFormat(data.date_format || "YYYY-MM-DD");
@@ -87,11 +90,18 @@ export default function Settings() {
             sso: data.sso,
           });
         }
+        if (resInvites.ok) {
+          const invites = await resInvites.json();
+          setInvitedUsers(invites);
+        } else {
+          setInvitedUsers(MOCK_INVITED_USERS);
+        }
       } catch (err) {
-        console.warn("Backend settings unavailable, falling back to local state");
+        console.warn("Backend unavailable, falling back to local mock state");
+        setInvitedUsers(MOCK_INVITED_USERS);
       }
     }
-    loadSettings();
+    loadData();
   }, []);
 
   /* ── Save Settings ── */

@@ -6,8 +6,8 @@ import {
 import { DownloadIcon, BarIcon, ShieldIcon, InfoIcon } from "../components/Icons";
 
 export default function Reports() {
-  const [kpis, setKpis] = useState(MOCK_KPIS);
-  const [monthlyVolume, setMonthlyVolume] = useState(MOCK_MONTHLY_VOLUME);
+  const [kpis, setKpis] = useState([]);
+  const [monthlyVolume, setMonthlyVolume] = useState([]);
   const [filterRange, setFilterRange] = useState("QTD");
 
   // Fetch live metrics if backend is wired up
@@ -23,9 +23,14 @@ export default function Reports() {
           const volumeData = await resVolume.json();
           setKpis(metricsData);
           setMonthlyVolume(volumeData);
+        } else {
+          setKpis(MOCK_KPIS);
+          setMonthlyVolume(MOCK_MONTHLY_VOLUME);
         }
       } catch (err) {
         console.warn("Backend metrics endpoint not accessible, falling back to mock data.", err);
+        setKpis(MOCK_KPIS);
+        setMonthlyVolume(MOCK_MONTHLY_VOLUME);
       }
     }
     fetchMetrics();
