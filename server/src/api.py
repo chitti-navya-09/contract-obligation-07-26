@@ -11,7 +11,7 @@ from src.support.controller import router as support_router
 from src.quick_actions.controller import router as quick_actions_router
 from src.health.controller import router as health_router
 
-api_router = APIRouter()
+api_router = APIRouter(prefix="/api")
 api_router.include_router(auth_router)
 api_router.include_router(todos_router)
 api_router.include_router(users_router)
