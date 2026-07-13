@@ -1,25 +1,46 @@
-from sqlalchemy import create_engine
+import os
+from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "sqlite:///./contractiq.db"
+load_dotenv()
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/contractiq"
 )
 
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
+# Force using asyncpg if postgresql url doesn't have it
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+asyncpg://"
+    )
+
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True
+)
+
+async_session = sessionmaker(
     bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False
 )
 
 Base = declarative_base()
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    async with async_session() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
