@@ -293,7 +293,7 @@ def send_reminder_action(db: Session, renewal_id: int):
         db.query(RenewalReminder)
         .filter(
             RenewalReminder.renewal_id == renewal_id,
-            RenewalReminder.sent == False,
+            RenewalReminder.sent.is_(False),
         )
         .all()
     )

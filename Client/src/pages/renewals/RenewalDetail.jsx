@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, User, Building2, Tag, Clock, DollarSign,
   CheckCircle, XCircle, RefreshCw, AlertTriangle, Shield,
-  Bell, FileText, ChevronRight
+  Bell, FileText, PlayCircle
 } from 'lucide-react';
 import Button from '../../components/Buttons/Button';
 import './RenewalDetail.css';
