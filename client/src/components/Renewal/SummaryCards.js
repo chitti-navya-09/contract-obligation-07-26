@@ -75,17 +75,31 @@ function SummaryCards({ data }) {
 
         return (
           <article
-            key={card.title}
-            className={`summary-card rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${card.cardClass}`}
-          >
+              key={card.title}
+              className="summary-card bg-white rounded-[28px] border border-slate-200 p-7 shadow-sm flex items-center justify-between"
+            >
             <div className="flex-1">
               <p className="summary-card__label whitespace-pre-line">{card.title}</p>
               <h2 className="summary-card__value mt-5">{card.value}</h2>
               <p className="summary-card__subtitle">{card.subtitle}</p>
             </div>
 
-            <div className={`${card.iconBg} flex h-14 w-14 items-center justify-center rounded-2xl`}>
-              <Icon className={`${card.iconColor}`} size={28} />
+            <div
+                className={`summary-card__icon ${
+                card.title.includes("30")
+                  ? "summary-card__icon--red"
+                  : card.title.includes("60")
+                  ? "summary-card__icon--amber"
+                  : card.title.includes("90")
+                  ? "summary-card__icon--blue"
+                  : "summary-card__icon--emerald"
+              }`}
+            >
+              <Icon
+                size={28}
+                strokeWidth={2.2}
+                className={card.iconColor}
+              />
             </div>
           </article>
         );

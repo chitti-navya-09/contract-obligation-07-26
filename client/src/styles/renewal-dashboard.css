@@ -10,26 +10,9 @@
   border-radius: 24px;
   box-shadow: 0 20px 48px rgba(15, 23, 42, 0.06);
 }
-.prediction-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.prediction-count {
- 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 8px;
-  background: #e2e8f0;
-  color: #334155;
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 700;
-}
+
+
 
 .renewal-card--form {
   padding: 24px;
@@ -146,44 +129,105 @@
 }
 
 .summary-card {
-  align-items: center;
   display: flex;
-  gap: 16px;
-  padding: 24px;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+
+  padding: 28px;
+
+  min-height: 180px;
+
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+
+  transition: all 0.25s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
 }
 
 .summary-card__icon {
-  align-items: center;
-  display: inline-flex;
-  height: 52px;
+  width: 58px;
+  height: 58px;
+
+  display: flex;
   justify-content: center;
-  width: 52px;
+  align-items: center;
+
   border-radius: 18px;
-  color: #ffffff;
+
+  flex-shrink: 0;
 }
 
-.summary-card__icon--red { background: #ef4444; }
-.summary-card__icon--amber { background: #f59e0b; }
-.summary-card__icon--blue { background: #2563eb; }
-.summary-card__icon--emerald { background: #10b981; }
+.summary-card__icon--red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.summary-card__icon--amber {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.summary-card__icon--blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.summary-card__icon--emerald {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.summary-card__icon--red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.summary-card__icon--amber {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.summary-card__icon--blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.summary-card__icon--emerald {
+  background: #dcfce7;
+  color: #16a34a;
+}
 
 .summary-card__label {
-  color: #6b7280;
-  font-size: 0.9rem;
-  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: #64748b;
+
+  white-space: pre-line;
+
+  margin-bottom: 20px;
 }
 
 .summary-card__value {
   color: #0f172a;
-  font-size: 2rem;
+  font-size: 46px;
   font-weight: 800;
+  line-height: 1;
   margin: 0;
 }
 
 .summary-card__subtitle {
+  margin-top: 14px;
   color: #64748b;
-  font-size: 0.92rem;
-  margin: 8px 0 0;
+  font-size: 17px;
 }
 
 .renewal-grid {
@@ -287,11 +331,7 @@
   padding: 14px 18px;
 }
 
-.prediction-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-}
+
 
 @media (max-width: 1080px) {
   .renewal-form__grid {
@@ -311,11 +351,14 @@
   }
 }
 
-.section-heading {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  padding: 22px 28px 0;
+.section-heading{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:24px 28px;
+
+    border-bottom:1px solid #edf2f7;
 }
 
 .section-heading h2 {
@@ -329,10 +372,10 @@
   gap: 16px;
 }
 
-.renewal-prediction-title {
-  align-items: center;
-  display: flex;
-  gap: 12px;
+.renewal-prediction-title{
+    display:flex;
+    align-items:center;
+    gap:12px;
 }
 
 .renewal-prediction-controls {
@@ -341,40 +384,17 @@
   gap: 12px;
 }
 
-.prediction-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 999px;
-  color: #334155;
-  cursor: pointer;
-  font-weight: 700;
-  padding: 0.75rem 1rem;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
 
-.prediction-toggle-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-}
 
-.prediction-icon-pill {
-  align-items: center;
-  background: #eef2ff;
-  border-radius: 16px;
-  display: inline-flex;
-  height: 42px;
-  justify-content: center;
-  width: 42px;
-}
 
 .renewal-card--pipeline,
-.renewal-card--prediction,
 .renewal-card--contracts {
   min-height: 220px;
+}
+.renewal-card--prediction{
+    padding:0;
+    overflow:hidden;
 }
 
 .chart-wrapper {
@@ -385,49 +405,218 @@
   padding: 12px 16px 12px;
 }
 
+.renewal-card--prediction{
+    padding:0;
+    overflow:hidden;
+}
+
+.section-heading{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:24px 28px;
+
+    border-bottom:1px solid #edf2f7;
+}
+
+.renewal-prediction-title{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.prediction-title-icon{
+    color:#8b5cf6;
+}
+
 .prediction-list {
-  display: grid;
-  gap: 8px;
-  padding: 12px 16px 16px;
+    padding: 16px 20px;
+}
+.progress-bar--red {
+  background: #ef4444;
 }
 
-.prediction-item {
-  background: #f8fafc;
-  border-radius: 18px;
-  border: 1px solid #d1d5db;
-  padding: 10px 12px;
+.prediction-percentage--red {
+  color: #ef4444;
+}
+.prediction-subtitle{
+    margin-top:4px;
+    font-size:14px;
+    color:#64748b;
 }
 
-.prediction-item__header {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
+.prediction-title-left{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.renewal-prediction-controls{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.prediction-refresh-btn{
+    width:40px;
+    height:40px;
+    border-radius:12px;
+    border:1px solid #e2e8f0;
+    background:#fff;
+    cursor:pointer;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    transition:.2s;
+}
+
+.prediction-refresh-btn:hover{
+    background:#f8fafc;
+}
+
+.prediction-toggle-btn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 18px;
+    border-radius:999px;
+    border:1px solid #e2e8f0;
+    background:#fff;
+    cursor:pointer;
+    font-weight:600;
+}
+
+.prediction-count{
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    background:#e2e8f0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:13px;
+    font-weight:700;
+}
+
+.prediction-right{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:10px;
+}
+
+.prediction-badge{
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.prediction-badge--emerald{
+    background:#dcfce7;
+    color:#15803d;
+}
+
+.prediction-badge--blue{
+    background:#dbeafe;
+    color:#2563eb;
+}
+
+.prediction-badge--amber{
+    background:#fef3c7;
+    color:#d97706;
+}
+
+.prediction-badge--red{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+.prediction-item{
+
+    background:#f8fafc;
+
+    border:1px solid #edf2f7;
+
+    border-radius:22px;
+
+    padding:16px 18px;
+
+    margin-bottom:14px;
+}
+
+.prediction-item:last-child{
+    margin-bottom:0;
+}
+
+.prediction-item__header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
 }
 
 .prediction-item__meta {
-  color: #475569;
-  font-size: 0.84rem;
-  margin: 0;
+    font-size: 13px;
+    margin-bottom: 4px;
 }
-
-.prediction-badge {
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  padding: 0.3rem 0.6rem;
-}
-
-.prediction-badge--emerald { background: #dcfce7; color: #166534; }
-.prediction-badge--blue { background: #dbeafe; color: #1d4ed8; }
-.prediction-badge--amber { background: #fef3c7; color: #b45309; }
 
 .prediction-item__label {
-  color: #0f172a;
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 4px 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
 }
+
+.prediction-percentage {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.prediction-percentage--emerald{
+
+    color:#10b981;
+}
+
+.prediction-percentage--blue{
+
+    color:#2563eb;
+}
+
+.prediction-percentage--amber{
+
+    color:#f59e0b;
+}
+
+.progress-track {
+    margin-top: 12px;
+    height: 6px;
+}
+
+.progress-bar{
+
+    height:100%;
+
+    border-radius:999px;
+}
+
+.progress-bar--emerald{
+
+    background:#10b981;
+}
+
+.progress-bar--blue{
+
+    background:#3b82f6;
+}
+
+.progress-bar--amber{
+
+    background:#f59e0b;
+}
+
 
 .progress-track {
   background: #eef2ff;
@@ -483,6 +672,32 @@
 .contract-item__value {
   color: #475569;
   font-size: 0.95rem;
+}
+.contract-status{
+    padding:6px 14px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.contract-status--critical{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+.contract-status--approved{
+    background:#dcfce7;
+    color:#15803d;
+}
+
+.contract-status--upcoming{
+    background:#fef3c7;
+    color:#d97706;
+}
+
+.contract-status--renewed{
+    background:#dbeafe;
+    color:#2563eb;
 }
 
 .top-navbar {

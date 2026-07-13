@@ -21,11 +21,14 @@ function ExpiringContracts({ data }) {
             ? Math.max(0, Math.ceil((new Date(contract.expiry_date) - new Date()) / (1000 * 60 * 60 * 24)))
             : 0,
           status: contract.status || "Upcoming",
-          chipColor: contract.status === "Critical"
-            ? "bg-red-100 text-red-700"
-            : contract.status === "Approved"
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-amber-100 text-amber-700",
+              chipColor:
+                contract.status === "Critical"
+                  ? "contract-status contract-status--critical"
+                  : contract.status === "Approved"
+                  ? "contract-status contract-status--approved"
+                  : contract.status === "Renewed"
+                  ? "contract-status contract-status--renewed"
+                  : "contract-status contract-status--upcoming",
         }))
         .sort((a, b) => a.days - b.days)
     : [];
@@ -51,11 +54,15 @@ function ExpiringContracts({ data }) {
           <p className="mt-1 text-sm font-medium text-slate-500">Review contracts that need attention</p>
         </div>
         <button
-          className="rounded-xl border border-slate-200 px-5 py-2 text-sm font-semibold hover:bg-slate-100"
           type="button"
+          className="prediction-toggle-btn"
           onClick={() => setShowAll((prev) => !prev)}
         >
-          {showAll ? "Show Less" : "Show All"} ({contracts.length})
+          {showAll ? "Show Less" : "Show All"}
+
+          <span className="prediction-count">
+            {contracts.length}
+          </span>
         </button>
       </div>
 
