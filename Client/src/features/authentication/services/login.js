@@ -1,5 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
-
+import { API_URL } from '../../../data/constants';
+const BASE_URL = 'http://localhost:8001/api';
 
 export const loginService = async (credentials) => {
   try {

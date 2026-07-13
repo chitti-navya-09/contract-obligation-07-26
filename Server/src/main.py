@@ -21,8 +21,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["*"],
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origin_regex=".*",
     allow_credentials=True,
     allow_methods=["*"],  # GET, POST, PUT, DELETE
     allow_headers=["*"],
@@ -34,4 +33,4 @@ app.include_router(notification_controller.router, prefix=settings.API_PREFIX)
 app.include_router(audit_logs_controller.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)

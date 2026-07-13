@@ -19,6 +19,7 @@ class UserRole(str, Enum):
     COMPLIANCE_OFFICER = "Compliance Officer"
     PROCUREMENT_MANAGER = "Procurement Manager"
     BUSINESS_USER = "Business User"
+    CONTRACT_MANAGER = "Contract Manager"
 
 
 class User(Base):

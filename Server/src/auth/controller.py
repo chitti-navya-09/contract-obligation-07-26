@@ -45,7 +45,7 @@ def register_user(
             full_name=user_data.full_name,
             email=user_data.email,
             phone=user_data.phone,
-            password=hash_password(user_data.password),
+            password=hash_password(user_data.password.encode('utf-8')[:71].decode('utf-8', 'ignore')),
             employee_id=user_data.employee_id,
             company_name=user_data.company_name,
             department=user_data.department,
@@ -56,8 +56,12 @@ def register_user(
         db.commit()
         db.refresh(user)
     except Exception as e:
-        raise HTTPException(status_code=404, detail="User allready exist!!")
-
+        from sqlalchemy.exc import IntegrityError
+        if isinstance(e, IntegrityError):
+            db.rollback()
+            raise HTTPException(status_code=400, detail="User already exists or missing fields!!")
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
     create_audit_log(
         db=db,
         user_id=user.user_id,
