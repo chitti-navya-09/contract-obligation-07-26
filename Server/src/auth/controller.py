@@ -8,7 +8,7 @@ from entities.user import User
 from entities.otp import OTP
 from core.config import settings
 from audit_logs.service import create_audit_log
-from Server.src.auth.mail import send_otp
+from auth.mail import send_otp
 from auth.service import (
     hash_password,
     verify_password,

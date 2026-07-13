@@ -7,7 +7,7 @@ from entities.user import User
 from audit_logs.service import create_audit_log
 from auth.service import verify_token
 from auth.models import UserResponse, UserUpdate
-from Server.src.users.service import admin_required
+from users.service import admin_required
 
 router = APIRouter(
     prefix="/user",
