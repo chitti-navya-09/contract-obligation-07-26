@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from src.database.core import get_db
 from src.database.models import AnalyticsSnapshot, MonthlyVolume
@@ -13,15 +13,14 @@ class MetricResponse(BaseModel):
     value: str
     trend: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class MonthlyVolumeResponse(BaseModel):
     month: str
     value: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 @router.get("/metrics", response_model=List[MetricResponse])
 async def get_metrics(db: AsyncSession = Depends(get_db)):

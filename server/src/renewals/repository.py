@@ -1,15 +1,17 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import Renewal
 
 
 class RenewalRepository:
 
-    def get_all(self, db: Session):
-        return db.query(Renewal).all()
+    async def get_all(self, db: AsyncSession):
+        result = await db.execute(select(Renewal))
+        return result.scalars().all()
 
-    def create(self, db: Session, renewal: Renewal):
+    async def create(self, db: AsyncSession, renewal: Renewal):
         db.add(renewal)
-        db.commit()
-        db.refresh(renewal)
+        await db.commit()
+        await db.refresh(renewal)
         return renewal

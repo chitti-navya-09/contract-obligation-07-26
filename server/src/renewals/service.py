@@ -1,5 +1,7 @@
 from datetime import date, datetime
-from sqlalchemy.orm import Session
+# from sqlalchemy.orm import Session
+from pytest import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import Renewal
 from .repository import RenewalRepository
@@ -10,13 +12,15 @@ class RenewalService:
     def __init__(self):
         self.repo = RenewalRepository()
 
-    def get_all(self, db: Session):
-        return self.repo.get_all(db)
 
-    def create(self, db: Session, data):
+    
+    async def get_all(self, db: AsyncSession):
+        return await self.repo.get_all(db)
+
+    async def create(self, db: AsyncSession, data):
         payload = data.dict() if hasattr(data, "dict") else data.model_dump()
         renewal = Renewal(**payload)
-        return self.repo.create(db, renewal)
+        return await self.repo.create(db, renewal)
 
     def _days_until(self, target_date):
         if not target_date:
@@ -25,8 +29,8 @@ class RenewalService:
             target_date = datetime.fromisoformat(target_date).date()
         return (target_date - date.today()).days
 
-    def dashboard(self, db: Session):
-        renewals = self.repo.get_all(db)
+    async def dashboard(self, db: AsyncSession):
+        renewals = await self.repo.get_all(db)
         total_contracts = len(renewals)
 
         expiring30 = 0
