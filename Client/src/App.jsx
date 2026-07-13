@@ -15,6 +15,7 @@ import Reports from './pages/reports/Reports';
 import Obligations from './pages/obligations/Obligations';
 import Compliance from './pages/compliance/Compliance';
 import Renewals from './pages/renewals/Renewals';
+import RenewalDetail from './pages/renewals/RenewalDetail';
 import AuditLogs from './pages/auditLogs/AuditLogs';
 import Settings from './pages/settings/Settings';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -118,6 +119,7 @@ function App() {
             {/* Obligations & Renewals */}
             <Route path="obligations" element={<RoleProtectedRoute module="Obligation Tracker"><Obligations /></RoleProtectedRoute>} />
             <Route path="renewals" element={<RoleProtectedRoute module="Renewal Dashboard"><Renewals /></RoleProtectedRoute>} />
+            <Route path="renewals/:id" element={<RoleProtectedRoute module="Renewal Dashboard"><RenewalDetail /></RoleProtectedRoute>} />
             <Route path="compliance" element={<RoleProtectedRoute module="Compliance"><Compliance /></RoleProtectedRoute>} />
             
             {/* Settings */}
