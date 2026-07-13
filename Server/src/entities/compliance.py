@@ -18,6 +18,7 @@ class ComplianceStatus(str, Enum):
     NON_COMPLIANT = "Non-Compliant"
     IN_PROGRESS = "In Progress"
     PENDING = "Pending"
+    COMPLETED = "Completed"
 
 
 class RiskLevel(str, Enum):
@@ -35,10 +36,8 @@ class Compliance(Base):
     requirement = Column(String(250), nullable=False)
     category = Column(String(150), nullable=False)
     entity = Column(String(250), nullable=False)
-    status = Column(
-        SQLEnum(ComplianceStatus), default=ComplianceStatus.PENDING, nullable=False
-    )
-    risk_level = Column(SQLEnum(RiskLevel), default=RiskLevel.MEDIUM, nullable=False)
+    status = Column(String(100), default=ComplianceStatus.PENDING.value, nullable=False)
+    risk_level = Column(String(100), default=RiskLevel.MEDIUM.value, nullable=False)
     last_audit = Column(DateTime, nullable=True)
     health_score = Column(Integer, nullable=True)
     audit_notes = Column(String(1000), nullable=True)

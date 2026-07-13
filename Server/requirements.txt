@@ -9,5 +9,6 @@ pydantic-settings
 pwdlib[argon2]
 email-validator
 python-multipart
+reportlab
 fastapi-mail
 
