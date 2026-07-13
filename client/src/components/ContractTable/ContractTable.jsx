@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
 
-import contracts from "../../data/contracts";
-
 import StatusBadge from "../StatusBadge/StatusBadge";
 import ProgressBar from "../ProgressBar/ProgressBar";
 
@@ -12,11 +10,11 @@ import {
 
 import "../../styles/table.css";
 
-function ContractTable() {
+function ContractTable({ contracts }) {
   const navigate = useNavigate();
 
-  const openContractDetails = () => {
-    navigate("/contract-details");
+  const openContractDetails = (id) => {
+    navigate(`/contract-details/${id}`);
   };
 
   return (
@@ -36,67 +34,82 @@ function ContractTable() {
         </thead>
 
         <tbody>
-          {contracts.map((item) => (
-            <tr key={item.id}>
-              <td>
-                <div className="company">
-                  <div className="company-logo">
-                    {item.company.charAt(0)}
+          {contracts.length > 0 ? (
+            contracts.map((item) => (
+              <tr key={item.id}>
+                <td>
+                  <div className="company">
+                    <div className="company-logo">
+                      {item.company.charAt(0)}
+                    </div>
+
+                    <div>
+                      <h4
+                        onClick={() => openContractDetails(item.id)}
+                        style={{
+                          cursor: "pointer",
+                          color: "#5B3DF5",
+                          fontWeight: "600",
+                        }}
+                      >
+                        {item.contract}
+                      </h4>
+
+                      <p>{item.company}</p>
+                    </div>
                   </div>
+                </td>
 
-                  <div>
-                    <h4
-                      onClick={openContractDetails}
-                      style={{
-                        cursor: "pointer",
-                        color: "#5B3DF5",
-                        fontWeight: "600",
-                      }}
-                    >
-                      {item.contract}
-                    </h4>
+                <td>{item.category}</td>
 
-                    <p>{item.company}</p>
+                <td>
+                  <div className="owner">
+                    <div className="owner-avatar">
+                      {item.owner.charAt(0)}
+                    </div>
+
+                    {item.owner}
                   </div>
-                </div>
-              </td>
+                </td>
 
-              <td>{item.category}</td>
+                <td>{item.value}</td>
 
-              <td>
-                <div className="owner">
-                  <div className="owner-avatar">
-                    {item.owner.charAt(0)}
+                <td>
+                  <StatusBadge status={item.status} />
+                </td>
+
+                <td>
+                  <ProgressBar value={item.compliance} />
+                </td>
+
+                <td>{item.renewal}</td>
+
+                <td>
+                  <div className="actions">
+                    <FiEye
+                      style={{ cursor: "pointer" }}
+                      onClick={() => openContractDetails(item.id)}
+                    />
+
+                    <FiMoreVertical />
                   </div>
-
-                  {item.owner}
-                </div>
-              </td>
-
-              <td>{item.value}</td>
-
-              <td>
-                <StatusBadge status={item.status} />
-              </td>
-
-              <td>
-                <ProgressBar value={item.compliance} />
-              </td>
-
-              <td>{item.renewal}</td>
-
-              <td>
-                <div className="actions">
-                  <FiEye
-                    style={{ cursor: "pointer" }}
-                    onClick={openContractDetails}
-                  />
-
-                  <FiMoreVertical />
-                </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td
+                colSpan="8"
+                style={{
+                  textAlign: "center",
+                  padding: "30px",
+                  color: "#888",
+                }}
+              >
+                No contracts found.
               </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>

@@ -8,12 +8,78 @@ import {
   FiArrowLeft,
   FiFileText,
   FiEdit2,
-  FiMoreVertical,
+  FiTrash2,
 } from "react-icons/fi";
 
-import { Link } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 function ContractDetails() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [contract, setContract] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const deleteContract = async () => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this contract?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/contracts/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Delete failed");
+    }
+
+    alert("Contract deleted successfully.");
+
+    navigate("/");
+  } catch (error) {
+    console.error(error);
+    alert("Unable to delete contract.");
+  }
+};
+
+  useEffect(() => {
+    const fetchContract = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(
+          `http://127.0.0.1:8000/contracts/${id}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Contract not found");
+        }
+
+        const data = await response.json();
+        setContract(data);
+      } catch (error) {
+        console.error(error);
+        setContract(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContract();
+  }, [id]);
+
+  if (loading) {
+    return <h2>Loading...</h2>;
+  }
+
+  if (!contract) {
+    return <h2>Contract not found.</h2>;
+  }
   return (
     <div className="details-layout">
       {/* Sidebar */}
@@ -51,20 +117,20 @@ function ContractDetails() {
 
               <div>
                 <div className="title-row">
-                  <h2>Master Services Agreement</h2>
+                  <h2>{contract.contract}</h2>
 
                   <span className="status-badge active">
-                    Active
+                    {contract.status}
                   </span>
                 </div>
 
                 <p className="contract-id">
                   Contract ID:
-                  <span> CON-2024-001</span>
+                  <span>{contract.id}</span>
                 </p>
 
                 <p className="company-name">
-                  Acme Corporation
+                  {contract.company}
                 </p>
               </div>
             </div>
@@ -72,42 +138,51 @@ function ContractDetails() {
             <div className="contract-header-center">
               <div>
                 <span>Start Date</span>
-                <h4>01 Jan 2024</h4>
+                <h4>{contract.start_date}</h4>
               </div>
 
               <div>
                 <span>End Date</span>
-                <h4>31 Dec 2024</h4>
+                <h4>{contract.end_date}</h4>
               </div>
 
               <div>
                 <span>Contract Value</span>
-                <h4>$250,000</h4>
+                <h4>{contract.value}</h4>
               </div>
 
               <div>
                 <span>Days Remaining</span>
                 <h4 className="green-text">
-                  225 Days
+                  {contract.days_remaining} Days
                 </h4>
               </div>
             </div>
 
             <div className="contract-header-right">
-              <button className="edit-btn">
-                <FiEdit2 />
+
+              <button
+                className="edit-btn"
+                onClick={() => navigate(`/edit-contract/${contract.id}`)}
+              >
+               <FiEdit2 />
                 Edit Contract
               </button>
 
-              <button className="action-btn">
-                Actions
-                <FiMoreVertical />
+              <button
+                className="delete-btn"
+                onClick={deleteContract}
+              >
+                <FiTrash2 />
+                Delete
               </button>
-            </div>
-          </div>
 
-          {/* Tabs */}
-          <Tabs />
+            </div> {/* contract-header-right */}
+
+            </div> {/* contract-header-card */}
+
+            {/* Tabs */}
+            <Tabs />
 
           {/* Details Content */}
           <div className="details-content">
@@ -124,43 +199,39 @@ function ContractDetails() {
                 <div className="info-grid">
                   <div className="info-item">
                     <label>Contract Name</label>
-                    <p>Master Services Agreement</p>
+                    <p>{contract.contract}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Contract ID</label>
-                    <p>CON-2024-001</p>
+                    <p>{contract.id}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Contract Type</label>
-                    <p>Service Agreement</p>
+                    <p>{contract.category}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Status</label>
                     <span className="status-active">
-                      Active
+                      {contract.status}
                     </span>
                   </div>
 
                   <div className="info-item">
                     <label>Priority</label>
-                    <p>High</p>
+                    <p>{contract.priority}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Vendor</label>
-                    <p>Acme Corporation</p>
+                    <p>{contract.company}</p>
                   </div>
 
                   <div className="info-item full-width">
                     <label>Description</label>
-                    <p>
-                      This Master Services Agreement governs all
-                      software development and support services
-                      provided by Acme Corporation.
-                    </p>
+                    <p>{contract.description}</p>
                   </div>
                 </div>
               </div>
@@ -174,35 +245,36 @@ function ContractDetails() {
                 <div className="info-grid">
                   <div className="info-item">
                     <label>Contract Value</label>
-                    <p>$250,000</p>
+                     <p>{contract.value}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Paid Amount</label>
-                    <p>$125,000</p>
+                    <p>{contract.paid_amount}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Outstanding</label>
-                    <p>$125,000</p>
+                    <p>{contract.outstanding}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Currency</label>
-                    <p>USD</p>
+                    <p>{contract.currency}</p>
                   </div>
                 </div>
 
                 <div className="payment-progress">
                   <div className="progress-top">
                     <span>Payment Progress</span>
-                    <span>50%</span>
+                    <span>{contract.payment_progress}%</span>
+                    
                   </div>
 
                   <div className="progress-line">
                     <div
                       className="progress-fill"
-                      style={{ width: "50%" }}
+                      style={{ width: `${contract.payment_progress}%` }}
                     ></div>
                   </div>
                 </div>
@@ -217,22 +289,22 @@ function ContractDetails() {
                 <div className="info-grid">
                   <div className="info-item">
                     <label>Renewal Type</label>
-                    <p>Automatic</p>
+                    <p>{contract.renewal_type}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Renewal Date</label>
-                    <p>31 Dec 2024</p>
+                    <p>{contract.renewal}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Notice Period</label>
-                    <p>60 Days</p>
+                    <p>{contract.notice_period}</p>
                   </div>
 
                   <div className="info-item">
                     <label>Auto Renewal</label>
-                    <p>Enabled</p>
+                    <p>{contract.auto_renewal}</p>
                   </div>
                 </div>
               </div>
@@ -251,23 +323,23 @@ function ContractDetails() {
                   <div className="summary-item">
                     <span>Status</span>
                     <strong className="status-active">
-                      Active
+                      {contract.status}
                     </strong>
                   </div>
 
                   <div className="summary-item">
                     <span>Priority</span>
-                    <strong>High</strong>
+                    <strong>{contract.priority}</strong>
                   </div>
 
                   <div className="summary-item">
                     <span>Contract Value</span>
-                    <strong>$250,000</strong>
+                    <strong>{contract.value}</strong>
                   </div>
 
                   <div className="summary-item">
                     <span>Currency</span>
-                    <strong>USD</strong>
+                    <strong>{contract.currency}</strong>
                   </div>
 
                   <div className="summary-item">
@@ -277,7 +349,7 @@ function ContractDetails() {
 
                   <div className="summary-item">
                     <span>Renewal</span>
-                    <strong>Automatic</strong>
+                    <strong>{contract.renewal_type}</strong>
                   </div>
                 </div>
               </div>
@@ -291,22 +363,22 @@ function ContractDetails() {
                 <div className="summary-list">
                   <div className="summary-item">
                     <span>Created On</span>
-                    <strong>15 May 2024</strong>
+                    <strong>{contract.created_on}</strong>
                   </div>
 
                   <div className="summary-item">
                     <span>Effective Date</span>
-                    <strong>01 Jan 2024</strong>
+                    <strong>{contract.effective_date}</strong>
                   </div>
 
                   <div className="summary-item">
                     <span>Expiry Date</span>
-                    <strong>31 Dec 2024</strong>
+                    <strong>{contract.expiry_date}</strong>
                   </div>
 
                   <div className="summary-item">
                     <span>Renewal Reminder</span>
-                    <strong>01 Nov 2024</strong>
+                    <strong>{contract.renewal_reminder}</strong>
                   </div>
                 </div>
               </div>
@@ -320,22 +392,22 @@ function ContractDetails() {
                 <div className="summary-list">
                   <div className="summary-item">
                     <span>Documents</span>
-                    <strong>8 Files</strong>
+                    <strong>{contract.documents} Files</strong>
                   </div>
 
                   <div className="summary-item">
                     <span>Obligations</span>
-                    <strong>12 Items</strong>
+                    <strong>{contract.obligations} Items</strong>
                   </div>
 
                   <div className="summary-item">
                     <span>Tasks</span>
-                    <strong>5 Pending</strong>
+                    <strong>{contract.tasks} Tasks</strong>
                   </div>
 
                   <div className="summary-item">
                     <span>Compliance Score</span>
-                    <strong>96%</strong>
+                    <strong>{contract.compliance}%</strong>
                   </div>
                 </div>
               </div>
