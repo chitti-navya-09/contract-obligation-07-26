@@ -9,6 +9,8 @@ import Badge from '../../components/DataDisplay/Badge';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { Doughnut, Line } from 'react-chartjs-2';
 import { API_URL } from '../../data/constants';
+import { useAuth } from '../../context/AuthContext';
+import Modal from '../../components/Modals/Modal';
 import '../contracts/Contracts.css';
 import './Compliance.css'; 
 
@@ -19,20 +21,8 @@ const Compliance = () => {
   const [activeTab, setActiveTab] = useState('Overview');
 
   // Dynamic userRole state for RBAC checks
-  const [currentRole, setCurrentRole] = useState(localStorage.getItem('user-role') || 'Legal Manager');
-
-  // Listen to role switcher changes in the Navbar dropdown
-  useEffect(() => {
-    const checkRole = () => {
-      setCurrentRole(localStorage.getItem('user-role') || 'Legal Manager');
-    };
-    window.addEventListener('storage', checkRole);
-    window.addEventListener('roleChanged', checkRole);
-    return () => {
-      window.removeEventListener('storage', checkRole);
-      window.removeEventListener('roleChanged', checkRole);
-    };
-  }, []);
+  const { role } = useAuth();
+  const currentRole = role || 'Legal Manager';
 
   // API State Variables
   const [summary, setSummary] = useState(null);
@@ -42,8 +32,8 @@ const Compliance = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modal State Variables
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Initiate Audit Modal State
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     requirement: '',
     category: 'Data Privacy',
@@ -55,6 +45,10 @@ const Compliance = () => {
     lastAudit: new Date().toISOString().split('T')[0]
   });
   const [formSubmitting, setFormSubmitting] = useState(false);
+
+  // Compliance Details Modal State (from remote branch)
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // Check if role has access to Compliance Dashboard (Legal Manager and Compliance Officer only)
   const isAuthorized = currentRole === 'Legal Manager' || currentRole === 'Compliance Officer';
@@ -225,7 +219,7 @@ const Compliance = () => {
         score: 70,
         lastAudit: new Date().toISOString().split('T')[0]
       });
-      setIsModalOpen(false);
+      setIsAuditModalOpen(false);
 
       // Refresh dashboard analytics and tables
       await refreshDashboardData();
@@ -327,7 +321,7 @@ const Compliance = () => {
     );
   }
 
-  // Overall metric configurations (using dynamic data, falling back to mockups on slow load)
+  // Overall metric configurations
   const complianceScoreVal = summary ? summary.compliance_score : 84;
   const compliantContractsCount = summary ? summary.compliant_contracts : 142;
   const compliantContractsTrend = summary ? summary.compliant_contracts_trend : "+12 this month";
@@ -349,7 +343,7 @@ const Compliance = () => {
         </div>
         <div className="comp-header-actions">
           <Button variant="outline" icon={FileText} onClick={handleExportReport}>Export Report</Button>
-          <Button variant="primary" icon={ShieldAlert} onClick={() => setIsModalOpen(true)}>Initiate Audit</Button>
+          <Button variant="primary" icon={ShieldAlert} onClick={() => setIsAuditModalOpen(true)}>Initiate Audit</Button>
         </div>
       </div>
 
@@ -492,7 +486,7 @@ const Compliance = () => {
                     </td>
                     <td>{getStatusBadge(item.status)}</td>
                     <td className="action-cell">
-                      <button className="comp-action-btn"><ChevronRight size={20} /></button>
+                      <button className="comp-action-btn" onClick={() => { setSelectedItem(item); setIsDetailsModalOpen(true); }}><ChevronRight size={20} /></button>
                     </td>
                   </tr>
                 ))}
@@ -510,12 +504,12 @@ const Compliance = () => {
       </div>
 
       {/* Initiate Audit Modal Overlay */}
-      {isModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+      {isAuditModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsAuditModalOpen(false)}>
           <div className="modal-container" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Initiate New Compliance Audit</h2>
-              <button className="modal-close-btn" onClick={() => setIsModalOpen(false)}>
+              <button className="modal-close-btn" onClick={() => setIsAuditModalOpen(false)}>
                 &times;
               </button>
             </div>
@@ -565,7 +559,7 @@ const Compliance = () => {
                     type="text" 
                     id="contractId" 
                     required
-                    placeholder="e.g. CNT-2026-09"
+                    placeholder="e.g. 1"
                     value={formData.contractId}
                     onChange={(e) => setFormData({ ...formData, contractId: e.target.value })}
                   />
@@ -621,7 +615,7 @@ const Compliance = () => {
                 />
               </div>
               <div className="form-actions">
-                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="button" variant="outline" onClick={() => setIsAuditModalOpen(false)}>Cancel</Button>
                 <Button type="submit" variant="primary" disabled={formSubmitting}>
                   {formSubmitting ? 'Initiating...' : 'Submit Audit'}
                 </Button>
@@ -630,6 +624,74 @@ const Compliance = () => {
           </div>
         </div>
       )}
+
+      {/* Compliance Details Modal (from remote branch) */}
+      <Modal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        title="Compliance Details"
+        footer={
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', width: '100%' }}>
+            <Button variant="outline" onClick={() => setIsDetailsModalOpen(false)}>Close</Button>
+            <Button 
+              variant="primary" 
+              onClick={() => {
+                alert(`Action initiated for requirement: ${selectedItem?.requirement}`);
+                setIsDetailsModalOpen(false);
+              }}
+            >
+              Initiate Action
+            </Button>
+          </div>
+        }
+      >
+        {selectedItem && (
+          <div className="compliance-details-modal">
+            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <div>
+                <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>Requirement</p>
+                <h3 style={{ margin: 0, color: 'var(--color-text-main)' }}>{selectedItem.requirement}</h3>
+                <p className="text-muted" style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>ID: {selectedItem.id} • Category: {selectedItem.category}</p>
+              </div>
+              <div>
+                {getStatusBadge(selectedItem.status)}
+              </div>
+            </div>
+
+            <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+              <div>
+                <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>Entity</p>
+                <p style={{ fontWeight: '500' }}>{selectedItem.entity}</p>
+              </div>
+              <div>
+                <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>Risk Level</p>
+                {getRiskLevel(selectedItem.risk)}
+              </div>
+              <div>
+                <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>Last Audit</p>
+                <p style={{ fontWeight: '500' }}>{selectedItem.lastAudit}</p>
+              </div>
+              <div>
+                <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>Health Score</p>
+                <div className="health-score-cell" style={{ justifyContent: 'flex-start' }}>
+                  <span className={`score-text ${selectedItem.score < 50 ? 'text-danger' : selectedItem.score < 80 ? 'text-warning' : 'text-success'}`}>{selectedItem.score}/100</span>
+                  <div className="mini-progress-bg" style={{ width: '80px', marginLeft: '0.75rem' }}>
+                    <div className={`mini-progress-fill ${selectedItem.score < 50 ? 'bg-danger' : selectedItem.score < 80 ? 'bg-warning' : 'bg-success'}`} style={{ width: `${selectedItem.score}%` }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+               <h4 style={{ marginBottom: '0.75rem', color: 'var(--color-text-main)' }}>Audit Notes</h4>
+               <p className="text-muted" style={{ lineHeight: '1.5', fontSize: '0.9rem' }}>
+                 The current compliance status is based on the latest automated check and manual audit findings.
+                 Please review the risk factors associated with this entity. Further documentation might be required to fulfill the <strong>{selectedItem.requirement}</strong> requirements.
+               </p>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

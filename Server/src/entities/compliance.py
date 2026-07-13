@@ -1,43 +1,62 @@
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, Date, DateTime
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    ForeignKey,
+    Enum as SQLEnum,
+)
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from enum import Enum
 
-# Declarative base class for SQLAlchemy.
-# Replace with your project's global base in production if needed.
-Base = declarative_base()
+from database.core import Base
 
-class ComplianceRecord(Base):
-    """
-    SQLAlchemy model representing a compliance item.
-    Naming conventions are aligned with the React frontend property names.
-    """
-    __tablename__ = "compliance_records"
 
-    id = Column(Integer, primary_key=True, index=True)
-    requirement = Column(String(255), nullable=False)            # E.g. 'GDPR Data Processing'
-    category = Column(String(100), nullable=False, index=True)   # E.g. 'Data Privacy', 'Security'
-    entity = Column(String(100), nullable=False, index=True)     # E.g. 'TechCorp Solutions'
-    contract_id = Column(String(100), nullable=False, index=True) # E.g. 'CNT-2025-001'
-    status = Column(String(50), nullable=False, default="Compliant", index=True) # E.g. 'Compliant', 'Non-Compliant', 'Warning', 'Under Review'
-    risk = Column(String(50), nullable=False, default="Medium", index=True)      # E.g. 'High', 'Medium', 'Low'
-    last_audit = Column(Date, nullable=False)                    # E.g. 2023-10-01
-    score = Column(Integer, nullable=False, default=100)         # Health Score: 0 to 100
+class ComplianceStatus(str, Enum):
+    COMPLIANT = "Compliant"
+    NON_COMPLIANT = "Non-Compliant"
+    IN_PROGRESS = "In Progress"
+    PENDING = "Pending"
+    COMPLETED = "Completed"
 
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+class RiskLevel(str, Enum):
+    LOW = "Low"
+    MEDIUM = "Medium"
+    HIGH = "High"
+    CRITICAL = "Critical"
+
+
+class Compliance(Base):
+    __tablename__ = "compliances"
+
+    compliance_id = Column(Integer, primary_key=True, index=True)
+    contract_id = Column(Integer, ForeignKey("contracts.contract_id"), nullable=False)
+    requirement = Column(String(250), nullable=False)
+    category = Column(String(150), nullable=False)
+    entity = Column(String(250), nullable=False)
+    status = Column(String(100), default=ComplianceStatus.PENDING.value, nullable=False)
+    risk_level = Column(String(100), default=RiskLevel.MEDIUM.value, nullable=False)
+    last_audit = Column(DateTime, nullable=True)
+    health_score = Column(Integer, nullable=True)
+    audit_notes = Column(String(1000), nullable=True)
+    next_review_date = Column(DateTime, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    contract = relationship("Contract", back_populates="compliances")
 
     def to_dict(self):
         """Serializes the database record to match the React frontend dictionary structure."""
         return {
-            "id": f"CMP-{self.id:03d}",
+            "id": f"CMP-{self.compliance_id:03d}",
             "requirement": self.requirement,
             "category": self.category,
             "entity": self.entity,
-            "contractId": self.contract_id,
+            "contractId": str(self.contract_id) if self.contract_id else "",
             "status": self.status,
-            "risk": self.risk,
-            "lastAudit": self.last_audit.isoformat() if self.last_audit else None,
-            "score": self.score,
+            "risk": self.risk_level,
+            "lastAudit": self.last_audit.date().isoformat() if self.last_audit else None,
+            "score": self.health_score if self.health_score is not None else 0,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "updated_at": self.created_at.isoformat() if self.created_at else None,
         }

@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, ChevronDown, Menu, User, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
-const Header = ({ toggleSidebar, userRole, onRoleChange }) => {
+const Header = ({ toggleSidebar }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { userProfile, logout, role, changeRole } = useAuth();
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -44,10 +46,10 @@ const Header = ({ toggleSidebar, userRole, onRoleChange }) => {
 
         <div className="user-profile-wrapper" ref={dropdownRef} style={{ position: 'relative' }}>
           <div className="user-profile" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-            <div className="avatar">JD</div>
+            <div className="avatar">{userProfile?.full_name ? userProfile.full_name.substring(0, 2).toUpperCase() : 'U'}</div>
             <div className="user-info">
-              <span className="user-name">John Doe</span>
-              <span className="user-role">{userRole}</span>
+              <span className="user-name">{userProfile?.full_name || 'Loading...'}</span>
+              <span className="user-role">{role || '...'}</span>
             </div>
             <ChevronDown size={14} className="text-muted" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
           </div>
@@ -67,13 +69,13 @@ const Header = ({ toggleSidebar, userRole, onRoleChange }) => {
               animation: 'dropdownIn 0.2s ease'
             }}>
               <div style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--color-bg)', marginBottom: '0.25rem' }}>
-                <p style={{ fontWeight: 600, fontSize: '0.85rem' }}>John Doe</p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>admin@contractiq.com</p>
+                <p style={{ fontWeight: 600, fontSize: '0.85rem' }}>{userProfile?.full_name || 'John Doe'}</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>{userProfile?.email || 'admin@contractiq.com'}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.5rem' }}>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Active Role</span>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Active Test Role</span>
                   <select 
-                    value={userRole} 
-                    onChange={(e) => onRoleChange(e.target.value)}
+                    value={role || 'Legal Manager'} 
+                    onChange={(e) => changeRole(e.target.value)}
                     style={{ 
                       width: '100%', 
                       fontSize: '0.8rem', 
@@ -88,7 +90,7 @@ const Header = ({ toggleSidebar, userRole, onRoleChange }) => {
                   >
                     <option value="Legal Manager">Legal Manager</option>
                     <option value="Compliance Officer">Compliance Officer</option>
-                    <option value="Administrator">Administrator</option>
+                    <option value="Admin">Administrator</option>
                     <option value="Contract Manager">Contract Manager</option>
                   </select>
                 </div>
@@ -109,7 +111,7 @@ const Header = ({ toggleSidebar, userRole, onRoleChange }) => {
               </button>
               <div style={{ height: '1px', backgroundColor: 'var(--color-bg)', margin: '0.25rem 0' }}></div>
               <button 
-                onClick={() => handleNavigation('/login')}
+                onClick={logout}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', borderRadius: 'var(--radius-sm)', color: '#ef4444' }}
                 className="dropdown-hover-danger"
               >
