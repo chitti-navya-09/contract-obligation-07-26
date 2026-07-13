@@ -7,3 +7,7 @@ passlib[bcrypt]
 python-multipart
 pydantic-settings
 pwdlib[argon2]
+email-validator
+python-multipart
+fastapi-mail
+

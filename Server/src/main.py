@@ -8,6 +8,11 @@ from auth import controller
 from users import controller as user_controller
 from notifications import controller as notification_controller
 from audit_logs import controller as audit_logs_controller
+from renewals import controller as renewals_controller
+
+# Import entities so tables are created
+import entities.renewal  # noqa: F401
+from api import router
 
 create_tables()
 
@@ -27,10 +32,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(controller.router, prefix=settings.API_PREFIX)
-app.include_router(user_controller.router, prefix=settings.API_PREFIX)
-app.include_router(notification_controller.router, prefix=settings.API_PREFIX)
-app.include_router(audit_logs_controller.router, prefix=settings.API_PREFIX)
+app.include_router(router, prefix=settings.API_PREFIX)
+
+app.include_router(renewals_controller.router, prefix=settings.API_PREFIX)
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
