@@ -1,118 +1,432 @@
-import { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Profile.css";
-import FormInput from "../components/Form/FormInput";
-import Checkbox from "../components/Form/Checkbox";
-import { UserIcon, LockIcon, ShieldIcon, BarIcon, CheckIcon, EditIcon } from "../components/Icons";
+import { MOCK_USER } from "../data/mockData";
+import { useUI } from "../context/UIContext";
+import {
+  UserIcon, LockIcon, GearIcon, EditIcon, CameraIcon, BellIcon
+} from "../components/Icons";
 
-function MatrixItem({ title, sub }) {
+/* ─── helpers ─── */
+function initials(full_name) {
+  if (!full_name) return "?";
+  const parts = full_name.trim().split(" ");
+  return parts.length > 1
+    ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
+    : parts[0][0].toUpperCase();
+}
+
+function FloatingInput({ label, name, type = "text", value, onChange, disabled, placeholder, state }) {
+  const [focused, setFocused] = useState(false);
+  const isActive = focused || (value && value.length > 0);
   return (
-    <div className="matrix-item">
-      <div className="ico"><CheckIcon size={16} /></div>
-      <div><strong>{title}</strong><span>{sub}</span></div>
+    <div className={`fi-wrap ${state || ""}`}>
+      <input
+        name={name}
+        type={type}
+        className="fi-input"
+        value={value || ""}
+        onChange={e => onChange && onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        disabled={disabled}
+        placeholder={focused ? (placeholder || "") : ""}
+        autoComplete="off"
+      />
+      <label className={`fi-label ${isActive ? "active" : ""}`}>{label}</label>
+      {state === "success" && <span className="fi-indicator success">✓</span>}
+      {state === "error" && <span className="fi-indicator error">✕</span>}
     </div>
   );
 }
 
+/* ─── Tab definitions ─── */
+const TABS = [
+  { key: "personal", label: "Personal Info", Icon: UserIcon },
+  { key: "security", label: "Security & Credentials", Icon: LockIcon },
+  { key: "preferences", label: "Preferences", Icon: GearIcon },
+];
+
 export default function Profile() {
+  const { setUser: setGlobalUser } = useUI();
+  const [tab, setTab] = useState("personal");
+  const [user, setUser] = useState(MOCK_USER);
   const [mfa, setMfa] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
   const [userPhoto, setUserPhoto] = useState(null);
   const [coverPhoto, setCoverPhoto] = useState(null);
-  const photoInputRef = useRef(null);
-  const coverInputRef = useRef(null);
+
+  // Validation states
+  const [emailState, setEmailState] = useState("success");
+  const [fullNameState, setFullNameState] = useState("idle");
+
+  // Preferences
+  const [prefs, setPrefs] = useState({
+    emailAlerts: true, smsAlerts: false, weeklyDigest: true,
+    contractReminders: true, darkMode: false, compactView: false,
+  });
+
+  const photoRef = useRef(null);
+  const coverRef = useRef(null);
+
+  /* ── Load from backend on mount ── */
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setUser(prev => ({ ...prev, ...data }));
+          setGlobalUser({ name: data.full_name, role: data.role, email: data.email });
+        }
+      } catch {
+        /* backend offline — use mock */
+      }
+    }
+    loadProfile();
+  }, [setGlobalUser]);
 
   function readFile(file, cb) {
-    const reader = new FileReader();
-    reader.onload = () => cb(reader.result);
-    reader.readAsDataURL(file);
+    const r = new FileReader();
+    r.onload = () => cb(r.result);
+    r.readAsDataURL(file);
+  }
+
+  /* ── Save Personal Info ── */
+  async function handleSavePersonal(e) {
+    e.preventDefault();
+    if (emailState === "error" || fullNameState === "error") return;
+    setSaving(true);
+    const payload = {
+      full_name: user.full_name,
+      email: user.email,
+      bio: user.bio,
+      phone: user.phone,
+      job_title: user.job_title,
+      department: user.department,
+    };
+    setGlobalUser({ name: user.full_name, role: user.role, email: user.email });
+    try {
+      await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      setSaveMsg("Profile saved successfully!");
+    } catch {
+      setSaveMsg("Saved locally — backend not reachable.");
+    }
+    setSaving(false);
+    setTimeout(() => setSaveMsg(""), 3000);
+  }
+
+  /* ── Field validators ── */
+  function handleFullNameChange(val) {
+    setUser(p => ({ ...p, full_name: val }));
+    setFullNameState(val.trim().length >= 2 ? "success" : "error");
+  }
+
+  function handleEmailChange(val) {
+    setUser(p => ({ ...p, email: val }));
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    setEmailState(ok ? "success" : "error");
+  }
+
+  function togglePref(key) {
+    setPrefs(p => ({ ...p, [key]: !p[key] }));
   }
 
   return (
-    <div>
-      <div className="page-title">My Profile</div>
-      <div className="page-sub">Manage your personal information, obligation ownership, and account security.</div>
+    <div className="profile-page fade-in-el">
+      {/* ── Page header ── */}
+      <div className="profile-page-header">
+        <h2 className="page-title">My Profile</h2>
+        <p className="page-sub">Manage your identity, security settings, and notification preferences.</p>
+      </div>
 
-      <div className="card profile-banner">
+      {/* ── Hero Banner + Avatar ── */}
+      <div className="profile-hero-card card">
         <div
-          className="profile-banner-cover"
-          style={coverPhoto ? { backgroundImage: "url(" + coverPhoto + ")", backgroundSize: "cover", backgroundPosition: "center" } : {}}
+          className="profile-hero-banner"
+          style={coverPhoto ? { backgroundImage: `url(${coverPhoto})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
         >
-          <button type="button" className="cover-edit-btn" onClick={() => coverInputRef.current && coverInputRef.current.click()}>
-            <EditIcon /> Change cover
+          <button type="button" className="cover-edit-btn" onClick={() => coverRef.current?.click()}>
+            <EditIcon size={12} /> Change cover
           </button>
         </div>
-        <div className="profile-header">
-          <div className="profile-avatar">
-            {userPhoto ? <img src={userPhoto} alt="Profile" /> : "R"}
-            <button type="button" className="edit-tag" onClick={() => photoInputRef.current && photoInputRef.current.click()}>
-              <EditIcon /> Edit Photo
-            </button>
+
+        <div className="profile-hero-body">
+          <div className="profile-avatar-ring" onClick={() => photoRef.current?.click()}>
+            {userPhoto
+              ? <img src={userPhoto} alt="avatar" />
+              : <span>{initials(user.full_name)}</span>}
+            <div className="avatar-camera-overlay"><CameraIcon size={16} /></div>
           </div>
-          <div>
-            <h2>Rishwanth</h2>
-            <div className="role-line">rishwanth@contractiq.com</div>
-            <div style={{ display: "flex", gap: 8, marginTop: 9 }}>
-              <span className="badge info">Administrator</span>
-              <span className="badge emerald">Legal Operations</span>
+
+          <div className="profile-hero-info">
+            <h3>{user.full_name}</h3>
+            <span className="profile-hero-role">
+              {user.job_title}{user.department ? ` · ${user.department}` : ""}
+            </span>
+            <span className="profile-hero-email">{user.email}</span>
+          </div>
+
+          <div className="profile-hero-stats">
+            <div className="phs">
+              <strong>24</strong>
+              <span>Contracts</span>
+            </div>
+            <div className="phs">
+              <strong>156</strong>
+              <span>Obligations</span>
+            </div>
+            <div className="phs">
+              <strong>91%</strong>
+              <span>Compliance</span>
             </div>
           </div>
         </div>
       </div>
 
-      <input
-        ref={photoInputRef} type="file" accept="image/*" style={{ display: "none" }}
-        onChange={(e) => { const f = e.target.files[0]; if (f) readFile(f, setUserPhoto); }}
-      />
-      <input
-        ref={coverInputRef} type="file" accept="image/*" style={{ display: "none" }}
-        onChange={(e) => { const f = e.target.files[0]; if (f) readFile(f, setCoverPhoto); }}
-      />
+      {/* Hidden file inputs */}
+      <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }}
+        onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setUserPhoto); }} />
+      <input ref={coverRef} type="file" accept="image/*" style={{ display: "none" }}
+        onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f, setCoverPhoto); }} />
 
-      <div className="grid-2">
-        <div>
-          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-            <div className="section-title"><UserIcon size={16} /> Personal Information</div>
+      {/* ── Animated Tab Bar ── */}
+      <div className="profile-tabbar">
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            type="button"
+            className={`profile-tabbar-btn ${tab === t.key ? "active" : ""}`}
+            onClick={() => setTab(t.key)}
+          >
+            <t.Icon size={14} />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Tab Panels ── */}
+      <div className="profile-panel fade-in-el" key={tab}>
+
+        {/* ─── Personal Info ─── */}
+        {tab === "personal" && (
+          <form className="card profile-card-inner" onSubmit={handleSavePersonal}>
+            <div className="section-title">
+              <UserIcon size={16} color="var(--info)" /> Personal Information
+            </div>
+
             <div className="field-row">
-              <FormInput label="First Name" defaultValue="Rishwanth" />
-              <FormInput label="Last Name" defaultValue="S V" />
+              <FloatingInput
+                label="Full Name"
+                name="full_name"
+                value={user.full_name}
+                onChange={handleFullNameChange}
+                state={fullNameState === "idle" ? "" : fullNameState}
+              />
+              <FloatingInput
+                label="Job Title"
+                name="job_title"
+                value={user.job_title}
+                onChange={val => setUser(p => ({ ...p, job_title: val }))}
+              />
             </div>
+
             <div className="field-row">
-              <FormInput label="Corporate Email" defaultValue="rishwanth@contractiq.com" />
-              <FormInput label="Phone Number" defaultValue="+91 98765 43210" />
+              <FloatingInput
+                label="Corporate Email"
+                name="email"
+                type="email"
+                value={user.email}
+                onChange={handleEmailChange}
+                state={emailState === "idle" ? "" : emailState}
+              />
+              <FloatingInput
+                label="Phone Number"
+                name="phone"
+                value={user.phone}
+                onChange={val => setUser(p => ({ ...p, phone: val }))}
+              />
             </div>
+
             <div className="field-row">
-              <FormInput label="Job Title" defaultValue="Compliance Administrator" />
-              <FormInput label="Department" defaultValue="Legal Operations" />
+              <FloatingInput
+                label="Department"
+                name="department"
+                value={user.department}
+                onChange={val => setUser(p => ({ ...p, department: val }))}
+              />
+              <FloatingInput
+                label="Role / Access Level"
+                name="role"
+                value={user.role}
+                disabled
+              />
             </div>
-            <button className="btn btn-primary">Save Changes</button>
-          </div>
-          <div className="card" style={{ padding: 20 }}>
-            <div className="section-title"><LockIcon size={16} /> Security & Authorization</div>
+
+            {/* Bio */}
+            <div className="fi-wrap" style={{ marginBottom: 18 }}>
+              <label className="fi-label active" style={{ position: "relative", top: "unset", left: "unset", fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>
+                Bio / Short Description
+              </label>
+              <textarea
+                name="bio"
+                className="profile-bio-textarea"
+                value={user.bio || ""}
+                onChange={e => setUser(p => ({ ...p, bio: e.target.value }))}
+                rows={3}
+                placeholder="Describe your role and expertise..."
+              />
+            </div>
+
+            <div className="profile-save-row">
+              {saveMsg && (
+                <span className={`save-msg ${saveMsg.includes("locally") ? "warn" : "ok"}`}>
+                  {saveMsg}
+                </span>
+              )}
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ─── Security & Credentials ─── */}
+        {tab === "security" && (
+          <div className="card profile-card-inner">
+            <div className="section-title">
+              <LockIcon size={16} color="var(--danger)" /> Credentials & Access Control
+            </div>
+
             <div className="field-row">
-              <FormInput label="Current Password" type="password" defaultValue="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" />
-              <FormInput label="New Password" type="password" placeholder="Enter new password" />
+              <FloatingInput
+                label="Current Password"
+                name="current_password"
+                type="password"
+                value="••••••••••••"
+                disabled
+              />
+              <FloatingInput
+                label="New Password"
+                name="new_password"
+                type="password"
+                value=""
+                placeholder="Leave blank to keep current"
+                onChange={() => {}}
+              />
             </div>
-            <div className="row-toggle">
-              <div><strong>Multi-Factor Authentication</strong><span>Require a verification code at every sign-in</span></div>
-              <Checkbox checked={mfa} onChange={() => setMfa((v) => !v)} />
+            <FloatingInput
+              label="Confirm New Password"
+              name="confirm_password"
+              type="password"
+              value=""
+              onChange={() => {}}
+            />
+
+            <div className="profile-divider" />
+
+            <div className="section-title" style={{ marginTop: 6 }}>
+              <BellIcon size={16} color="var(--warning)" /> Two-Factor Authentication
             </div>
-            <button className="btn btn-ghost" style={{ marginTop: 14 }}>Update Password</button>
+
+            <div className="pill-toggle-container">
+              <div>
+                <strong>Multi-Factor Authentication (MFA)</strong>
+                <span className="muted" style={{ display: "block", fontSize: 12, marginTop: 4 }}>
+                  Protect your account with an authenticator app at login.
+                </span>
+              </div>
+              <button
+                type="button"
+                className={`toggle ${mfa ? "on" : ""}`}
+                onClick={() => setMfa(m => !m)}
+              />
+            </div>
+
+            <div className="profile-security-sessions">
+              <div className="section-title" style={{ marginTop: 18 }}>
+                Active Sessions
+              </div>
+              <div className="session-row">
+                <div>
+                  <strong>Chrome · Windows 11</strong>
+                  <span className="muted" style={{ display: "block", fontSize: 12 }}>Last active: just now · 192.168.1.42</span>
+                </div>
+                <span className="badge emerald">Current</span>
+              </div>
+              <div className="session-row">
+                <div>
+                  <strong>Mobile Safari · iPhone</strong>
+                  <span className="muted" style={{ display: "block", fontSize: 12 }}>Last active: 2 days ago · 10.0.0.5</span>
+                </div>
+                <button type="button" className="btn btn-ghost" style={{ padding: "5px 12px", fontSize: 12 }}>Revoke</button>
+              </div>
+            </div>
+
+            <div className="profile-save-row" style={{ marginTop: 20 }}>
+              <button type="button" className="btn btn-ghost">Update Password</button>
+            </div>
           </div>
-        </div>
-        <div>
-          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-            <div className="section-title"><ShieldIcon size={16} /> Obligation Role & Signing Authority</div>
-            <MatrixItem title="Primary Obligation Owner" sub="24 contracts assigned" />
-            <MatrixItem title="Legal Signatory Approval Cleared" sub="Tier 1 & Tier 2 agreements" />
-            <MatrixItem title="Compliance Reviewer \u2014 Tier 2" sub="Cross-functional review rights" />
+        )}
+
+        {/* ─── Preferences ─── */}
+        {tab === "preferences" && (
+          <div className="card profile-card-inner">
+            <div className="section-title">
+              <BellIcon size={16} color="var(--info)" /> Notification Preferences
+            </div>
+
+            {[
+              { key: "emailAlerts", label: "Email Alerts", sub: "Receive contract & obligation alerts via email" },
+              { key: "smsAlerts", label: "SMS / WhatsApp Alerts", sub: "Get urgent alerts via text message" },
+              { key: "weeklyDigest", label: "Weekly Digest", sub: "Summary of contract activity every Monday" },
+              { key: "contractReminders", label: "Contract Reminders", sub: "Reminders 30, 15, and 7 days before expiry" },
+            ].map(item => (
+              <div key={item.key} className="pill-toggle-container">
+                <div>
+                  <strong>{item.label}</strong>
+                  <span className="muted" style={{ display: "block", fontSize: 12, marginTop: 4 }}>{item.sub}</span>
+                </div>
+                <button
+                  type="button"
+                  className={`toggle ${prefs[item.key] ? "on" : ""}`}
+                  onClick={() => togglePref(item.key)}
+                />
+              </div>
+            ))}
+
+            <div className="profile-divider" />
+
+            <div className="section-title" style={{ marginTop: 6 }}>
+              <GearIcon size={16} color="var(--text-secondary)" /> Display & Interface
+            </div>
+
+            {[
+              { key: "darkMode", label: "Dark Mode", sub: "Switch to a dark colour scheme for the interface" },
+              { key: "compactView", label: "Compact View", sub: "Reduce padding and spacing for higher information density" },
+            ].map(item => (
+              <div key={item.key} className="pill-toggle-container">
+                <div>
+                  <strong>{item.label}</strong>
+                  <span className="muted" style={{ display: "block", fontSize: 12, marginTop: 4 }}>{item.sub}</span>
+                </div>
+                <button
+                  type="button"
+                  className={`toggle ${prefs[item.key] ? "on" : ""}`}
+                  onClick={() => togglePref(item.key)}
+                />
+              </div>
+            ))}
+
+            <div className="profile-save-row" style={{ marginTop: 20 }}>
+              <button type="button" className="btn btn-primary">Save Preferences</button>
+            </div>
           </div>
-          <div className="card" style={{ padding: 20 }}>
-            <div className="section-title"><BarIcon size={16} /> Ownership Summary</div>
-            <div className="stat-row"><span>Contracts Owned</span><strong>24</strong></div>
-            <div className="stat-row"><span>Obligations Tracked</span><strong>156</strong></div>
-            <div className="stat-row"><span>Due This Month</span><strong>17</strong></div>
-            <div className="stat-row"><span>Overdue</span><strong style={{ color: "var(--danger)" }}>3</strong></div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

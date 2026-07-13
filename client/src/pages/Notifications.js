@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import "./Notifications.css";
 import { useUI } from "../context/UIContext";
-import { FileIcon, ShieldIcon, RepeatIcon, ClipboardIcon, AlertTriIcon, CheckIcon, GearIcon } from "../components/Icons";
+import { MOCK_NOTIFICATIONS, MOCK_UPCOMING_RENEWALS } from "../data/mockData";
+import {
+  FileIcon, ShieldIcon, RepeatIcon, ClipboardIcon, AlertTriIcon, CheckIcon, GearIcon,
+  TrashIcon, CheckCircleIcon
+} from "../components/Icons";
 
 const NOTIF_CAT_STYLE = {
   Contracts: { color: "#3B82F6", Icon: FileIcon },
@@ -13,114 +16,202 @@ const NOTIF_CAT_STYLE = {
   Approvals: { color: "#6366F1", Icon: CheckIcon },
   System: { color: "#64748B", Icon: GearIcon },
 };
-const FILTERS = ["All", "Contracts", "Compliance", "Renewals", "Workflow", "Risk Alerts", "Approvals", "System"];
 
-const NOTIFS = [
-  { id: 1, cat: "Renewals", urgency: "critical", title: "Contract Expiring Urgently", desc: "CTR-2024-005 (Darwinbox) expires in 25 days. No renewal initiated.", time: "Just now" },
-  { id: 2, cat: "Approvals", urgency: "critical", title: "Approval Required", desc: "CTR-2024-006 (Deloitte Audit) is awaiting your legal review and approval.", time: "30 min ago" },
-  { id: 3, cat: "Workflow", urgency: "warning", title: "Overdue Obligation", desc: "OBL-004 (Property Insurance Renewal) is overdue by 5 days.", time: "2 hrs ago" },
-  { id: 4, cat: "Risk Alerts", urgency: "warning", title: "Risk Alert", desc: "3 contracts flagged for missing SLA clauses \u2014 compliance risk detected.", time: "3 hrs ago" },
-  { id: 5, cat: "Compliance", urgency: "info", title: "Compliance Score Updated", desc: "Compliance score increased to 84% after 3 obligations were resolved.", time: "5 hrs ago" },
-  { id: 6, cat: "Contracts", urgency: "info", title: "New Contract Assigned", desc: "CTR-2024-007 (Ogilvy) has been assigned to your review queue.", time: "Yesterday" },
-  { id: 7, cat: "System", urgency: "info", title: "Scheduled Audit Reminder", desc: "Q2 Financial Controls Audit scheduled for Jul 25 \u2014 3 weeks away.", time: "Yesterday" },
-];
-const UPCOMING_RENEWALS = [
-  { code: "CTR-2024-005", name: "Darwinbox", daysLeft: 25 },
-  { code: "CTR-2024-011", name: "Zoho People", daysLeft: 41 },
-  { code: "CTR-2024-014", name: "AWS Enterprise", daysLeft: 58 },
-];
+const FILTERS = ["All", "Contracts", "Compliance", "Renewals", "Workflow", "Risk Alerts", "Approvals", "System"];
 
 export default function Notifications() {
   const { setNotificationCount } = useUI();
-  const navigate = useNavigate();
   const [filter, setFilter] = useState("All");
-  const [dismissed, setDismissed] = useState([]);
-  const [viewMsg, setViewMsg] = useState("");
+  const [notifs, setNotifs] = useState(MOCK_NOTIFICATIONS);
+  const [dismissingIds, setDismissingIds] = useState([]);
+  const [upcomingRenewals] = useState(MOCK_UPCOMING_RENEWALS);
 
-  const all = NOTIFS.filter((n) => !dismissed.includes(n.id));
-  const filtered = filter === "All" ? all : all.filter((n) => n.cat === filter);
-  const counts = { critical: 0, warning: 0, info: 0 };
-  all.forEach((n) => counts[n.urgency]++);
+  // Fetch from live database if available
+  useEffect(() => {
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/api/notifications");
+        if (res.ok) {
+          const data = await res.json();
+          setNotifs(data);
+          const unreadCount = data.filter(n => !n.is_read).length;
+          setNotificationCount(unreadCount);
+        }
+      } catch (err) {
+        console.warn("Backend unavailable, using localized mock data");
+      }
+    }
+    loadNotifications();
+  }, [setNotificationCount]);
 
-  function markAllRead() {
-    setNotificationCount(0);
+  // Sync count on changes
+  useEffect(() => {
+    const unread = notifs.filter(n => !n.isRead && !n.is_read).length;
+    setNotificationCount(unread);
+  }, [notifs, setNotificationCount]);
+
+  async function handleMarkRead(id) {
+    // Optimistic UI update
+    setNotifs(prev => prev.map(n => n.id === id ? { ...n, isRead: true, is_read: true } : n));
+    try {
+      await fetch(`/api/notifications/${id}/read`, { method: "PATCH" });
+    } catch (e) {
+      console.warn("Could not sync read status with backend");
+    }
   }
 
+  async function handleDismiss(id) {
+    // Stage for slide out animation
+    setDismissingIds(prev => [...prev, id]);
+    
+    setTimeout(async () => {
+      setNotifs(prev => prev.filter(n => n.id !== id));
+      setDismissingIds(prev => prev.filter(dId => dId !== id));
+      try {
+        await fetch(`/api/notifications/${id}`, { method: "DELETE" });
+      } catch (e) {
+        console.warn("Could not delete from backend");
+      }
+    }, 300);
+  }
+
+  async function handleMarkAllRead() {
+    setNotifs(prev => prev.map(n => ({ ...n, isRead: true, is_read: true })));
+    try {
+      await fetch("/api/notifications/mark-all-read", { method: "POST" });
+    } catch (e) {
+      console.warn("Could not sync bulk read state");
+    }
+  }
+
+  const filtered = filter === "All" ? notifs : notifs.filter((n) => n.cat === filter);
+  
+  const counts = { critical: 0, warning: 0, info: 0 };
+  notifs.forEach((n) => {
+    const urgency = n.urgency || "info";
+    if (counts[urgency] !== undefined) {
+      counts[urgency]++;
+    }
+  });
+
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-        <div className="page-title" style={{ marginBottom: 0 }}>Notifications Center</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--info)", cursor: "pointer" }} onClick={markAllRead}>Mark all read</span>
-          <span
-            style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}
-            onClick={() => navigate("/settings")}
-          >
-            <GearIcon size={14} /> Settings
-          </span>
+    <div className="fade-in-el">
+      <div className="notifications-header-wrapper">
+        <div>
+          <h2>Notifications Center</h2>
+          <p className="muted">Stay up to date on required signature approvals, expiring vendors, and compliance changes.</p>
+        </div>
+        <div className="action-links-row">
+          <button className="text-action-btn" onClick={handleMarkAllRead}>
+            <CheckCircleIcon size={14} /> Mark all read
+          </button>
         </div>
       </div>
-      <div className="page-sub">Stay updated with approvals, renewals, compliance alerts, and risk insights.</div>
 
-      <div className="grid-2">
+      <div className="dashboard-grid">
+        {/* Main Feed */}
         <div>
-          <div className="chip-row">
+          <div className="filter-chips-scroll">
             {FILTERS.map((f) => (
-              <div key={f} className={"chip" + (filter === f ? " active" : "")} onClick={() => setFilter(f)} style={{ cursor: "pointer" }}>{f}</div>
+              <button
+                key={f}
+                className={`filter-chip ${filter === f ? "active" : ""}`}
+                onClick={() => setFilter(f)}
+              >
+                {f}
+              </button>
             ))}
           </div>
-          <div className="card">
-            {filtered.length === 0 && <div style={{ padding: "30px 0", textAlign: "center", color: "var(--text-secondary)", fontSize: 12.5 }}>No notifications in this category.</div>}
-            {filtered.map((n) => {
-              const s = NOTIF_CAT_STYLE[n.cat];
-              return (
-                <div className="notif-item" key={n.id}>
-                  <div className="ico" style={{ background: s.color + "22", color: s.color }}><s.Icon size={18} /></div>
-                  <div className="body">
-                    <strong>{n.title}</strong>
-                    <span className="badge" style={{ background: s.color + "1a", color: s.color, margin: "4px 0" }}>{n.cat}</span>
-                    <p>{n.desc}</p>
-                    <div className="time">{n.time}</div>
-                    <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
-                      <button className="action" onClick={() => setViewMsg("Opening: " + n.title)}>View Details</button>
-                      <button className="action" style={{ color: "var(--text-secondary)" }} onClick={() => setDismissed((d) => [...d, n.id])}>Dismiss</button>
+
+          <div className="card notifications-feed-card">
+            {filtered.length === 0 ? (
+              <div className="empty-feed-placeholder">
+                No alerts found in this category.
+              </div>
+            ) : (
+              filtered.map((n) => {
+                const style = NOTIF_CAT_STYLE[n.cat] || { color: "#64748B", Icon: GearIcon };
+                const isUnread = !n.isRead && !n.is_read;
+                const isDismissing = dismissingIds.includes(n.id);
+                
+                return (
+                  <div 
+                    className={`notif-item ${isUnread ? "unread" : ""} ${isDismissing ? "dismissing" : ""}`} 
+                    key={n.id}
+                  >
+                    <div 
+                      className="ico-circle" 
+                      style={{ background: `${style.color}15`, color: style.color }}
+                    >
+                      <style.Icon size={16} />
+                    </div>
+                    <div className="body">
+                      <div className="notif-title-row">
+                        <strong>{n.title}</strong>
+                        {isUnread && <span className="notif-unread-dot" title="Unread Alert" />}
+                      </div>
+                      <span className="badge category-badge" style={{ background: `${style.color}10`, color: style.color }}>
+                        {n.cat}
+                      </span>
+                      <p>{n.desc}</p>
+                      <div className="time">{n.time}</div>
+                    </div>
+                    <div className="notif-actions">
+                      {isUnread && (
+                        <button className="btn-mark-read" onClick={() => handleMarkRead(n.id)}>
+                          Mark Read
+                        </button>
+                      )}
+                      <button className="btn-dismiss" onClick={() => handleDismiss(n.id)} title="Dismiss Alert">
+                        <TrashIcon size={13} />
+                      </button>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
-          {viewMsg && <div className="muted" style={{ marginTop: 10 }}>{viewMsg}</div>}
         </div>
+
+        {/* Sidebar Summary */}
         <div>
-          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+          <div className="card summary-card" style={{ padding: 22, marginBottom: 20 }}>
             <div className="section-title">Today's Summary</div>
-            <p style={{ fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 16 }}>
-              You have {counts.critical} urgent item{counts.critical === 1 ? "" : "s"} requiring action \u2014 a contract expiry and an approval request.
+            <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.5, marginBottom: 18 }}>
+              Check system operations flags and high-risk alerts before generating your quarterly review deck.
             </p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <div style={{ flex: 1, textAlign: "center", padding: "12px 6px", borderRadius: 10, background: "rgba(239,68,68,0.08)" }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "var(--danger)" }}>{counts.critical}</div>
-                <div style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 600 }}>Critical</div>
+            <div className="urgency-meter-grid">
+              <div className="urgency-meter-box critical">
+                <span className="num">{counts.critical}</span>
+                <span className="lbl">Critical</span>
               </div>
-              <div style={{ flex: 1, textAlign: "center", padding: "12px 6px", borderRadius: 10, background: "rgba(245,158,11,0.08)" }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "var(--warning)" }}>{counts.warning}</div>
-                <div style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 600 }}>Warnings</div>
+              <div className="urgency-meter-box warning">
+                <span className="num">{counts.warning}</span>
+                <span className="lbl">Warning</span>
               </div>
-              <div style={{ flex: 1, textAlign: "center", padding: "12px 6px", borderRadius: 10, background: "rgba(59,130,246,0.08)" }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "var(--info)" }}>{counts.info}</div>
-                <div style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 600 }}>Info</div>
+              <div className="urgency-meter-box info">
+                <span className="num">{counts.info}</span>
+                <span className="lbl">General</span>
               </div>
             </div>
           </div>
-          <div className="card" style={{ padding: 20 }}>
-            <div className="section-title">Upcoming Renewals</div>
-            {UPCOMING_RENEWALS.map((r) => (
-              <div className="stat-row" key={r.code}>
-                <span>{r.code} <span style={{ color: "var(--text-secondary)" }}>({r.name})</span></span>
-                <strong style={{ color: r.daysLeft <= 25 ? "var(--danger)" : r.daysLeft <= 45 ? "var(--warning)" : "var(--emerald)" }}>{r.daysLeft}d left</strong>
-              </div>
-            ))}
+
+          <div className="card renewals-preview-card" style={{ padding: 22 }}>
+            <div className="section-title">Urgent Renewals</div>
+            <p className="muted" style={{ fontSize: 12, marginBottom: 15 }}>Required review for upcoming contracts</p>
+            <div className="renewals-list">
+              {upcomingRenewals.map((r) => (
+                <div className="renewal-preview-row" key={r.code}>
+                  <div className="renewal-desc">
+                    <span className="code">{r.code}</span>
+                    <span className="name">{r.name}</span>
+                  </div>
+                  <strong className={r.daysLeft <= 25 ? "critical-alert" : "warning-alert"}>
+                    {r.daysLeft}d left
+                  </strong>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

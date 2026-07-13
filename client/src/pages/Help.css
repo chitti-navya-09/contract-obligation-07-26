@@ -1,15 +1,149 @@
-.page-surface{background:var(--color-surface);padding:20px;border-radius:12px}
-.page-surface h2{margin:0;font-size:18px}
-.page-surface .muted{color:var(--text-secondary);margin-top:8px}
+.help-hero-enhanced {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--slate) 100%);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
 
-.help-cats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0 22px;}
-@media (max-width:900px){.help-cats{grid-template-columns:repeat(2,1fr);}}
-.help-cat-card{border:1px solid var(--color-border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px;}
-.help-cat-card strong{font-size:13.5px;}
-.help-cat-card span{font-size:12px;color:var(--text-secondary);}
-.faq-item{border-bottom:1px solid var(--color-border);}
-.faq-q{width:100%;text-align:left;background:transparent;border:0;padding:14px 2px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:var(--text-primary);}
-.faq-chev{transition:transform .2s ease;}
-.faq-chev.open{transform:rotate(180deg);}
-.faq-a{padding:0 2px 14px;font-size:12.5px;color:var(--text-secondary);line-height:1.55;}
-.help-page textarea{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--color-border);font-size:13px;resize:vertical;}
+.help-hero-enhanced h2 {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+}
+
+.search-wrap-enhanced {
+  position: relative;
+  max-width: 480px;
+  margin: 14px auto 0;
+}
+
+.search-wrap-enhanced .search-ico {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translatey(-50%);
+  color: var(--text-secondary);
+  display: flex;
+}
+
+.search-wrap-enhanced input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  border-radius: 8px;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  box-shadow: var(--shadow-lg);
+  transition: box-shadow 0.2s ease;
+}
+
+.search-wrap-enhanced input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
+}
+
+.cat-grid-enhanced {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.help-category-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.help-category-card:hover {
+  border-color: var(--info);
+  background: var(--hover);
+  box-shadow: var(--shadow);
+}
+
+.category-accent-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--info);
+  margin-bottom: 10px;
+}
+
+.help-category-card strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.help-category-card span {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.faq-chev {
+  transition: transform 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.faq-chev.open {
+  transform: rotate(180deg);
+}
+
+.empty-faqs {
+  padding: 20px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.ticket-card-enhanced {
+  padding: 16px;
+  border-radius: 10px;
+}
+
+.ticket-success-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.success-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.ticket-success-container h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+.ticket-success-container p {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 20px;
+}

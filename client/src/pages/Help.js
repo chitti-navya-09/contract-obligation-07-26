@@ -1,76 +1,206 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Help.css";
-import FormInput from "../components/Form/FormInput";
-import FormSelect from "../components/Form/FormSelect";
-import { SearchIcon, ChevDownIcon, SendIcon } from "../components/Icons";
+import { MOCK_FAQS, MOCK_HELP_CATEGORIES } from "../data/mockData";
+import {
+  SearchIcon, ChevDownIcon, SendIcon, CheckIcon, HelpIcon,
+} from "../components/Icons";
 
-const CATEGORIES = [
-  { title: "Getting Started", sub: "Initial setup and ingesting contract PDFs" },
-  { title: "Obligation Mapping", sub: "Defining SLAs, compliance parameters, milestones" },
-  { title: "Audit & Reporting Logs", sub: "Exporting CSV/PDF history for executive review" },
-  { title: "Integrations & Webhooks", sub: "Connecting repositories to external trackers" },
-];
-const FAQS = [
-  { q: "How does ContractIQ identify a missed conditional deadline?", a: 'ContractIQ parses clause language for conditional triggers (e.g. "within 30 days of notice") and cross-references them against linked event dates, flagging any obligation that passes its computed due date without a logged completion.' },
-  { q: "Can I assign backup owners to critical obligations?", a: 'Yes. Open any obligation in the Tracker, select "Assign Backup Owner," and choose a teammate. Backup owners receive the same alert cadence as the primary owner.' },
-  { q: "How are renewal notice periods calculated?", a: "ContractIQ reads the auto-renewal clause and counts backward from the term end date using the stated notice window, then surfaces the result on the Renewal Dashboard." },
-  { q: "Can I export obligation history for an audit?", a: "From Audit Logs, choose a date range and export to CSV or PDF. Exports include owner, status changes, and timestamps for every obligation in scope." },
-];
-
-function FaqItem({ item }) {
+function FaqAccordionItem({ item }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="faq-item">
-      <button className="faq-q" onClick={() => setOpen((o) => !o)}>
-        {item.q}
-        <ChevDownIcon className={open ? "faq-chev open" : "faq-chev"} />
+    <div className={`faq-card ${open ? "open" : ""}`}>
+      <button className="faq-header-btn" onClick={() => setOpen((o) => !o)}>
+        <span>{item.q}</span>
+        <ChevDownIcon size={16} className={`faq-chev ${open ? "open" : ""}`} />
       </button>
-      {open && <div className="faq-a"><div className="faq-a-inner">{item.a}</div></div>}
+      {open && (
+        <div className="faq-body-content">
+          {item.a}
+        </div>
+      )}
     </div>
   );
 }
 
 export default function Help() {
+  const [faqs, setFaqs] = useState(MOCK_FAQS);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Ticket States
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [severity, setSeverity] = useState("Low");
+  const [details, setDetails] = useState("");
+
+  // Load FAQ content from live database if available
+  useEffect(() => {
+    async function loadFaqs() {
+      try {
+        const res = await fetch("/api/faqs");
+        if (res.ok) {
+          const data = await res.json();
+          setFaqs(data);
+        }
+      } catch (err) {
+        console.warn("Backend unavailable, using default FAQ database");
+      }
+    }
+    loadFaqs();
+  }, []);
+
+  async function handleTicketSubmit(e) {
+    e.preventDefault();
+    if (subject.trim() === "" || details.trim() === "") return;
+    setSubmitting(true);
+
+    const payload = {
+      subject,
+      severity,
+      description: details,
+    };
+
+    try {
+      await fetch("/api/support/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      console.warn("Could not submit ticket to backend API, completing offline");
+    }
+
+    setTimeout(() => {
+      setSubmitting(false);
+      setSubmitted(true);
+      setSubject("");
+      setDetails("");
+    }, 1500);
+  }
+
+  // Filter FAQS by search query
+  const filteredFaqs = faqs.filter(
+    (faq) =>
+      faq.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.a.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div>
-      <div className="help-hero">
-        <h2>How can we help you today?</h2>
-        <div className="search-wrap">
-          <span className="search-ico"><SearchIcon /></span>
-          <input placeholder="Search documentation, obligation templates, and compliance guides..." />
+    <div className="help-page-wrapper fade-in-el">
+      {/* Search Hero banner */}
+      <div className="help-hero-enhanced">
+        <h2>Documentation & Support</h2>
+        <p className="muted" style={{ color: "rgba(255,255,255,0.75)" }}>
+          Find answers, review service level agreements, or log support tickets.
+        </p>
+        <div className="search-wrap-enhanced">
+          <span className="search-ico"><SearchIcon size={16} /></span>
+          <input 
+            placeholder="Search FAQs, system capabilities, SLA triggers..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
-      <div className="cat-grid">
-        {CATEGORIES.map((c) => (
-          <div className="card cat-card" key={c.title}>
+
+      {/* Help Topic categories */}
+      <div className="cat-grid-enhanced">
+        {MOCK_HELP_CATEGORIES.map((c) => (
+          <div className="help-category-card" key={c.title}>
+            <div className="category-accent-dot" />
             <strong>{c.title}</strong>
             <span>{c.sub}</span>
           </div>
         ))}
       </div>
-      <div className="grid-2">
-        <div className="card" style={{ padding: 20 }}>
-          <div className="section-title">Frequently Asked Questions</div>
-          {FAQS.map((f, i) => <FaqItem item={f} key={i} />)}
-        </div>
-        <div className="card" style={{ padding: 20 }}>
-          <div className="section-title">Submit a Support Ticket</div>
-          <FormInput label="Subject" placeholder="Briefly describe the issue" />
-          <FormSelect label="Issue Severity" options={["Low", "Medium", "Critical Compliance Breach"]} />
-          <div className="field">
-            <label>Details</label>
-            <textarea placeholder="Describe what happened, and any obligation or contract IDs involved..." />
+
+      {/* Main split grid */}
+      <div className="dashboard-grid">
+        {/* Accordions */}
+        <div>
+          <div className="section-title">
+            <HelpIcon size={16} color="var(--info)" /> Frequently Asked Questions
           </div>
-          <button
-            className="btn btn-primary"
-            style={{ display: "flex", alignItems: "center", gap: 7 }}
-            onClick={() => setSubmitted(true)}
-          >
-            <SendIcon size={14} /> Submit Ticket
-          </button>
-          {submitted && <span className="muted" style={{ marginLeft: 10 }}>Submitted!</span>}
+          <div className="faq-accordion">
+            {filteredFaqs.length === 0 ? (
+              <div className="empty-faqs">No FAQs found matching your search.</div>
+            ) : (
+              filteredFaqs.map((f, i) => (
+                <FaqAccordionItem item={f} key={i} />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Ticket Form */}
+        <div className="card ticket-card-enhanced">
+          {submitted ? (
+            <div className="ticket-success-container fade-in-el">
+              <div className="success-icon-circle">
+                <CheckIcon size={24} color="var(--emerald)" />
+              </div>
+              <h3>Ticket Received</h3>
+              <p className="muted">
+                Our compliance support operations will respond within 4 hours for high severity concerns, and 24 hours for general feedback.
+              </p>
+              <button className="btn btn-ghost" onClick={() => setSubmitted(false)}>
+                Submit another ticket
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleTicketSubmit}>
+              <div className="section-title">
+                <SendIcon size={16} color="var(--info)" /> Log Support Ticket
+              </div>
+              <p className="muted" style={{ fontSize: 12, marginBottom: 15 }}>
+                Submit issues to the ContractIQ legal operations support queue.
+              </p>
+
+              <div className="modern-input-wrap">
+                <label>Ticket Subject</label>
+                <input
+                  type="text"
+                  placeholder="e.g. OCR parser failed on signed Darwinbox PDF"
+                  className="modern-input"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="modern-input-wrap">
+                <label>Issue Severity</label>
+                <select
+                  className="modern-input"
+                  value={severity}
+                  onChange={(e) => setSeverity(e.target.value)}
+                >
+                  <option value="Low">Low - Question / Feature</option>
+                  <option value="Medium">Medium - Workflow Blocked</option>
+                  <option value="Critical Compliance Breach">Critical - Compliance Risk</option>
+                </select>
+              </div>
+
+              <div className="modern-input-wrap">
+                <label>Detailed Explanation</label>
+                <textarea
+                  placeholder="Include specific contract identifiers, SLA dates, or user roles involved..."
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: "100%", justifyContent: "center", display: "flex" }}
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : "Submit Ticket"}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

@@ -2,17 +2,19 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUI } from "../context/UIContext";
 import {
-  ChevRightSmIcon, SearchIcon, CalendarIcon, MoonIcon, SunIcon, HelpIcon, BellIcon, PlusIcon,
-  FileIcon, ClipboardCheckIcon, UsersIcon, BarIcon, DownloadIcon, ChevDownIcon, UserIcon,
-  GearIcon, BellSmIcon, SwitchIcon, LogoutIcon, MenuIcon,
+  ChevRightSmIcon, SearchIcon, MoonIcon, SunIcon, HelpIcon, BellIcon, PlusIcon,
+  FileIcon, BarIcon, ChevDownIcon, UserIcon,
+  GearIcon, BellSmIcon, LogoutIcon, MenuIcon,
 } from "../components/Icons";
 
 const ROUTE_TITLES = {
-  "/": "Dashboard", "/repository": "Contract Repository", "/obligations": "Obligation Tracker",
-  "/renewals": "Renewal Dashboard", "/compliance": "Compliance", "/reports": "Reports & Analytics",
-  "/notifications": "Notifications", "/audit": "Audit Logs", "/users": "User Management",
-  "/settings": "Settings", "/profile": "My Profile", "/help": "Help & Support", "/calendar": "Calendar",
-  "/switch-role": "Switch Role",
+  "/reports": "Reports & Analytics",
+  "/notifications": "Notifications",
+  "/quick-actions": "Quick Actions",
+  "/profile": "My Profile",
+  "/settings": "Settings",
+  "/help": "Help & Support",
+  "/calendar": "Calendar",
 };
 
 const NOTIF_PREVIEW = [
@@ -21,14 +23,13 @@ const NOTIF_PREVIEW = [
 ];
 
 const SEARCH_INDEX = [
-  { group: "Pages", label: "Dashboard", sub: "Overview & KPIs", to: "/" },
-  { group: "Pages", label: "Settings", sub: "General, security, integrations", to: "/settings" },
-  { group: "Pages", label: "Help & Support", sub: "FAQs & ticketing", to: "/help" },
-  { group: "Pages", label: "Calendar", sub: "Obligations, renewals & tasks", to: "/calendar" },
-  { group: "Contracts", label: "MSA \u2014 Cloudline Inc.", sub: "Master Service Agreement \u00b7 Active", to: "/repository" },
-  { group: "Contracts", label: "Vendor Agreement \u2014 SafeHaul", sub: "Logistics vendor contract", to: "/repository" },
-  { group: "Obligations", label: "Vendor SLA Renewal", sub: "Due Jul 12, 2026 \u00b7 Priya N.", to: "/obligations" },
-  { group: "Users", label: "Arjun Mehta", sub: "Administrator", to: "/users" },
+  { group: "Pages", label: "Reports & Analytics", sub: "Data visualization & KPIs", to: "/reports" },
+  { group: "Pages", label: "Notifications", sub: "Alert feed & history", to: "/notifications" },
+  { group: "Pages", label: "Quick Actions", sub: "Instant operations grid", to: "/quick-actions" },
+  { group: "Pages", label: "My Profile", sub: "Personal settings & authority", to: "/profile" },
+  { group: "Pages", label: "Settings", sub: "App configuration & billing", to: "/settings" },
+  { group: "Pages", label: "Help & Support", sub: "FAQs & ticket submission", to: "/help" },
+  { group: "Pages", label: "Calendar", sub: "Compliance milestones & renewals calendar", to: "/calendar" },
 ];
 
 function useOutsideClick(ref, handler) {
@@ -53,11 +54,11 @@ export default function Navbar({ onToggleSidebar }) {
   useOutsideClick(bellRef, () => setBellOpen(false));
   useOutsideClick(qaRef, () => setQaOpen(false));
 
-  const { notificationCount, setNotificationCount, user, toggleTheme, theme } = useUI();
+  const { notificationCount, user, toggleTheme, theme } = useUI();
   const navigate = useNavigate();
   const location = useLocation();
   const initials = (user?.name || "AM").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-  const pageTitle = ROUTE_TITLES[location.pathname] || "Dashboard";
+  const pageTitle = ROUTE_TITLES[location.pathname] || "Reports & Analytics";
 
   const q = query.trim().toLowerCase();
   const matches = q ? SEARCH_INDEX.filter((it) => (it.label + " " + it.sub + " " + it.group).toLowerCase().includes(q)).slice(0, 8) : [];
@@ -80,7 +81,7 @@ export default function Navbar({ onToggleSidebar }) {
       <div className="search-wrap">
         <span className="search-ico"><SearchIcon /></span>
         <input
-          type="text" autoComplete="off" placeholder="Search contracts, obligations, users..."
+          type="text" autoComplete="off" placeholder="Search pages, settings, help..."
           value={query} onChange={(e) => setQuery(e.target.value)}
         />
         {q && (
@@ -104,8 +105,6 @@ export default function Navbar({ onToggleSidebar }) {
       </div>
 
       <div className="top-actions">
-        <Link to="/calendar" className="icon-btn" title="Calendar"><CalendarIcon /></Link>
-
         <button className="icon-btn" onClick={toggleTheme} title="Toggle theme">
           {theme === "light" ? <MoonIcon /> : <SunIcon />}
         </button>
@@ -140,11 +139,10 @@ export default function Navbar({ onToggleSidebar }) {
           </button>
           {qaOpen && (
             <div className="dropdown" style={{ width: 236 }}>
-              <button type="button" className="dd-item" onClick={() => goTo("/repository")}><FileIcon size={17} color="#3B82F6" /> New Contract</button>
-              <button type="button" className="dd-item" onClick={() => goTo("/obligations")}><ClipboardCheckIcon size={17} color="#10B981" /> Add Obligation</button>
-              <button type="button" className="dd-item" onClick={() => goTo("/users")}><UsersIcon size={17} color="#8B5CF6" /> Invite User</button>
-              <button type="button" className="dd-item" onClick={() => goTo("/reports")}><BarIcon size={17} color="#F59E0B" /> Generate Report</button>
-              <button type="button" className="dd-item" onClick={() => setQaOpen(false)}><DownloadIcon size={17} color="#14B8A6" /> Export Analytics</button>
+              <button type="button" className="dd-item" onClick={() => goTo("/quick-actions")}><PlusIcon size={17} color="#3B82F6" /> Open Quick Actions</button>
+              <button type="button" className="dd-item" onClick={() => goTo("/reports")}><BarIcon size={17} color="#F59E0B" /> View Analytics</button>
+              <button type="button" className="dd-item" onClick={() => goTo("/help")}><HelpIcon size={17} color="#10B981" /> File Support Ticket</button>
+              <button type="button" className="dd-item" onClick={() => goTo("/profile")}><UserIcon size={17} color="#8B5CF6" /> Manage Profile</button>
             </div>
           )}
         </div>
@@ -161,13 +159,12 @@ export default function Navbar({ onToggleSidebar }) {
                 <div className="avatar-purple">{initials}</div>
                 <div><strong>{user?.name || "Arjun Mehta"}</strong><span>{user?.email || "arjun.mehta@contractiq.com"}</span></div>
               </div>
-              <button type="button" className="dd-item" onClick={() => { goTo("/profile"); setNotificationCount(notificationCount); }}><UserIcon /> My Profile</button>
+              <button type="button" className="dd-item" onClick={() => goTo("/profile")}><UserIcon /> My Profile</button>
               <button type="button" className="dd-item" onClick={() => goTo("/settings")}><GearIcon /> Settings</button>
               <button type="button" className="dd-item" onClick={() => goTo("/notifications")}><BellSmIcon /> Notifications</button>
               <button type="button" className="dd-item" onClick={() => goTo("/help")}><HelpIcon /> Help & Support</button>
               <div className="dd-sep" />
-              <button type="button" className="dd-item orange" onClick={() => goTo("/switch-role")}><SwitchIcon /> Switch Role</button>
-              <button type="button" className="dd-item red" onClick={() => goTo("/logout")}><LogoutIcon /> Logout</button>
+              <button type="button" className="dd-item red" onClick={() => goTo("/reports")}><LogoutIcon /> Logout</button>
             </div>
           )}
         </div>

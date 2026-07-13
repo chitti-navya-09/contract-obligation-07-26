@@ -1,62 +1,134 @@
+import React, { useState, useEffect } from "react";
 import "./Reports.css";
-
-const KPIS = [
-  { label: "Contracts Signed (QTD)", value: "34" },
-  { label: "Avg. Turnaround Time", value: "6.2 days" },
-  { label: "Total Contract Value", value: "$2.1M" },
-  { label: "Renewal Rate", value: "91%" },
-];
-const MONTHLY_VOLUME = [
-  { month: "Feb", value: 18 }, { month: "Mar", value: 22 }, { month: "Apr", value: 19 },
-  { month: "May", value: 27 }, { month: "Jun", value: 24 }, { month: "Jul", value: 34 },
-];
-const TEMPLATES = [
-  { title: "Compliance Summary", sub: "Score trend + open flags, last 90 days" },
-  { title: "Obligation Status", sub: "All obligations grouped by owner and status" },
-  { title: "Contract Portfolio", sub: "Full repository export with value & expiry" },
-  { title: "Audit Trail", sub: "Every logged action for a chosen date range" },
-];
+import {
+  MOCK_KPIS, MOCK_MONTHLY_VOLUME, MOCK_REPORT_TEMPLATES
+} from "../data/mockData";
+import { DownloadIcon, BarIcon, ShieldIcon, InfoIcon } from "../components/Icons";
 
 export default function Reports() {
-  const maxVal = Math.max(...MONTHLY_VOLUME.map((m) => m.value));
+  const [kpis, setKpis] = useState(MOCK_KPIS);
+  const [monthlyVolume, setMonthlyVolume] = useState(MOCK_MONTHLY_VOLUME);
+  const [filterRange, setFilterRange] = useState("QTD");
+
+  // Fetch live metrics if backend is wired up
+  useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        const [resMetrics, resVolume] = await Promise.all([
+          fetch("/api/analytics/metrics"),
+          fetch("/api/analytics/monthly-volume")
+        ]);
+        if (resMetrics.ok && resVolume.ok) {
+          const metricsData = await resMetrics.json();
+          const volumeData = await resVolume.json();
+          setKpis(metricsData);
+          setMonthlyVolume(volumeData);
+        }
+      } catch (err) {
+        console.warn("Backend metrics endpoint not accessible, falling back to mock data.", err);
+      }
+    }
+    fetchMetrics();
+  }, []);
+
+  const maxVolumeVal = Math.max(...monthlyVolume.map((m) => m.value), 1);
 
   return (
-    <div className="page-surface reports-page">
-      <h2>Reports & Analytics</h2>
-      <p className="muted">Run reports and export analytics.</p>
-
-      <div className="kpi-grid" style={{ marginTop: 18 }}>
-        {KPIS.map((k) => (
-          <div className="kpi-card" key={k.label}>
-            <div className="kpi-val">{k.value}</div>
-            <div className="kpi-lbl">{k.label}</div>
-          </div>
-        ))}
+    <div className="page-surface reports-page fade-in-el">
+      <div className="reports-header-row">
+        <div>
+          <h2>Reports & Analytics</h2>
+          <p className="muted">Monitor contract compliance, renewal tracking, and obligation throughput.</p>
+        </div>
+        <div className="date-tabs">
+          {["QTD", "YTD", "Last 12M", "All Time"].map((tab) => (
+            <button
+              key={tab}
+              className={`date-tab-btn ${filterRange === tab ? "active" : ""}`}
+              onClick={() => setFilterRange(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Modern KPI Cards */}
+      <div className="kpi-grid" style={{ marginTop: 22 }}>
+        {kpis.map((k) => {
+          const isPositive = k.trend && !k.trend.startsWith("-");
+          return (
+            <div className="kpi-card-redesigned" key={k.label}>
+              <div className="kpi-card-meta">
+                <span className="lbl">{k.label}</span>
+                {k.trend && (
+                  <span className={`kpi-trend-badge ${isPositive ? "positive" : "negative"}`}>
+                    {k.trend}
+                  </span>
+                )}
+              </div>
+              <div className="val">{k.value}</div>
+              <div className="kpi-card-progress">
+                <div className="progress-bar-fill" style={{ width: "70%" }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Chart & Template Sections */}
       <div className="grid-split">
-        <div>
-          <div className="section-title">Contract Volume \u2014 Last 6 Months</div>
-          <div className="bar-chart">
-            {MONTHLY_VOLUME.map((m) => (
-              <div className="bar-col" key={m.month}>
-                <div className="bar-fill" style={{ height: (m.value / maxVal) * 100 + "%" }} />
-                <span>{m.month}</span>
+        <div className="card chart-wrapper">
+          <div className="section-title">
+            <BarIcon size={16} color="var(--info)" /> Contract Volume Trend
+          </div>
+          <p className="muted" style={{ fontSize: 12, marginBottom: 20 }}>Monthly signed agreements and extensions</p>
+          
+          <div className="bar-chart-enhanced">
+            {monthlyVolume.map((m) => (
+              <div className="bar-col-enhanced" key={m.month}>
+                <div className="bar-container-enhanced">
+                  <div 
+                    className="bar-fill-enhanced" 
+                    style={{ height: `${(m.value / maxVolumeVal) * 100}%` }}
+                  >
+                    <span className="bar-tooltip">{m.value} contracts</span>
+                  </div>
+                </div>
+                <span className="bar-label">{m.month}</span>
               </div>
             ))}
           </div>
         </div>
-        <div>
-          <div className="section-title">Report Templates</div>
-          {TEMPLATES.map((t) => (
-            <div className="report-row" key={t.title}>
-              <div>
-                <div className="task-title">{t.title}</div>
-                <div className="task-meta">{t.sub}</div>
+
+        <div className="card templates-wrapper">
+          <div className="section-title">
+            <ShieldIcon size={16} color="var(--emerald)" /> Standard Templates
+          </div>
+          <p className="muted" style={{ fontSize: 12, marginBottom: 15 }}>Export ready-to-file compliance reports</p>
+          
+          <div className="templates-list">
+            {MOCK_REPORT_TEMPLATES.map((t) => (
+              <div className="template-card-row" key={t.title}>
+                <div className="template-card-info">
+                  <strong>{t.title}</strong>
+                  <span className="subText">{t.sub}</span>
+                </div>
+                <button className="export-action-btn" title="Download Report CSV/PDF">
+                  <DownloadIcon size={14} /> <span>PDF</span>
+                </button>
               </div>
-              <button className="btn-ghost">Export</button>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Performance Summary Banner */}
+      <div className="compliance-banner-enhanced">
+        <InfoIcon size={18} color="var(--info)" />
+        <div className="banner-text">
+          <strong>Pro-Tip:</strong> Automated monthly volume calculations are synced directly with the contract repository database. 
+          For granular CSV logs, run the <em>Compliance Audit</em> in the <a href="/quick-actions" style={{ textDecoration: "underline", color: "var(--info)" }}>Quick Actions page</a>.
         </div>
       </div>
     </div>

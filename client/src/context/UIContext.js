@@ -6,6 +6,7 @@ export function UIProvider({ children }){
   const [notificationCount, setNotificationCount] = useState(2);
   const [user, setUser] = useState({name:'Arjun Mehta', role:'Administrator', email:'arjun.mehta@contractiq.com'});
   const [theme, setTheme] = useState('light');
+  const [toast, setToast] = useState({ visible: false, message: "" });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -15,8 +16,24 @@ export function UIProvider({ children }){
     setTheme(t => (t === 'light' ? 'dark' : 'light'));
   }
 
+  function showToast(message){
+    setToast({ visible: true, message });
+    setTimeout(() => {
+      setToast({ visible: false, message: "" });
+    }, 3000);
+  }
+
   return (
-    <UIContext.Provider value={{ notificationCount, setNotificationCount, user, setUser, theme, toggleTheme }}>
+    <UIContext.Provider value={{ 
+      notificationCount, 
+      setNotificationCount, 
+      user, 
+      setUser, 
+      theme, 
+      toggleTheme,
+      toast,
+      showToast
+    }}>
       {children}
     </UIContext.Provider>
   )
