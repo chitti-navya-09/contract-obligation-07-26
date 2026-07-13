@@ -12,6 +12,21 @@ export function UIProvider({ children }){
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    async function loadUserProfile() {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setUser({ name: data.full_name, role: data.role, email: data.email });
+        }
+      } catch (err) {
+        // Fallback to default state
+      }
+    }
+    loadUserProfile();
+  }, []);
+
   function toggleTheme(){
     setTheme(t => (t === 'light' ? 'dark' : 'light'));
   }
