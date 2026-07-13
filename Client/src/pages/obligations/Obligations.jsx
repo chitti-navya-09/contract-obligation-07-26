@@ -2,15 +2,28 @@ import React, { useState } from 'react';
 import { 
   Plus, Search, Filter, CheckCircle, Clock,Eye, Edit,
   Trash2,
-  AlertTriangle, MoreVertical, Calendar,
+  AlertTriangle, MoreVertical, Calendar, GripVertical,
 Grid3X3,
   ArrowRight, LayoutList 
 } from 'lucide-react';
 import FormInput from '../../components/Form/FormInput';
 import FormSelect from '../../components/Form/FormSelect';
+
 import Button from '../../components/Buttons/Button';
 import Modal from '../../components/Modals/Modal';
+import SortableCard from "./SortableCard";
 import './Obligations.css';
+
+import {
+  DndContext,
+  closestCenter
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+
 
 const Obligations = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -165,6 +178,23 @@ const pendingCount = obligations.filter(
 const completedCount = obligations.filter(
   (o) => o.status === "Completed"
 ).length;
+const handleDragEnd = (event) => {
+  const { active, over } = event;
+
+  if (!over || active.id === over.id) return;
+
+  const oldIndex = obligations.findIndex(
+    (item) => item.id === active.id
+  );
+
+  const newIndex = obligations.findIndex(
+    (item) => item.id === over.id
+  );
+
+  setObligations((items) =>
+    arrayMove(items, oldIndex, newIndex)
+  );
+};
 
   const filteredObligations = obligations.filter(o => {
     const matchesSearch = o.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -453,32 +483,60 @@ const completedCount = obligations.filter(
         </div>
       </div>
 {viewMode === "grid" && (
-  <div className="obl-grid-view">
+  <DndContext
+  collisionDetection={closestCenter}
+  onDragEnd={handleDragEnd}
+>
+    <SortableContext
+      items={filteredObligations.map((o) => o.id)}
+      strategy={rectSortingStrategy}
+    >
+      <div className="obl-grid-view">
 
-    {filteredObligations.map((obligation) => (
+       {filteredObligations.map((obligation) => (
 
-      <div className="obl-grid-card" key={obligation.id}>
+  <SortableCard
+    key={obligation.id}
+    id={obligation.id}
+  >
+   <div className="obl-grid-card">
 
-        <h4>{obligation.description}</h4>
+  <div className="card-header">
+    <h4>{obligation.description}</h4>
 
-        <p>{obligation.contractId}</p>
+    <GripVertical
+      size={20}
+      className="drag-handle"
+    />
+  </div>
 
-        {getPriorityBadge(obligation.priority)}
+  <p>{obligation.contractId}</p>
+  <div className="obl-card-footer">
+    <small>
+        Drag to reorder
+    </small>
+</div>
 
-        {getStatusBadge(obligation.status)}
+  <div className="grid-badges">
+    {getPriorityBadge(obligation.priority)}
+    {getStatusBadge(obligation.status)}
+  </div>
 
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{ width: obligation.progress }}
-          ></div>
-        </div>
+  <div className="progress-bar">
+    <div
+      className="progress-fill"
+      style={{ width: obligation.progress }}
+    ></div>
+  </div>
+
+</div>
+</SortableCard>
+
+        ))}
 
       </div>
-
-    ))}
-
-  </div>
+    </SortableContext>
+  </DndContext>
 )}
    <Modal 
         isOpen={isAddModalOpen} 
