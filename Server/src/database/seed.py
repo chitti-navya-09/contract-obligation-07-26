@@ -1,12 +1,13 @@
 import sys
 import os
-from datetime import date
+from datetime import date, datetime, timedelta
 
 # Add the server's root directory to python path if run directly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from src.compliance.controller import SessionLocal, engine
-from src.entities.compliance import Base, ComplianceRecord
+from database.core import SessionLocal, engine
+from entities.compliance import Base, Compliance
+from entities.contract import Contract, ContractCategories, ContractStatus
 
 def seed_db():
     print("Initializing database schema...")
@@ -14,62 +15,84 @@ def seed_db():
     
     db = SessionLocal()
     try:
-        # Clear existing placeholder records
+        # Check if we have at least one contract to satisfy the foreign key constraint
+        contract = db.query(Contract).first()
+        if not contract:
+            print("No contract found. Creating a default contract for compliance records...")
+            contract = Contract(
+                titile=ContractCategories.VENDOR_CONTRACTS,
+                category=ContractCategories.VENDOR_CONTRACTS,
+                department="Legal",
+                company_name="TechCorp Solutions",
+                vendor_name="TechCorp Solutions",
+                responsible_person="John Doe",
+                contract_value=150000,
+                description="Default contract for compliance tracking",
+                status=ContractStatus.ACTIVE,
+                effective_date=datetime.utcnow() - timedelta(days=365),
+                expiry_date=datetime.utcnow() + timedelta(days=365)
+            )
+            db.add(contract)
+            db.commit()
+            db.refresh(contract)
+            print(f"Created default contract with ID: {contract.contract_id}")
+            
+        # Clear existing compliance records
         print("Clearing existing compliance records...")
-        db.query(ComplianceRecord).delete()
+        db.query(Compliance).delete()
         db.commit()
         
         # Standard mockup data matching Compliance.jsx exactly
         mock_records = [
-            ComplianceRecord(
+            Compliance(
                 requirement="GDPR Data Processing",
                 category="Data Privacy",
                 entity="TechCorp Solutions",
-                contract_id="CNT-2025-001",
+                contract_id=contract.contract_id,
                 status="Compliant",
-                risk="High",
-                last_audit=date(2023, 10, 1),
-                score=98
+                risk_level="High",
+                last_audit=datetime(2023, 10, 1),
+                health_score=98
             ),
-            ComplianceRecord(
+            Compliance(
                 requirement="ISO 27001 Certification",
                 category="Security",
                 entity="Cloud Services LLC",
-                contract_id="CNT-2025-002",
+                contract_id=contract.contract_id,
                 status="Non-Compliant",
-                risk="High",
-                last_audit=date(2023, 9, 15),
-                score=45
+                risk_level="High",
+                last_audit=datetime(2023, 9, 15),
+                health_score=45
             ),
-            ComplianceRecord(
+            Compliance(
                 requirement="Annual Background Checks",
                 category="HR Policy",
                 entity="Staffing Agency",
-                contract_id="CNT-2025-003",
+                contract_id=contract.contract_id,
                 status="Under Review",
-                risk="Medium",
-                last_audit=date(2023, 11, 5),
-                score=72
+                risk_level="Medium",
+                last_audit=datetime(2023, 11, 5),
+                health_score=72
             ),
-            ComplianceRecord(
+            Compliance(
                 requirement="Anti-Bribery Clause",
                 category="Legal",
                 entity="GlobalTech",
-                contract_id="CNT-2025-004",
+                contract_id=contract.contract_id,
                 status="Compliant",
-                risk="Low",
-                last_audit=date(2023, 1, 10),
-                score=100
+                risk_level="Low",
+                last_audit=datetime(2023, 1, 10),
+                health_score=100
             ),
-            ComplianceRecord(
+            Compliance(
                 requirement="SLA Uptime >= 99.9%",
                 category="Operations",
                 entity="HostProvider Inc",
-                contract_id="CNT-2025-005",
+                contract_id=contract.contract_id,
                 status="Warning",
-                risk="Medium",
-                last_audit=date(2023, 11, 20),
-                score=85
+                risk_level="Medium",
+                last_audit=datetime(2023, 11, 20),
+                health_score=85
             ),
         ]
         

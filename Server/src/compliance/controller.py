@@ -15,27 +15,7 @@ from .models import (
     RiskDistributionResponse,
     PaginatedComplianceResponse
 )
-
-# ==========================================
-# DATABASE SESSION DEPENDENCY (FALLBACK)
-# ==========================================
-# Replace this fallback PostgreSQL configuration with your project's global database provider.
-# E.g. `from Server.src.database import get_db`
-#
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/contract_iq"
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
+from database.core import get_db
 
 def verify_compliance_access(x_user_role: str = Header(None)):
     """
@@ -50,7 +30,7 @@ def verify_compliance_access(x_user_role: str = Header(None)):
 
 
 router = APIRouter(
-    prefix="/api/compliance",
+    prefix="/compliance",
     tags=["Compliance Dashboard REST API"],
     dependencies=[Depends(verify_compliance_access)]
 )
@@ -69,15 +49,15 @@ def export_compliance_records(db: Session = Depends(get_db)):
     
     for r in records:
         writer.writerow([
-            f"CMP-{r.id:03d}",
+            f"CMP-{r.compliance_id:03d}",
             r.requirement,
             r.category,
             r.entity,
             r.contract_id,
             r.status,
-            r.risk,
-            r.last_audit.isoformat() if r.last_audit else "",
-            r.score
+            r.risk_level,
+            r.last_audit.date().isoformat() if r.last_audit else "",
+            r.health_score if r.health_score is not None else 0
         ])
         
     f.seek(0)
@@ -147,7 +127,8 @@ def read_all_compliance_records(
     """
     Retrieve all compliance records (GET all records).
     """
-    return service.get_all_compliance_records(db, skip=skip, limit=limit)
+    records = service.get_all_compliance_records(db, skip=skip, limit=limit)
+    return [r.to_dict() for r in records]
 
 @router.get("/records/{record_id}", response_model=ComplianceRecordResponse)
 def read_compliance_record_by_id(record_id: int, db: Session = Depends(get_db)):
@@ -160,7 +141,7 @@ def read_compliance_record_by_id(record_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Compliance record with ID {record_id} not found"
         )
-    return db_record
+    return db_record.to_dict()
 
 @router.post("/records", response_model=ComplianceRecordResponse, status_code=status.HTTP_201_CREATED)
 def create_compliance_record(record: ComplianceRecordCreate, db: Session = Depends(get_db)):
@@ -182,7 +163,7 @@ def update_compliance_record(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Compliance record with ID {record_id} not found"
         )
-    return db_record
+    return db_record.to_dict()
 
 @router.delete("/records/{record_id}", status_code=status.HTTP_200_OK)
 def delete_compliance_record(record_id: int, db: Session = Depends(get_db)):
