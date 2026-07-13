@@ -165,14 +165,14 @@
 }
 
 /* Stat Cards */
-.stat-card {
+.compliance-dashboard .stat-card {
   display: flex;
   flex-direction: column;
   justify-content: center;
   color: white;
 }
 
-.stat-icon-wrapper {
+.compliance-dashboard .stat-icon-wrapper {
   background: rgba(255, 255, 255, 0.2);
   width: 48px;
   height: 48px;
@@ -184,39 +184,42 @@
   backdrop-filter: blur(4px);
 }
 
-.stat-info {
+.compliance-dashboard .stat-info {
   display: flex;
   flex-direction: column;
 }
 
-.stat-label {
+.compliance-dashboard .stat-label {
   font-size: 0.85rem;
   opacity: 0.9;
   font-weight: 500;
   margin-bottom: 0.25rem;
+  color: #ffffff !important;
 }
 
-.stat-value {
+.compliance-dashboard .stat-value {
   font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
   color: white;
 }
 
-.stat-trend {
+.compliance-dashboard .stat-trend {
   font-size: 0.8rem;
   opacity: 0.8;
+  color: #ffffff !important;
 }
 
-.stat-trend.negative {
-  color: #ffd1d1;
+.compliance-dashboard .stat-trend.negative {
+  color: #ffd1d1 !important;
   font-weight: 600;
+  opacity: 1;
 }
 
 /* Gradients */
-.gradient-blue { background: linear-gradient(135deg, #4A6D8C 0%, #6B8EB1 100%); }
-.gradient-red { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); }
-.gradient-purple { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); }
+.compliance-dashboard .gradient-blue { background: linear-gradient(135deg, #4A6D8C 0%, #6B8EB1 100%); }
+.compliance-dashboard .gradient-red { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); }
+.compliance-dashboard .gradient-purple { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); }
 
 /* Chart Section */
 .comp-charts-section {
