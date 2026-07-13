@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Profile.css";
-import { MOCK_USER } from "../data/mockData";
+
 import { useUI } from "../context/UIContext";
 import {
   UserIcon, LockIcon, GearIcon, EditIcon, CameraIcon, BellIcon
@@ -86,13 +86,10 @@ export default function Profile() {
           const data = await res.json();
           setUser(prev => ({ ...prev, ...data }));
           setGlobalUser({ name: data.full_name, role: data.role, email: data.email });
-        } else {
-          setUser(MOCK_USER);
-          setGlobalUser({ name: MOCK_USER.full_name, role: MOCK_USER.role, email: MOCK_USER.email });
         }
+        // Backend unavailable — keep empty user state, no dummy fallback
       } catch {
-        setUser(MOCK_USER);
-        setGlobalUser({ name: MOCK_USER.full_name, role: MOCK_USER.role, email: MOCK_USER.email });
+        console.warn('Profile API unavailable — waiting for DB connection.');
       }
     }
     loadProfile();

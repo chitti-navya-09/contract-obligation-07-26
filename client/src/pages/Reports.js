@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "./Reports.css";
-import {
-  MOCK_KPIS, MOCK_MONTHLY_VOLUME, MOCK_REPORT_TEMPLATES
-} from "../data/mockData";
 import { DownloadIcon, BarIcon, ShieldIcon, InfoIcon } from "../components/Icons";
+
+// Static report template config (UI-only, no DB table)
+const REPORT_TEMPLATES = [
+  { title: "Compliance Summary", sub: "Score trend + open flags, last 90 days" },
+  { title: "Obligation Status", sub: "All obligations grouped by owner and status" },
+  { title: "Contract Portfolio", sub: "Full repository export with value & expiry" },
+  { title: "Audit Trail", sub: "Every logged action for a chosen date range" },
+];
 
 export default function Reports() {
   const [kpis, setKpis] = useState([]);
@@ -23,14 +28,10 @@ export default function Reports() {
           const volumeData = await resVolume.json();
           setKpis(metricsData);
           setMonthlyVolume(volumeData);
-        } else {
-          setKpis(MOCK_KPIS);
-          setMonthlyVolume(MOCK_MONTHLY_VOLUME);
         }
+        // On failure, KPIs and chart stay empty — no dummy fallback
       } catch (err) {
-        console.warn("Backend metrics endpoint not accessible, falling back to mock data.", err);
-        setKpis(MOCK_KPIS);
-        setMonthlyVolume(MOCK_MONTHLY_VOLUME);
+        console.warn('Analytics API unavailable — waiting for DB connection.', err);
       }
     }
     fetchMetrics();
@@ -113,7 +114,7 @@ export default function Reports() {
           <p className="muted" style={{ fontSize: 12, marginBottom: 15 }}>Export ready-to-file compliance reports</p>
           
           <div className="templates-list">
-            {MOCK_REPORT_TEMPLATES.map((t) => (
+            {REPORT_TEMPLATES.map((t) => (
               <div className="template-card-row" key={t.title}>
                 <div className="template-card-info">
                   <strong>{t.title}</strong>

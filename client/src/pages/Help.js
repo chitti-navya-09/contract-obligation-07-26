@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from "react";
 import "./Help.css";
-import { MOCK_FAQS, MOCK_HELP_CATEGORIES } from "../data/mockData";
 import {
   SearchIcon, ChevDownIcon, SendIcon, CheckIcon, HelpIcon,
 } from "../components/Icons";
+
+// Static help category config (UI-only)
+const HELP_CATEGORIES = [
+  { title: "Getting Started", sub: "Initial setup and ingesting contract PDFs" },
+  { title: "Obligation Mapping", sub: "Defining SLAs, compliance parameters, milestones" },
+  { title: "Audit & Reporting Logs", sub: "Exporting CSV/PDF history for executive review" },
+  { title: "Integrations & Webhooks", sub: "Connecting repositories to external trackers" },
+];
 
 function FaqAccordionItem({ item }) {
   const [open, setOpen] = useState(false);
@@ -33,7 +40,6 @@ export default function Help() {
   const [severity, setSeverity] = useState("Low");
   const [details, setDetails] = useState("");
 
-  // Load FAQ content from live database if available
   useEffect(() => {
     async function loadFaqs() {
       try {
@@ -41,12 +47,10 @@ export default function Help() {
         if (res.ok) {
           const data = await res.json();
           setFaqs(data);
-        } else {
-          setFaqs(MOCK_FAQS);
         }
+        // On failure, FAQ list stays empty — no dummy fallback
       } catch (err) {
-        console.warn("Backend unavailable, using default FAQ database");
-        setFaqs(MOCK_FAQS);
+        console.warn('FAQs API unavailable — waiting for DB connection.', err);
       }
     }
     loadFaqs();
@@ -108,7 +112,7 @@ export default function Help() {
 
       {/* Help Topic categories */}
       <div className="cat-grid-enhanced">
-        {MOCK_HELP_CATEGORIES.map((c) => (
+        {HELP_CATEGORIES.map((c) => (
           <div className="help-category-card" key={c.title}>
             <div className="category-accent-dot" />
             <strong>{c.title}</strong>

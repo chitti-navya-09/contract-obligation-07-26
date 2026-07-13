@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./QuickActions.css";
-import { MOCK_QUICK_ACTIONS } from "../data/mockData";
+
 import {
   ShieldIcon, DownloadIcon, BellIcon, RepeatIcon, BriefcaseIcon, PlugIcon,
   CheckIcon, PlayIcon, InfoIcon
@@ -32,24 +32,14 @@ export default function QuickActions() {
         if (resActions.ok) {
           const actionData = await resActions.json();
           setActions(actionData);
-        } else {
-          setActions(MOCK_QUICK_ACTIONS);
         }
         if (resLogs.ok) {
           const logData = await resLogs.json();
           setLogs(logData);
-        } else {
-          setLogs([
-            { id: 1, label: "Ping Overdue Owners", time: "10 mins ago", status: "Success" },
-            { id: 2, label: "Trigger Backup snapshot", time: "1 hr ago", status: "Success" },
-          ]);
         }
+        // On failure, lists stay empty — no dummy fallback
       } catch (err) {
-        setActions(MOCK_QUICK_ACTIONS);
-        setLogs([
-          { id: 1, label: "Ping Overdue Owners", time: "10 mins ago", status: "Success" },
-          { id: 2, label: "Trigger Backup snapshot", time: "1 hr ago", status: "Success" },
-        ]);
+        console.warn('Quick Actions API unavailable — waiting for DB connection.', err);
       }
     }
     loadData();

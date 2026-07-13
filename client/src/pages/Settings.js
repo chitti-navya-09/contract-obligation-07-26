@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from "react";
 import "./Settings.css";
-import { MOCK_INTEGRATIONS, MOCK_INVOICES, MOCK_INVITED_USERS } from "../data/mockData";
 import { useUI } from "../context/UIContext";
 import {
   PlugIcon, BuildingIcon, BellSmIcon, EditIcon, FileIcon, CheckIcon, DownloadIcon, BriefcaseIcon,
   GearIcon, LockIcon, CreditCardIcon, UsersIcon, MoonIcon, SunIcon, PlusIcon, KeyIcon
 } from "../components/Icons";
+
+// Static integrations config (UI-only — list of available integration providers)
+const INTEGRATIONS_LIST = [
+  { key: "salesforce", name: "Salesforce CRM", desc: "Sync contract records", color: "#3B82F6" },
+  { key: "slack", name: "Slack Link", desc: "Push channel alerts", color: "#8B5CF6" },
+  { key: "docusign", name: "DocuSign Connect", desc: "Manage e-signatures", color: "#10B981" },
+  { key: "sharepoint", name: "SharePoint Repo", desc: "Document repository sync", color: "#F59E0B" },
+];
 
 const TABS = [
   { key: "general", label: "General", Icon: GearIcon },
@@ -29,7 +36,7 @@ export default function Settings() {
   const [tab, setTab] = useState("general");
   
   // General State
-  const [orgName, setOrgName] = useState("Acme Corp");
+  const [orgName, setOrgName] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [dateFormat, setDateFormat] = useState("YYYY-MM-DD");
   
@@ -44,12 +51,12 @@ export default function Settings() {
   });
 
   // Security State
-  const [apiKeys, setApiKeys] = useState([
-    { id: 1, name: "Production Read-Only", key: "ct_live_...9f23", created: "2026-06-15" },
-    { id: 2, name: "Development Read/Write", key: "ct_test_...8b42", created: "2026-07-02" }
-  ]);
+  const [apiKeys, setApiKeys] = useState([]);
   const [newKeyName, setNewKeyName] = useState("");
   const [passwords, setPasswords] = useState({ current: "", newPass: "", confirm: "" });
+
+  // Invoices State
+  const [invoices, setInvoices] = useState([]);
 
   // Integrations State
   const [integrations, setIntegrations] = useState({
@@ -68,17 +75,18 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   const [billingMsg, setBillingMsg] = useState("");
 
-  // Fetch live settings and invitations if backend is reachable
   useEffect(() => {
     async function loadData() {
       try {
-        const [resSettings, resInvites] = await Promise.all([
+        const [resSettings, resInvites, resApiKeys, resInvoices] = await Promise.all([
           fetch("/api/settings"),
-          fetch("/api/users/invitations")
+          fetch("/api/users/invitations"),
+          fetch("/api/settings/security/apikeys"),
+          fetch("/api/billing/invoices")
         ]);
         if (resSettings.ok) {
           const data = await resSettings.json();
-          setOrgName(data.org_name || "Acme Corp");
+          setOrgName(data.org_name || "");
           setCurrency(data.currency || "USD");
           setDateFormat(data.date_format || "YYYY-MM-DD");
           setToggles({
@@ -93,12 +101,20 @@ export default function Settings() {
         if (resInvites.ok) {
           const invites = await resInvites.json();
           setInvitedUsers(invites);
-        } else {
-          setInvitedUsers(MOCK_INVITED_USERS);
         }
+        // On failure, invitedUsers stays [] — no dummy fallback
+        if (resApiKeys.ok) {
+          const keys = await resApiKeys.json();
+          setApiKeys(keys);
+        }
+        // On failure, apiKeys stays [] — no dummy fallback
+        if (resInvoices.ok) {
+          const inv = await resInvoices.json();
+          setInvoices(inv);
+        }
+        // On failure, invoices stays [] — no dummy fallback
       } catch (err) {
-        console.warn("Backend unavailable, falling back to local mock state");
-        setInvitedUsers(MOCK_INVITED_USERS);
+        console.warn('Settings API unavailable — waiting for DB connection.', err);
       }
     }
     loadData();
@@ -546,7 +562,7 @@ export default function Settings() {
           <div className="fade-in-el">
             <div className="section-title"><PlugIcon size={14} /> Linked Integrations</div>
             <div className="integrations-list">
-              {MOCK_INTEGRATIONS.map((it) => {
+              {INTEGRATIONS_LIST.map((it) => {
                 const connected = integrations[it.key];
                 const isConnecting = connectingKey === it.key;
                 const Icon = INTEGRATION_ICONS[it.key] || PlugIcon;
@@ -746,7 +762,9 @@ export default function Settings() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_INVOICES.map((inv) => (
+                {invoices.length === 0 ? (
+                  <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: 16 }}>No invoices found. Connect to database to load billing history.</td></tr>
+                ) : invoices.map((inv) => (
                   <tr key={inv.id}>
                     <td><strong>{inv.id}</strong></td>
                     <td>{inv.date}</td>

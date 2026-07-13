@@ -5,7 +5,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 from src.database.core import get_db
-from src.database.models import UserInvitation
+from src.database.models import UserInvitation, User
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -22,6 +22,34 @@ class UserInviteResponse(BaseModel):
     department: str
     status: str
     invitedAt: str
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str
+    status: str
+    lastActive: str
+
+    class Config:
+        orm_mode = True
+
+@router.get("", response_model=List[UserResponse])
+async def list_users(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).order_by(User.id.asc()))
+    users = result.scalars().all()
+    
+    return [
+        UserResponse(
+            id=u.id,
+            name=u.full_name,
+            email=u.email,
+            role=u.role,
+            status="Active",
+            lastActive="Just now"
+        )
+        for u in users
+    ]
 
 @router.post("/invite", response_model=UserInviteResponse)
 async def invite_user(payload: UserInviteRequest, db: AsyncSession = Depends(get_db)):

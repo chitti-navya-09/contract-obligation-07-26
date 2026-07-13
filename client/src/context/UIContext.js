@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { MOCK_USER } from '../data/mockData';
+
 
 const UIContext = createContext(null);
 
 export function UIProvider({ children }){
-  const [notificationCount, setNotificationCount] = useState(2);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [user, setUser] = useState({ name: '', role: '', email: '' });
   const [theme, setTheme] = useState('light');
   const [toast, setToast] = useState({ visible: false, message: "" });
@@ -20,11 +20,10 @@ export function UIProvider({ children }){
         if (res.ok) {
           const data = await res.json();
           setUser({ name: data.full_name, role: data.role, email: data.email });
-        } else {
-          setUser({ name: MOCK_USER.full_name, role: MOCK_USER.role, email: MOCK_USER.email });
         }
+        // If backend is unavailable, user stays as empty — no dummy fallback
       } catch (err) {
-        setUser({ name: MOCK_USER.full_name, role: MOCK_USER.role, email: MOCK_USER.email });
+        console.warn('Profile API unavailable — waiting for DB connection.', err);
       }
     }
     loadUserProfile();

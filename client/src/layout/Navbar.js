@@ -17,10 +17,15 @@ const ROUTE_TITLES = {
   "/calendar": "Calendar",
 };
 
-const NOTIF_PREVIEW = [
-  { id: 1, title: "Contract Expiring Urgently", desc: "CTR-2024-005 (Darwinbox) expires in 25 days.", time: "Just now", color: "#14B8A6" },
-  { id: 2, title: "Approval Required", desc: "CTR-2024-006 (Deloitte Audit) is awaiting your review.", time: "30 min ago", color: "#6366F1" },
-];
+const NOTIF_COLORS = {
+  Contracts: "#3B82F6",
+  Compliance: "#10B981",
+  Renewals: "#14B8A6",
+  Workflow: "#F59E0B",
+  "Risk Alerts": "#8B5CF6",
+  Approvals: "#6366F1",
+  System: "#64748B",
+};
 
 const SEARCH_INDEX = [
   { group: "Pages", label: "Reports & Analytics", sub: "Data visualization & KPIs", to: "/reports" },
@@ -47,6 +52,7 @@ export default function Navbar({ onToggleSidebar }) {
   const [bellOpen, setBellOpen] = useState(false);
   const [qaOpen, setQaOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [notifPreview, setNotifPreview] = useState([]);
   const ref = useRef();
   const bellRef = useRef();
   const qaRef = useRef();
@@ -55,6 +61,23 @@ export default function Navbar({ onToggleSidebar }) {
   useOutsideClick(qaRef, () => setQaOpen(false));
 
   const { notificationCount, user, toggleTheme, theme } = useUI();
+
+  useEffect(() => {
+    async function loadNotifs() {
+      try {
+        const res = await fetch("/api/notifications");
+        if (res.ok) {
+          const data = await res.json();
+          // Filter to show the first 3 notifications
+          setNotifPreview(data.slice(0, 3));
+        }
+      } catch (err) {
+        console.warn("Failed to load notifications for topbar preview", err);
+      }
+    }
+    loadNotifs();
+  }, [notificationCount]);
+
   const navigate = useNavigate();
   const location = useLocation();
   const initials = (user?.name || "AM").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
@@ -122,9 +145,9 @@ export default function Navbar({ onToggleSidebar }) {
                 <strong style={{ fontSize: 13.5 }}>Notifications</strong>
                 <span className="badge danger">{notificationCount} unread</span>
               </div>
-              {NOTIF_PREVIEW.map((n) => (
+              {notifPreview.map((n) => (
                 <button key={n.id} type="button" className="bell-preview-item" onClick={() => goTo("/notifications")}>
-                  <span className="dot" style={{ background: n.color, marginTop: 5 }} />
+                  <span className="dot" style={{ background: NOTIF_COLORS[n.cat] || "#64748B", marginTop: 5 }} />
                   <div><strong>{n.title}</strong><p>{n.desc}</p><div className="time">{n.time}</div></div>
                 </button>
               ))}
@@ -150,14 +173,14 @@ export default function Navbar({ onToggleSidebar }) {
         <div className="dropdown-wrap" ref={ref}>
           <button className="user-block" onClick={() => setOpen((s) => !s)} aria-haspopup="true" aria-expanded={open}>
             <div className="avatar-purple">{initials}</div>
-            <div className="user-meta"><strong>{user?.name || "Arjun Mehta"}</strong><span>{user?.role || "Administrator"}</span></div>
+            <div className="user-meta"><strong>{user?.name || "Guest"}</strong><span>{user?.role || "User"}</span></div>
             <span className="chev" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .18s ease" }}><ChevDownIcon /></span>
           </button>
           {open && (
             <div className="dropdown" role="menu">
               <div className="dd-header">
                 <div className="avatar-purple">{initials}</div>
-                <div><strong>{user?.name || "Arjun Mehta"}</strong><span>{user?.email || "arjun.mehta@contractiq.com"}</span></div>
+                <div><strong>{user?.name || "Guest"}</strong><span>{user?.email || ""}</span></div>
               </div>
               <button type="button" className="dd-item" onClick={() => goTo("/profile")}><UserIcon /> My Profile</button>
               <button type="button" className="dd-item" onClick={() => goTo("/settings")}><GearIcon /> Settings</button>

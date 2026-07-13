@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Notifications.css";
 import { useUI } from "../context/UIContext";
-import { MOCK_NOTIFICATIONS, MOCK_UPCOMING_RENEWALS } from "../data/mockData";
+
 import {
   FileIcon, ShieldIcon, RepeatIcon, ClipboardIcon, AlertTriIcon, CheckIcon, GearIcon,
   TrashIcon, CheckCircleIcon
@@ -26,25 +26,26 @@ export default function Notifications() {
   const [dismissingIds, setDismissingIds] = useState([]);
   const [upcomingRenewals, setUpcomingRenewals] = useState([]);
 
-  // Fetch from live database if available
   useEffect(() => {
     async function loadNotifications() {
       try {
-        const res = await fetch("/api/notifications");
-        if (res.ok) {
-          const data = await res.json();
+        const [resNotifs, resRenewals] = await Promise.all([
+          fetch("/api/notifications"),
+          fetch("/api/upcoming-renewals")
+        ]);
+        if (resNotifs.ok) {
+          const data = await resNotifs.json();
           setNotifs(data);
           const unreadCount = data.filter(n => !n.is_read).length;
           setNotificationCount(unreadCount);
-          setUpcomingRenewals(MOCK_UPCOMING_RENEWALS); // Renewals are client-side only
-        } else {
-          setNotifs(MOCK_NOTIFICATIONS);
-          setUpcomingRenewals(MOCK_UPCOMING_RENEWALS);
         }
+        if (resRenewals.ok) {
+          const renewalData = await resRenewals.json();
+          setUpcomingRenewals(renewalData);
+        }
+        // If endpoints fail, lists stay empty — no dummy fallback
       } catch (err) {
-        console.warn("Backend unavailable, using localized mock data");
-        setNotifs(MOCK_NOTIFICATIONS);
-        setUpcomingRenewals(MOCK_UPCOMING_RENEWALS);
+        console.warn('Notifications API unavailable — waiting for DB connection.', err);
       }
     }
     loadNotifications();
