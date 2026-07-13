@@ -12,7 +12,7 @@ import {
   BarChart3
 } from 'lucide-react';
 
-const Sidebar = ({ isOpen, closeSidebar }) => {
+const Sidebar = ({ isOpen, closeSidebar, userRole }) => {
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { path: '/contracts', label: 'Contracts', icon: <Files size={20} /> },
@@ -23,6 +23,13 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     { path: '/reports', label: 'Report Dashboard', icon: <BarChart3 size={20} /> },
   ];
 
+  const filteredNavItems = navItems.filter(item => {
+    if (item.path === '/compliance') {
+      return userRole === 'Legal Manager' || userRole === 'Compliance Officer';
+    }
+    return true;
+  });
+
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
@@ -31,7 +38,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
       </div>
       
       <nav className="sidebar-nav">
-        {navItems.map((item) => (
+        {filteredNavItems.map((item) => (
           <NavLink 
             key={item.path} 
             to={item.path} 

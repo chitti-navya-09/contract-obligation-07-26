@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -37,9 +37,22 @@ def get_db():
         db.close()
 
 
+def verify_compliance_access(x_user_role: str = Header(None)):
+    """
+    Dependency to verify if the user's role has permission to access the Compliance dashboard.
+    Authorized roles: Legal Manager, Compliance Officer.
+    """
+    if x_user_role not in ["Legal Manager", "Compliance Officer"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access Denied: Your role does not have permission to access the Compliance module."
+        )
+
+
 router = APIRouter(
     prefix="/api/compliance",
-    tags=["Compliance Dashboard REST API"]
+    tags=["Compliance Dashboard REST API"],
+    dependencies=[Depends(verify_compliance_access)]
 )
 
 @router.get("/export")

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, ChevronDown, Menu, User, Settings, LogOut } from 'lucide-react';
 
-const Header = ({ toggleSidebar }) => {
+const Header = ({ toggleSidebar, userRole, onRoleChange }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ const Header = ({ toggleSidebar }) => {
             <div className="avatar">JD</div>
             <div className="user-info">
               <span className="user-name">John Doe</span>
-              <span className="user-role">Legal Manager</span>
+              <span className="user-role">{userRole}</span>
             </div>
             <ChevronDown size={14} className="text-muted" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
           </div>
@@ -68,7 +68,30 @@ const Header = ({ toggleSidebar }) => {
             }}>
               <div style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--color-bg)', marginBottom: '0.25rem' }}>
                 <p style={{ fontWeight: 600, fontSize: '0.85rem' }}>John Doe</p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>admin@contractiq.com</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>admin@contractiq.com</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.5rem' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Active Role</span>
+                  <select 
+                    value={userRole} 
+                    onChange={(e) => onRoleChange(e.target.value)}
+                    style={{ 
+                      width: '100%', 
+                      fontSize: '0.8rem', 
+                      padding: '0.25rem 0.5rem', 
+                      borderRadius: '4px', 
+                      border: '1px solid var(--color-border)',
+                      backgroundColor: 'var(--color-bg-light)',
+                      color: 'var(--color-text-dark)',
+                      outline: 'none',
+                      fontWeight: 500
+                    }}
+                  >
+                    <option value="Legal Manager">Legal Manager</option>
+                    <option value="Compliance Officer">Compliance Officer</option>
+                    <option value="Administrator">Administrator</option>
+                    <option value="Contract Manager">Contract Manager</option>
+                  </select>
+                </div>
               </div>
               <button 
                 onClick={() => handleNavigation('/settings')}

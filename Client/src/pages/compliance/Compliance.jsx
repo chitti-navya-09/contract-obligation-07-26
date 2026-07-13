@@ -18,6 +18,22 @@ const Compliance = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('Overview');
 
+  // Dynamic userRole state for RBAC checks
+  const [currentRole, setCurrentRole] = useState(localStorage.getItem('user-role') || 'Legal Manager');
+
+  // Listen to role switcher changes in the Navbar dropdown
+  useEffect(() => {
+    const checkRole = () => {
+      setCurrentRole(localStorage.getItem('user-role') || 'Legal Manager');
+    };
+    window.addEventListener('storage', checkRole);
+    window.addEventListener('roleChanged', checkRole);
+    return () => {
+      window.removeEventListener('storage', checkRole);
+      window.removeEventListener('roleChanged', checkRole);
+    };
+  }, []);
+
   // API State Variables
   const [summary, setSummary] = useState(null);
   const [trend, setTrend] = useState([]);
@@ -40,13 +56,17 @@ const Compliance = () => {
   });
   const [formSubmitting, setFormSubmitting] = useState(false);
 
+  // Check if role has access to Compliance Dashboard (Legal Manager and Compliance Officer only)
+  const isAuthorized = currentRole === 'Legal Manager' || currentRole === 'Compliance Officer';
+
   // Reusable refresh function
   const refreshDashboardData = async () => {
+    if (!isAuthorized) return;
     try {
       const [summaryRes, trendRes, riskRes] = await Promise.all([
-        fetch(`${API_URL}/compliance/summary`),
-        fetch(`${API_URL}/compliance/trend`),
-        fetch(`${API_URL}/compliance/risk-distribution`)
+        fetch(`${API_URL}/compliance/summary`, { headers: { 'X-User-Role': currentRole } }),
+        fetch(`${API_URL}/compliance/trend`, { headers: { 'X-User-Role': currentRole } }),
+        fetch(`${API_URL}/compliance/risk-distribution`, { headers: { 'X-User-Role': currentRole } })
       ]);
 
       if (summaryRes.ok && trendRes.ok && riskRes.ok) {
@@ -67,7 +87,7 @@ const Compliance = () => {
         url += `&search=${encodeURIComponent(searchTerm)}`;
       }
 
-      const tableRes = await fetch(url);
+      const tableRes = await fetch(url, { headers: { 'X-User-Role': currentRole } });
       if (tableRes.ok) {
         const data = await tableRes.json();
         setComplianceItems(data.records || []);
@@ -79,15 +99,20 @@ const Compliance = () => {
 
   // Fetch overall dashboard analytics on load
   useEffect(() => {
+    if (!isAuthorized) return;
     const fetchAnalytics = async () => {
+      setLoading(true);
       try {
         const [summaryRes, trendRes, riskRes] = await Promise.all([
-          fetch(`${API_URL}/compliance/summary`),
-          fetch(`${API_URL}/compliance/trend`),
-          fetch(`${API_URL}/compliance/risk-distribution`)
+          fetch(`${API_URL}/compliance/summary`, { headers: { 'X-User-Role': currentRole } }),
+          fetch(`${API_URL}/compliance/trend`, { headers: { 'X-User-Role': currentRole } }),
+          fetch(`${API_URL}/compliance/risk-distribution`, { headers: { 'X-User-Role': currentRole } })
         ]);
 
         if (!summaryRes.ok || !trendRes.ok || !riskRes.ok) {
+          if (summaryRes.status === 403) {
+            throw new Error("Access Denied: You do not have permission to view compliance analytics.");
+          }
           throw new Error("Failed to load dashboard analytics data");
         }
 
@@ -107,10 +132,11 @@ const Compliance = () => {
     };
 
     fetchAnalytics();
-  }, []);
+  }, [currentRole, isAuthorized]);
 
-  // Fetch table records based on tab and search query updates
+  // Fetch table records based on tab, search query, and active role updates
   useEffect(() => {
+    if (!isAuthorized) return;
     const fetchTableData = async () => {
       try {
         let url = `${API_URL}/compliance/contracts?limit=100`;
@@ -125,7 +151,7 @@ const Compliance = () => {
           url += `&search=${encodeURIComponent(searchTerm)}`;
         }
 
-        const res = await fetch(url);
+        const res = await fetch(url, { headers: { 'X-User-Role': currentRole } });
         if (!res.ok) {
           throw new Error("Failed to fetch compliance table records");
         }
@@ -137,11 +163,34 @@ const Compliance = () => {
     };
 
     fetchTableData();
-  }, [activeTab, searchTerm]);
+  }, [activeTab, searchTerm, currentRole, isAuthorized]);
 
-  // Export report CSV download click handler
-  const handleExportReport = () => {
-    window.open(`${API_URL}/compliance/export`, '_blank');
+  // Export report CSV download click handler (using Blob to attach X-User-Role header)
+  const handleExportReport = async () => {
+    try {
+      const res = await fetch(`${API_URL}/compliance/export`, {
+        headers: {
+          'X-User-Role': currentRole
+        }
+      });
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error("Access Denied: You do not have permission to export compliance data.");
+        }
+        throw new Error("Failed to export compliance report");
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'compliance_report.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   // Audit form submit handler
@@ -151,7 +200,10 @@ const Compliance = () => {
     try {
       const res = await fetch(`${API_URL}/compliance/records`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Role': currentRole
+        },
         body: JSON.stringify({
           ...formData,
           score: parseInt(formData.score)
@@ -256,6 +308,24 @@ const Compliance = () => {
       legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: 'inherit', size: 13 } } }
     }
   };
+
+  // If not authorized, display Access Denied screen instead
+  if (!isAuthorized) {
+    return (
+      <div className="compliance-dashboard fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', padding: '2rem' }}>
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '1.5rem', borderRadius: '50%', marginBottom: '1.5rem', display: 'inline-flex' }}>
+          <AlertOctagon size={48} />
+        </div>
+        <h1 className="comp-title" style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Access Denied</h1>
+        <p className="comp-subtitle" style={{ maxWidth: '500px', margin: '0 auto 1.5rem auto', lineHeight: '1.6' }}>
+          Your active role <strong>({currentRole})</strong> does not have permission to view the Compliance Intelligence dashboard.
+        </p>
+        <p className="text-muted" style={{ fontSize: '0.875rem' }}>
+          Please use the user profile dropdown in the top navbar to switch to an authorized role like <strong>Legal Manager</strong> or <strong>Compliance Officer</strong>.
+        </p>
+      </div>
+    );
+  }
 
   // Overall metric configurations (using dynamic data, falling back to mockups on slow load)
   const complianceScoreVal = summary ? summary.compliance_score : 84;
