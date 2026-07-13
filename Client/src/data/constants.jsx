@@ -1,4 +1,4 @@
-export const API_URL = import.meta.env.VITE_API_BASE_URL;
+export const API_URL = import.meta.env.VITE_API_URL;
 export const APP_NAME = 'Contract Obligation Tracking';
 export const STORAGE_KEYS = {
   USER: 'cot_user',
