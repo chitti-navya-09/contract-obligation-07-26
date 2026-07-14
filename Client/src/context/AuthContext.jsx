@@ -12,11 +12,6 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('access_token');
       if (token) {
         const data = await getUsers();
-        // If there's an overridden role in localStorage, apply it!
-        const overriddenRole = localStorage.getItem('user-role');
-        if (overriddenRole) {
-          data.role = overriddenRole;
-        }
         setUserProfile(data);
       } else {
         setUserProfile(null);
@@ -43,27 +38,12 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user_id');
-    localStorage.removeItem('user-role');
     setUserProfile(null);
     window.location.href = '/login';
   };
 
-  const changeRole = (newRole) => {
-    localStorage.setItem('user-role', newRole);
-    setUserProfile(prev => (prev ? { ...prev, role: newRole } : { role: newRole }));
-    window.dispatchEvent(new Event('roleChanged'));
-  };
-
   return (
-    <AuthContext.Provider value={{ 
-      userProfile, 
-      role: userProfile?.role, 
-      loading, 
-      login, 
-      logout, 
-      changeRole,
-      refreshProfile: fetchProfile 
-    }}>
+    <AuthContext.Provider value={{ userProfile, role: userProfile?.role, loading, login, logout, refreshProfile: fetchProfile }}>
       {children}
     </AuthContext.Provider>
   );
