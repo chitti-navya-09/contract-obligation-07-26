@@ -1,18 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '../components/Modals/Modal';
 
 const ContractRepository = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [contracts, setContracts] = useState([]);
 
-  // Mock data for contracts
-  const contracts = [
-    { id: 'CTR-2026-001', vendor: 'Acme Corp', type: 'NDA', status: 'Active', value: '$50,000', owner: 'Jane Doe', date: 'Jul 12, 2026' },
-    { id: 'CTR-2026-002', vendor: 'TechFlow Inc', type: 'MSA', status: 'Pending', value: '$120,000', owner: 'John Smith', date: 'Jul 10, 2026' },
-    { id: 'CTR-2026-003', vendor: 'Global Logistics', type: 'SLA', status: 'Active', value: '$85,000', owner: 'Jane Doe', date: 'Jul 05, 2026' },
-    { id: 'CTR-2026-004', vendor: 'CloudSystems', type: 'Vendor', status: 'Expired', value: '$10,000', owner: 'Alice Wong', date: 'Jun 28, 2026' },
-    { id: 'CTR-2026-005', vendor: 'Marketing Pros', type: 'NDA', status: 'Active', value: '$25,000', owner: 'John Smith', date: 'Jun 15, 2026' },
-  ];
+  useEffect(() => {
+    fetch('/api/contracts/')
+      .then(res => res.json())
+      .then(data => setContracts(data))
+      .catch(console.error);
+  }, []);
+
+  const handleDownload = (contractId) => {
+    const content = `Contract Details for ${contractId}`;
+    const blob = new Blob([content], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${contractId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleAddContract = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newContract = {
+      id: formData.get('id'),
+      vendor: formData.get('vendor'),
+      type: formData.get('type'),
+      value: formData.get('value'),
+      status: 'Pending',
+      owner: 'Admin User'
+    };
+    try {
+      const res = await fetch('/api/contracts/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newContract)
+      });
+      if (res.ok) {
+        const added = await res.json();
+        setContracts([...contracts, added]);
+        setIsModalOpen(false);
+      }
+    } catch(err) { console.error(err); }
+  };
 
   return (
     <div>
@@ -84,7 +121,7 @@ const ContractRepository = () => {
                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '12px' }} title="View Details">
                     <i className="fa-solid fa-eye"></i>
                   </button>
-                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Download PDF">
+                  <button onClick={() => handleDownload(contract.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Download PDF">
                     <i className="fa-solid fa-download"></i>
                   </button>
                 </td>
@@ -96,15 +133,19 @@ const ContractRepository = () => {
 
       {/* Add Contract Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Upload New Contract">
-        <form onSubmit={(e) => { e.preventDefault(); setIsModalOpen(false); }}>
+        <form onSubmit={handleAddContract}>
+          <div className="form-group">
+            <label className="form-label">Contract ID</label>
+            <input type="text" name="id" className="premium-input" placeholder="e.g. CTR-2026-006" required />
+          </div>
           <div className="form-group">
             <label className="form-label">Counterparty / Vendor Name</label>
-            <input type="text" className="premium-input" placeholder="e.g. Acme Corp" required />
+            <input type="text" name="vendor" className="premium-input" placeholder="e.g. Acme Corp" required />
           </div>
           <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
             <div style={{ flex: 1 }}>
               <label className="form-label">Contract Type</label>
-              <select className="premium-input" required>
+              <select name="type" className="premium-input" required>
                 <option value="NDA">NDA</option>
                 <option value="MSA">MSA</option>
                 <option value="SLA">SLA</option>
@@ -112,7 +153,7 @@ const ContractRepository = () => {
             </div>
             <div style={{ flex: 1 }}>
               <label className="form-label">Contract Value</label>
-              <input type="text" className="premium-input" placeholder="$0.00" />
+              <input type="text" name="value" className="premium-input" placeholder="$0.00" />
             </div>
           </div>
           <div className="form-group">

@@ -1,61 +1,69 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { DashboardIcon, ContractsIcon, ObligationsIcon, ComplianceIcon, SettingsIcon } from '../DashboardIcons';
 
 const Sidebar = () => {
   const location = useLocation();
 
   const isActive = (path) => {
-    return location.pathname.startsWith(path) ? 'sidebar-link active-link' : 'sidebar-link';
+    return location.pathname.startsWith(path) ? 'bg-white/10 text-white border-l-4 border-emerald-400' : 'text-gray-300 hover:bg-white/5 hover:text-white';
   };
 
+  const linkClass = "flex items-center px-4 py-3 mb-2 rounded-r-lg font-medium transition-colors duration-200 group";
+
   return (
-    <aside style={{ width: '260px', backgroundColor: '#fff', borderRight: '1px solid #e5e7eb', padding: '24px 16px', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', paddingLeft: '16px' }}>
+    <aside className="w-64 bg-[#1E3A8A] text-white flex flex-col h-full overflow-y-auto">
+      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-4 pt-6">
         Main Menu
       </div>
-      <nav style={{ flex: 1 }}>
-        <Link to="/dashboard" className={isActive('/dashboard')}>
-          <i className="fa-solid fa-chart-pie"></i> Dashboard
+      <nav className="flex-1 pr-4">
+        <Link to="/dashboard" className={`${linkClass} ${isActive('/dashboard')}`}>
+          <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300 group-hover:scale-110 transition-transform mr-3">
+            <DashboardIcon className="w-5 h-5" />
+          </div>
+          Dashboard
         </Link>
-        <Link to="/contracts" className={isActive('/contracts')}>
-          <i className="fa-solid fa-folder-open"></i> Contract Repository
+        <Link to="/contracts" className={`${linkClass} ${isActive('/contracts')}`}>
+          <div className="p-2 rounded-lg bg-purple-500/20 text-purple-300 group-hover:scale-110 transition-transform mr-3">
+            <ContractsIcon className="w-5 h-5" />
+          </div>
+          Contract Repository
         </Link>
-        <Link to="/obligations" className={isActive('/obligations')}>
-          <i className="fa-solid fa-list-check"></i> Obligation Tracker
+        <Link to="/obligations" className={`${linkClass} ${isActive('/obligations')}`}>
+          <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 group-hover:scale-110 transition-transform mr-3">
+            <ObligationsIcon className="w-5 h-5" />
+          </div>
+          Obligation Tracker
         </Link>
-        <Link to="/compliance" className={isActive('/compliance')}>
-          <i className="fa-solid fa-shield-halved"></i> Compliance Dashboard
-        </Link>
-        <Link to="/reports" className={isActive('/reports')}>
-          <i className="fa-solid fa-file-invoice"></i> Reports & Analytics
+        <Link to="/compliance" className={`${linkClass} ${isActive('/compliance')}`}>
+          <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300 group-hover:scale-110 transition-transform mr-3">
+            <ComplianceIcon className="w-5 h-5" />
+          </div>
+          Compliance Dashboard
         </Link>
       </nav>
 
-      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', paddingLeft: '16px', marginTop: '32px' }}>
+      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-4 mt-8">
         System
       </div>
-      <nav>
-        <Link to="/notifications" className={isActive('/notifications')}>
-          <i className="fa-solid fa-bell"></i> Notifications
-        </Link>
-        <Link to="/audit-logs" className={isActive('/audit-logs')}>
-          <i className="fa-solid fa-clock-rotate-left"></i> Audit Logs
-        </Link>
-        <Link to="/settings" className={isActive('/settings')}>
-          <i className="fa-solid fa-gear"></i> Settings
+      <nav className="pr-4 mb-4">
+        <Link to="/settings" className={`${linkClass} ${isActive('/settings')}`}>
+          <div className="p-2 rounded-lg bg-slate-500/20 text-slate-300 group-hover:scale-110 transition-transform mr-3">
+            <SettingsIcon className="w-5 h-5" />
+          </div>
+          Settings
         </Link>
       </nav>
       
-      {/* Sidebar Footer User Profile snippet */}
-      <div style={{ marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', paddingLeft: '8px' }}>
-        <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--secondary-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', marginRight: '12px' }}>
+      <Link to="/settings" className="mt-auto pt-6 pb-6 border-t border-white/10 flex items-center px-4 hover:bg-white/5 transition-colors no-underline text-white">
+        <div className="w-10 h-10 rounded-full bg-[#10B981] text-white flex items-center justify-center font-bold mr-3 shadow-md">
           AD
         </div>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>Admin User</div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>admin@company.com</div>
+          <div className="text-sm font-semibold">Admin User</div>
+          <div className="text-xs text-gray-300">admin@company.com</div>
         </div>
-      </div>
+      </Link>
     </aside>
   );
 };

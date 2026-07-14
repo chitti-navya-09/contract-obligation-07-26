@@ -1,6 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import LegalDashboard from '../features/dashboard/LegalDashboard';
+import ActivityChart from '../components/ActivityChart';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   // Mock Data for the beautiful UI preview
   const recentContracts = [
     { id: 'CTR-2026-001', vendor: 'Acme Corp', type: 'NDA', status: 'Active', date: 'Jul 12, 2026' },
@@ -17,37 +21,16 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="dashboard-grid">
-        <div className="stat-card">
-          <div className="stat-icon primary"><i className="fa-solid fa-file-signature"></i></div>
-          <div className="stat-title">Total Contracts</div>
-          <div className="stat-value">1,248</div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-icon warning"><i className="fa-solid fa-clock"></i></div>
-          <div className="stat-title">Pending Renewals (30 Days)</div>
-          <div className="stat-value">34</div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-icon success"><i className="fa-solid fa-shield-check"></i></div>
-          <div className="stat-title">Compliance Score</div>
-          <div className="stat-value">98.5%</div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-icon danger"><i className="fa-solid fa-triangle-exclamation"></i></div>
-          <div className="stat-title">Missed Obligations</div>
-          <div className="stat-value">2</div>
-        </div>
-      </div>
+      <LegalDashboard />
+      
+      {/* Visual Analytics */}
+      <ActivityChart />
 
       {/* Recent Activity Table */}
       <div className="premium-table-container">
         <div className="table-header">
           <h2 className="table-title">Recent Contracts</h2>
-          <button className="premium-button" style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}>View All</button>
+          <button className="premium-button" style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }} onClick={() => navigate('/contracts')}>View All</button>
         </div>
         <table className="premium-table">
           <thead>
