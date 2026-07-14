@@ -1,62 +1,96 @@
 import os
-import tempfile
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from src.auth.security import hash_password, verify_password
+from src.auth.service import AuthService
 from src.database.core import Base
 from src.database.models import UserModel
-from src.auth.service import AuthService
-from src.auth.security import hash_password, verify_password
+
+
+TEST_DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not TEST_DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL is required for PostgreSQL tests."
+    )
 
 
 @pytest.fixture(scope="function")
 def db_session():
-    # create a temporary SQLite database file
-    fd, path = tempfile.mkstemp(suffix=".db")
-    os.close(fd)
-    engine = create_engine(f"sqlite:///{path}")
+    engine = create_engine(
+        TEST_DATABASE_URL,
+        pool_pre_ping=True,
+    )
+
+    # ప్రతి test ముందు clean tables create చేస్తుంది.
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
 
-    yield session
+    TestingSessionLocal = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=engine,
+    )
 
-    session.close()
-    engine.dispose()
-    os.remove(path)
+    session = TestingSessionLocal()
+
+    try:
+        yield session
+    finally:
+        session.close()
+        Base.metadata.drop_all(bind=engine)
+        engine.dispose()
 
 
 def test_hash_and_verify_password():
-    pw = "a" * 100  # longer than bcrypt 72-byte limit
-    hashed = hash_password(pw)
-    assert isinstance(hashed, str)
-    assert verify_password(pw, hashed) is True
-    # A password that differs only after the 72-byte truncation may still verify
-    # because bcrypt truncates inputs; ensure a differing prefix fails verification
-    different_pw = "b" * 100
-    assert verify_password(different_pw, hashed) is False
+    password = "StrongPassword@123"
+
+    hashed_password = hash_password(password)
+
+    assert isinstance(hashed_password, str)
+    assert verify_password(password, hashed_password) is True
+    assert verify_password(
+        "WrongPassword@123",
+        hashed_password,
+    ) is False
 
 
 def test_register_creates_user(db_session):
     service = AuthService()
 
-    class Req:
+    class RegisterRequest:
         name = "Tester"
-        organization = "Org"
-        department = "Dept"
-        phone = "+100000"
+        organization = "ContractIQ"
+        department = "Legal"
+        phone = "+1000000000"
         email = "tester@example.com"
-        password = "secretpass"
+        password = "StrongPassword@123"
         role = "Employee"
 
-    req = Req()
-    result = service.register(req, db_session)
+    request = RegisterRequest()
+
+    result = service.register(
+        request,
+        db_session,
+    )
 
     assert result["message"] == "User registered successfully"
     assert result["email"] == "tester@example.com"
+    assert result["role"] == "Employee"
 
-    user = db_session.query(UserModel).filter_by(email=req.email).first()
+    user = (
+        db_session.query(UserModel)
+        .filter(UserModel.email == request.email)
+        .first()
+    )
+
     assert user is not None
-    assert user.email == req.email
+    assert user.email == request.email
+    assert user.password != request.password
+    assert verify_password(
+        request.password,
+        user.password,
+    ) is True
