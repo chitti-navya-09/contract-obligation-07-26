@@ -9,33 +9,47 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 SERVER_DIR = Path(__file__).resolve().parents[2]
 ENV_FILE = SERVER_DIR / ".env"
 
-# Local development lo .env unte load chestundi.
-# GitHub Actions lo env variables direct ga use avutayi.
+# Local development lo server/.env unte load chestundi.
+# GitHub Actions lo workflow environment variables use avutayi.
 if ENV_FILE.exists():
     load_dotenv(ENV_FILE, override=False)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+Base = declarative_base()
 
-if not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL environment variable is not configured."
+engine = None
+SessionLocal = None
+
+
+def initialize_database():
+    """Create the database engine and session factory when required."""
+    global engine, SessionLocal
+
+    if engine is not None:
+        return
+
+    database_url = os.getenv("DATABASE_URL")
+
+    if not database_url:
+        raise RuntimeError(
+            "DATABASE_URL environment variable is not configured."
+        )
+
+    engine = create_engine(
+        database_url,
+        pool_pre_ping=True,
     )
 
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-)
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-)
-
-Base = declarative_base()
+    SessionLocal = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=engine,
+    )
 
 
 def get_db():
+    """Provide a database session for FastAPI dependencies."""
+    initialize_database()
+
     db = SessionLocal()
 
     try:
