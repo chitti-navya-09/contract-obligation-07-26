@@ -8,13 +8,15 @@ import {
 } from "../components/Icons";
 
 const ROUTE_TITLES = {
+  "/": "Dashboard",
+  "/renewal-dashboard": "Renewal Dashboard",
   "/reports": "Reports & Analytics",
-  "/notifications": "Notifications",
-  "/quick-actions": "Quick Actions",
-  "/profile": "My Profile",
   "/settings": "Settings",
-  "/help": "Help & Support",
+  "/notifications": "Notifications",
   "/calendar": "Calendar",
+  "/profile": "My Profile",
+  "/quick-actions": "Quick Actions",
+  "/help": "Help & Support",
 };
 
 const NOTIF_COLORS = {
@@ -81,7 +83,7 @@ export default function Navbar({ onToggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
   const initials = (user?.name || "AM").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-  const pageTitle = ROUTE_TITLES[location.pathname] || "Reports & Analytics";
+  const pageTitle =ROUTE_TITLES[location.pathname] || "ContractIQ";
 
   const q = query.trim().toLowerCase();
   const matches = q ? SEARCH_INDEX.filter((it) => (it.label + " " + it.sub + " " + it.group).toLowerCase().includes(q)).slice(0, 8) : [];

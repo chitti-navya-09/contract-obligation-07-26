@@ -1,7 +1,8 @@
 import "./assets/global.css";
-import PageContainer from "./layout/PageContainer";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { UIProvider } from './context/UIContext';
+import { UIProvider } from "./context/UIContext";
+import PageContainer from "./layout/PageContainer";
+
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
@@ -10,16 +11,17 @@ import Reports from "./pages/Reports";
 import QuickActions from "./pages/QuickActions";
 import Calendar from "./pages/Calendar";
 
-// Retained pages only: Settings, Notifications, Reports & Analytics,
-// Profile, Help & Support, Quick Actions, Calendar.
-// All other page files remain in /pages/ for future reference but are
-// intentionally not imported or routed here.
+// Your page
+import RenewalDashboard from "./pages/RenewalDashboard";
 
 function AppShell() {
   return (
     <PageContainer>
       <Routes>
-        <Route path="/" element={<Navigate to="/reports" replace />} />
+        <Route path="/" element={<Navigate to="/renewal-dashboard" replace />} />
+
+        <Route path="/renewal-dashboard" element={<RenewalDashboard />} />
+
         <Route path="/reports" element={<Reports />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/quick-actions" element={<QuickActions />} />
@@ -27,7 +29,8 @@ function AppShell() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<Help />} />
         <Route path="/calendar" element={<Calendar />} />
-        <Route path="*" element={<Navigate to="/reports" replace />} />
+
+        <Route path="*" element={<Navigate to="/renewal-dashboard" replace />} />
       </Routes>
     </PageContainer>
   );

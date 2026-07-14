@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List
 from src.database.core import get_db
 from src.database.models import QuickAction, QuickActionLog
@@ -16,8 +16,7 @@ class QuickActionResponse(BaseModel):
     icon: str
     color: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class QuickActionLogResponse(BaseModel):
     id: int

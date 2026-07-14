@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from src.database.core import get_db
 from src.database.models import Notification
@@ -18,8 +18,7 @@ class NotificationResponse(BaseModel):
     time: str
     isRead: bool
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 def format_relative_time(created_at):
     # Simply return a mock text for simplicity, or format the date nicely

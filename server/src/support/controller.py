@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List
 from src.database.core import get_db
 from src.database.models import FAQ, SupportTicket
@@ -12,8 +12,7 @@ class FaqResponse(BaseModel):
     q: str
     a: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TicketCreate(BaseModel):
     subject: str

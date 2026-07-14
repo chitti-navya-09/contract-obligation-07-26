@@ -1,3 +1,4 @@
+
 /* ContractIQ design system — ported to match the approved design exactly. */
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600;700;800&display=swap');
 
@@ -619,4 +620,5 @@ textarea:focus{border-color:var(--info); box-shadow:0 0 0 3px rgba(59,130,246,0.
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
+
 }
