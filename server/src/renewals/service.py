@@ -1,6 +1,6 @@
 from datetime import date, datetime
 # from sqlalchemy.orm import Session
-from pytest import Session
+# from pytest import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import Renewal
