@@ -77,7 +77,7 @@ function ForgotPassword() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/auth/forgot-password",
+        "/auth/forgot-password",
         {
           method: "POST",
           headers: {
