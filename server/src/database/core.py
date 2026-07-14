@@ -9,13 +9,16 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 SERVER_DIR = Path(__file__).resolve().parents[2]
 ENV_FILE = SERVER_DIR / ".env"
 
-load_dotenv(ENV_FILE)
+# Local development lo .env unte load chestundi.
+# GitHub Actions lo env variables direct ga use avutayi.
+if ENV_FILE.exists():
+    load_dotenv(ENV_FILE, override=False)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     raise RuntimeError(
-        "DATABASE_URL is missing in server/.env"
+        "DATABASE_URL environment variable is not configured."
     )
 
 engine = create_engine(
