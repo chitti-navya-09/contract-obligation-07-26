@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { DashboardIcon, ContractsIcon, ObligationsIcon, ComplianceIcon, SettingsIcon } from '../DashboardIcons';
+import { DashboardIcon, ContractsIcon, ObligationsIcon, ComplianceIcon, SettingsIcon, ReportsIcon } from '../DashboardIcons';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -40,6 +40,12 @@ const Sidebar = () => {
             <ComplianceIcon className="w-5 h-5" />
           </div>
           Compliance Dashboard
+        </Link>
+        <Link to="/reports" className={`${linkClass} ${isActive('/reports')}`}>
+          <div className="p-2 rounded-lg bg-pink-500/20 text-pink-300 group-hover:scale-110 transition-transform mr-3">
+            <ReportsIcon className="w-5 h-5" />
+          </div>
+          Reports & Analytics
         </Link>
       </nav>
 
