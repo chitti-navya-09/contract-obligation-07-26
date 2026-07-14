@@ -40,7 +40,7 @@ function ContractTable({ contracts }) {
                 <td>
                   <div className="company">
                     <div className="company-logo">
-                      {item.company.charAt(0)}
+                      {(item.company || "?").charAt(0)}
                     </div>
 
                     <div>
@@ -52,27 +52,27 @@ function ContractTable({ contracts }) {
                           fontWeight: "600",
                         }}
                       >
-                        {item.contract}
+                        {item.contract || "N/A"}
                       </h4>
 
-                      <p>{item.company}</p>
+                      <p>{item.company || "N/A"}</p>
                     </div>
                   </div>
                 </td>
 
-                <td>{item.category}</td>
+                <td>{item.category || "-"}</td>
 
                 <td>
                   <div className="owner">
                     <div className="owner-avatar">
-                      {item.owner.charAt(0)}
+                      {(item.owner || "?").charAt(0)}
                     </div>
 
-                    {item.owner}
+                    {item.owner || "-"}
                   </div>
                 </td>
 
-                <td>{item.value}</td>
+                <td>{item.value || "-"}</td>
 
                 <td>
                   <StatusBadge status={item.status} />
@@ -82,7 +82,7 @@ function ContractTable({ contracts }) {
                   <ProgressBar value={item.compliance} />
                 </td>
 
-                <td>{item.renewal}</td>
+                <td>{item.renewal || "-"}</td>
 
                 <td>
                   <div className="actions">

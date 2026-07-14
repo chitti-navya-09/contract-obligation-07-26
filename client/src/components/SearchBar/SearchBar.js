@@ -17,6 +17,7 @@ function SearchBar({
   status,
   setStatus,
   resetFilters,
+  contracts = [],
 }) {
   return (
     <div className="filter-container">
@@ -38,10 +39,16 @@ function SearchBar({
         onChange={(e) => setVendor(e.target.value)}
       >
         <option value="">Vendor</option>
-        <option value="Microsoft">Microsoft</option>
-        <option value="Amazon AWS">Amazon AWS</option>
-        <option value="Salesforce">Salesforce</option>
-        <option value="Adobe">Adobe</option>
+
+        {[...new Set(
+          contracts
+            .map(c => c.company)
+            .filter(Boolean)
+        )].map(company => (
+          <option key={company} value={company}>
+            {company}
+          </option>
+        ))}
       </select>
 
       {/* Contract Type */}
@@ -50,9 +57,16 @@ function SearchBar({
         onChange={(e) => setContractType(e.target.value)}
       >
         <option value="">Contract Type</option>
-        <option value="Cloud Service">Cloud Service</option>
-        <option value="Infrastructure">Infrastructure</option>
-        <option value="Software">Software</option>
+
+        {[...new Set(
+          contracts
+            .map(c => c.category)
+            .filter(Boolean)
+        )].map(category => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
       </select>
 
       {/* Owner */}
@@ -61,10 +75,16 @@ function SearchBar({
         onChange={(e) => setOwner(e.target.value)}
       >
         <option value="">Owner</option>
-        <option value="Sarah Chen">Sarah Chen</option>
-        <option value="David Lee">David Lee</option>
-        <option value="John Smith">John Smith</option>
-        <option value="Emily">Emily</option>
+
+        {[...new Set(
+          contracts
+            .map(c => c.owner)
+            .filter(Boolean)
+        )].map(owner => (
+          <option key={owner} value={owner}>
+            {owner}
+          </option>
+        ))}
       </select>
 
       {/* Status */}
@@ -73,9 +93,15 @@ function SearchBar({
         onChange={(e) => setStatus(e.target.value)}
       >
         <option value="">Status</option>
-        <option value="Active">Active</option>
-        <option value="Review">Review</option>
-        <option value="Draft">Draft</option>
+        {[...new Set(
+          contracts
+            .map(c => c.status)
+            .filter(Boolean)
+        )].map(status => (
+          <option key={status} value={status}>
+            {status}
+          </option>
+        ))}
       </select>
 
       {/* Reset */}

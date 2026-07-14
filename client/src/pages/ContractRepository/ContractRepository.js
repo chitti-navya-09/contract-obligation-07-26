@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -5,6 +6,7 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
 import SearchBar from "../../components/SearchBar/SearchBar";
 import ContractTable from "../../components/ContractTable/ContractTable";
+
 
 import {
   FiFileText,
@@ -27,13 +29,24 @@ function ContractRepository() {
   const [activeTab, setActiveTab] = useState("All");
 
   useEffect(() => {
-  fetch("http://127.0.0.1:8000/contracts")
-    .then((response) => response.json())
-    .then((data) => setContracts(data))
-    .catch((error) =>
-      console.error("Error fetching contracts:", error)
-    );
-  }, []);
+  const fetchContracts = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/contracts`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch contracts");
+      }
+
+      const data = await response.json();
+      setContracts(data);
+    } catch (error) {
+      console.error("Error fetching contracts:", error);
+      alert(error.message);
+    }
+  };
+
+  fetchContracts();
+}, []);
   const totalContracts = contracts.length;
 
   const activeContracts = contracts.filter(
@@ -111,18 +124,18 @@ const exportContracts = () => {
 const filteredContracts = contracts.filter((contract) => {
 
   const matchesSearch =
-    contract.contract
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()) ||
-    contract.company
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()) ||
-    contract.owner
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()) ||
-    contract.status
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+  (contract.contract || "")
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase()) ||
+  (contract.company || "")
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase()) ||
+  (contract.owner || "")
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase()) ||
+  (contract.status || "")
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase());
 
   const matchesVendor =
     vendor === "" || contract.company === vendor;
@@ -245,6 +258,7 @@ const filteredContracts = contracts.filter((contract) => {
           </div>
 
           <SearchBar
+            contracts={contracts}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             vendor={vendor}

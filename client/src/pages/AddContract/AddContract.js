@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
-
+import BASE_URL from "../../config/api";
 import "../../styles/addContract.css";
 
 function AddContract() {
@@ -12,43 +12,21 @@ function AddContract() {
 
   const isEditMode = Boolean(id);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading existing contract
+const [saving, setSaving] = useState(false);   // Saving the form
 
   const [contract, setContract] = useState({
-    id: "",
     company: "",
     contract: "",
     category: "",
-    value: "",
     owner: "",
+    value: "",
     status: "Draft",
-    compliance: 0,
-    renewal: "",
-
+    priority: "Medium",
     start_date: "",
     end_date: "",
-    days_remaining: 0,
-    priority: "Medium",
     description: "",
-
-    paid_amount: "",
-    outstanding: "",
-    currency: "USD",
-    payment_progress: 0,
-
-    renewal_type: "Manual",
-    notice_period: "30 Days",
-    auto_renewal: "Disabled",
-
-    created_on: "",
-    effective_date: "",
-    expiry_date: "",
-    renewal_reminder: "",
-
-    documents: 0,
-    obligations: 0,
-    tasks: 0,
-  });
+});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,7 +45,7 @@ function AddContract() {
         setLoading(true);
 
         const response = await fetch(
-          `http://127.0.0.1:8000/contracts/${id}`
+         `${BASE_URL}/contracts/${id}`
         );
 
         if (!response.ok) {
@@ -78,7 +56,8 @@ function AddContract() {
 
         setContract(data);
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching contract:", error);
+        alert(error.message);
       } finally {
         setLoading(false);
       }
@@ -89,11 +68,21 @@ function AddContract() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (
+      contract.start_date &&
+      contract.end_date &&
+      contract.end_date < contract.start_date
+    ) {
+      alert("End Date cannot be before Start Date.");
+      return;
+    }
 
     try {
+      setSaving(true);
+
       const url = isEditMode
-        ? `http://127.0.0.1:8000/contracts/${id}`
-        : "http://127.0.0.1:8000/contracts";
+        ? `${BASE_URL}/contracts/${id}`
+        : `${BASE_URL}/contracts`;
 
       const method = isEditMode ? "PUT" : "POST";
 
@@ -108,6 +97,8 @@ function AddContract() {
       if (!response.ok) {
         throw new Error("Failed to save contract");
       }
+      const result = await response.json();
+      console.log(result);
 
       alert(
         isEditMode
@@ -117,9 +108,11 @@ function AddContract() {
 
       navigate("/");
     } catch (error) {
-      console.error(error);
-      alert("Something went wrong.");
-    }
+        console.error("Error:", error);
+        alert(error.message);
+      } finally {
+        setSaving(false);
+      }
   };
 
   if (loading) {
@@ -281,12 +274,15 @@ function AddContract() {
                     </button>
 
                     <button
-                        type="submit"
-                        className="save-btn"
+                      type="submit"
+                      className="save-btn"
+                      disabled={saving}
                     >
-                        {isEditMode
-                            ? "Update Contract"
-                            : "Save Contract"}
+                      {saving
+                        ? "Saving..."
+                        : isEditMode
+                          ? "Update Contract"
+                          : "Save Contract"}
                     </button>
 
                 </div>

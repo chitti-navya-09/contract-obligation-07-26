@@ -1,8 +1,10 @@
+import BASE_URL from "../../config/api";
 import "../../styles/details.css";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
 import Tabs from "../../components/Tabs/Tabs";
+
 
 import {
   FiArrowLeft,
@@ -27,12 +29,12 @@ function ContractDetails() {
   if (!confirmDelete) return;
 
   try {
-    const response = await fetch(
-      `http://127.0.0.1:8000/contracts/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
+  const response = await fetch(
+    `${BASE_URL}/contracts/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
 
     if (!response.ok) {
       throw new Error("Delete failed");
@@ -53,7 +55,7 @@ function ContractDetails() {
         setLoading(true);
 
         const response = await fetch(
-          `http://127.0.0.1:8000/contracts/${id}`
+          `${BASE_URL}/contracts/${id}`
         );
 
         if (!response.ok) {
@@ -344,7 +346,7 @@ function ContractDetails() {
 
                   <div className="summary-item">
                     <span>Payment Terms</span>
-                    <strong>Net 30</strong>
+                    <strong>{contract.payment_terms}</strong>
                   </div>
 
                   <div className="summary-item">
