@@ -13,6 +13,7 @@ import Calendar from "./pages/Calendar";
 
 // Your page
 import RenewalDashboard from "./pages/RenewalDashboard";
+import UserManagement from "./pages/UserManagement";
 
 function AppShell() {
   return (
@@ -21,6 +22,7 @@ function AppShell() {
         <Route path="/" element={<Navigate to="/renewal-dashboard" replace />} />
 
         <Route path="/renewal-dashboard" element={<RenewalDashboard />} />
+        <Route path="/user-management" element={<UserManagement />} />
 
         <Route path="/reports" element={<Reports />} />
         <Route path="/notifications" element={<Notifications />} />
