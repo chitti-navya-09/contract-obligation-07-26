@@ -12,11 +12,15 @@ import {
   LogOut,
   Sliders
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [profileDropdown, setProfileDropdown] = useState(false);
   const [quickActionDropdown, setQuickActionDropdown] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   // Initialize theme from system or body classes
   useEffect(() => {
@@ -115,7 +119,13 @@ export default function Navbar() {
                 <span>Account Settings</span>
               </div>
               <hr className="dropdown-divider" />
-              <div className="dropdown-item text-danger">
+              <div 
+                className="dropdown-item text-danger"
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                }}
+              >
                 <LogOut className="dropdown-item-icon" />
                 <span>Log Out</span>
               </div>
