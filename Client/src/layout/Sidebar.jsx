@@ -92,6 +92,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
       </nav>
 
       <div className="sidebar-footer">
+<<<<<<< HEAD
         <NavLink 
           to="/settings" 
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -104,6 +105,25 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           <LogOut size={20} />
           <span>Logout</span>
         </button>
+=======
+        <nav className="sidebar-footer-nav">
+          <NavLink to="/settings" className="nav-item" onClick={closeSidebar}>
+            <Settings size={20} />
+            <span>Settings</span>
+          </NavLink>
+          <button 
+            className="nav-item nav-item-danger" 
+            style={{ width: '100%', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
+            onClick={() => {
+              closeSidebar();
+              logout();
+            }}
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </nav>
+>>>>>>> origin/main-group-A
       </div>
     </aside>
   );
