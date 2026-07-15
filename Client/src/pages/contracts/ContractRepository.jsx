@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from "xlsx";
-
+import { CONTRACT_API_URL } from "../../config/api";
 import { saveAs } from "file-saver";
 import axios from 'axios';
 import './Contracts.css';
+
 import ContractDetails from './ContractDetails';
 
 const ContractRepository = () => {
@@ -17,92 +18,46 @@ const ContractRepository = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentContractId, setCurrentContractId] = useState(null);
   const [selectedContract, setSelectedContract] = useState(null);
-  const exportData = contracts
-  .filter((item) => {
-    const matchesStatus =
-      statusFilter === "All" || item.status === statusFilter;
 
-    const matchesSearch =
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.vendor.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesStatus && matchesSearch;
-  })
-  .map((contract) => ({
-    ID: contract.id,
-    Title: contract.title,
-    Vendor: contract.vendor,
-    Type: contract.type,
-    Value: contract.value,
-    "End Date": contract.end_date,
-    Owner: contract.owner,
-    Status: contract.status,
-    Compliance: contract.compliance
-  }));
-  const handleExport = () => {
-  const exportData = contracts.map((contract) => ({
-    ID: contract.id,
-    Title: contract.title,
-    Vendor: contract.vendor,
-    Type: contract.type,
-    Value: contract.value,
-    "End Date": contract.end_date,
-    Owner: contract.owner,
-    Status: contract.status,
-    Compliance: contract.compliance
-  }));
-
-  const worksheet = XLSX.utils.json_to_sheet(exportData);
-  const workbook = XLSX.utils.book_new();
-
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Contracts");
-
-  const excelBuffer = XLSX.write(workbook, {
-    bookType: "xlsx",
-    type: "array"
-  });
-
-  const file = new Blob([excelBuffer], {
-    type:
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"
-  });
-
-  saveAs(file, "Contracts.xlsx");
-};
-
-  // Dynamic Form Field Payload state
+  // Dynamic Form Field Payload state (Fully Sync'd with Backend Schemas)
   const [formData, setFormData] = useState({
     title: '',
     vendor: '',
     type: 'SaaS License',
     value: '',
+    start_date: '',
     end_date: '',
     owner: '',
     status: 'Active',
-    compliance: 90
+    compliance: 90,
+    description: '',
+    auto_renewal: 'N/A',
+    payment_terms: 'N/A',
+    governing_law: 'N/A',
+    liability_cap: 'N/A'
   });
-
-  const API_BASE_URL = 'http://127.0.0.1:8000/api/contracts';
 
   // --- READ: Fetch records from backend ---
   const fetchContracts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(API_BASE_URL, {
+      const response = await axios.get(CONTRACT_API_URL, {
         params: {
           search: searchTerm || undefined,
           status: statusFilter !== 'All' ? statusFilter : undefined
         }
       });
-      setContracts(response.data);
+      
+      // Safety Check: Verify response.data is actually an array before setting state
+      if (Array.isArray(response.data)) {
+        setContracts(response.data);
+      } else {
+        console.error("Expected an array of contracts, but received:", response.data);
+        setContracts([]); 
+      }
     } catch (error) {
-      console.error("Backend connection failed, using local fallback data:", error);
-      // Fallback local state mock array if backend is offline/unreachable
-      setContracts([
-        { id: 1, title: 'Microsoft Azure Enterprise Agreement', vendor: 'Microsoft Corp', type: 'Cloud Services', value: 2.40, end_date: '2026-01-14', owner: 'Sarah Chen', status: 'Active', compliance: 95 },
-        { id: 2, title: 'Salesforce CRM Platform License', vendor: 'Salesforce Inc', type: 'SaaS License', value: 0.89, end_date: '2025-02-28', owner: 'James Miller', status: 'Active', compliance: 87 },
-        { id: 3, title: 'AWS Infrastructure Services', vendor: 'Amazon Web Services', type: 'IaaS', value: 1.56, end_date: '2025-05-31', owner: 'Emily Rodriguez', status: 'Renewal Due', compliance: 72 }
-      ]);
+      console.error("Backend connection failed:", error);
+      setContracts([]); // Fallback to avoid crashing when offline
     } finally {
       setLoading(false);
     }
@@ -120,6 +75,47 @@ const ContractRepository = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // --- EXPORT TO EXCEL ---
+  const handleExport = () => {
+    if (!Array.isArray(contracts) || contracts.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+
+    const exportData = contracts.map((contract) => ({
+      ID: contract.id,
+      Title: contract.title,
+      Vendor: contract.vendor,
+      Type: contract.type,
+      Value: contract.value,
+      "Start Date": contract.start_date,
+      "End Date": contract.end_date,
+      Owner: contract.owner,
+      Status: contract.status,
+      Compliance: `${contract.compliance}%`,
+      Description: contract.description,
+      "Auto Renewal": contract.auto_renewal,
+      "Payment Terms": contract.payment_terms,
+      "Governing Law": contract.governing_law,
+      "Liability Cap": contract.liability_cap
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Contracts");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array"
+    });
+
+    const file = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"
+    });
+
+    saveAs(file, "Contracts.xlsx");
+  };
+
   // --- CREATE & UPDATE: Combined submit handler ---
   const handleSubmitContract = async (e) => {
     e.preventDefault();
@@ -128,26 +124,32 @@ const ContractRepository = () => {
     const rawValue = formData.value.toString();
     const numericValue = parseFloat(rawValue.replace(/[\$,M\s]/gi, '')) || 0;
 
-    // 2. Map compliance safely to a string matching your Pydantic expectation
-    const complianceString = formData.compliance ? `${formData.compliance}%` : "Compliant";
+    // 2. Map compliance safely to a pure integer matching your database schemas
+    const complianceInt = parseInt(formData.compliance, 10) || 0;
 
-    // 3. Match backend schemas.py requirements perfectly
+    // 3. Match backend requirements perfectly
     const payload = {
       title: formData.title,
       vendor: formData.vendor,
       type: formData.type,
       value: numericValue,
+      start_date: formData.start_date,
       end_date: formData.end_date, 
       owner: formData.owner,
       status: formData.status,
-      compliance: complianceString
+      compliance: complianceInt,
+      description: formData.description || "No description provided for this contract.",
+      auto_renewal: formData.auto_renewal || "N/A",
+      payment_terms: formData.payment_terms || "N/A",
+      governing_law: formData.governing_law || "N/A",
+      liability_cap: formData.liability_cap || "N/A"
     };
 
     try {
       if (isEditing) {
-        await axios.put(`${API_BASE_URL}/${currentContractId}`, payload);
+        await axios.put(`${CONTRACT_API_URL}/${currentContractId}`, payload);
       } else {
-        await axios.post(API_BASE_URL, payload);
+        await axios.post(CONTRACT_API_URL, payload);
       }
       closeModal();
       fetchContracts(); 
@@ -160,15 +162,14 @@ const ContractRepository = () => {
     }
   };
 
-  // --- DELETE: Destroy handler with a user safety prompt ---
+  // --- DELETE: Destroy handler with safety prompt ---
   const handleDeleteContract = async (id) => {
     if (window.confirm(`Are you absolutely sure you want to delete contract ${id}?`)) {
       try {
-        await axios.delete(`${API_BASE_URL}/${id}`);
+        await axios.delete(`${CONTRACT_API_URL}/${id}`);
         fetchContracts(); 
       } catch (error) {
         console.error("Failed to delete contract record:", error);
-        setContracts((prev) => prev.filter((item) => item.id !== id));
       }
     }
   };
@@ -178,7 +179,7 @@ const ContractRepository = () => {
     setIsEditing(true);
     setCurrentContractId(contract.id);
     
-    // Safely extract numeric values if backend payload contains percentage symbols
+    // Convert backend percentage score cleanly to a numeric state
     const cleanCompliance = contract.compliance 
       ? parseInt(contract.compliance.toString().replace(/%/g, ''), 10) 
       : 100;
@@ -188,10 +189,16 @@ const ContractRepository = () => {
       vendor: contract.vendor,
       type: contract.type,
       value: contract.value,
+      start_date: contract.start_date || '',
       end_date: contract.end_date || '',
       owner: contract.owner || '',
       status: contract.status,
-      compliance: isNaN(cleanCompliance) ? 90 : cleanCompliance
+      compliance: isNaN(cleanCompliance) ? 90 : cleanCompliance,
+      description: contract.description || '',
+      auto_renewal: contract.auto_renewal || 'N/A',
+      payment_terms: contract.payment_terms || 'N/A',
+      governing_law: contract.governing_law || 'N/A',
+      liability_cap: contract.liability_cap || 'N/A'
     });
     setIsModalOpen(true);
   };
@@ -202,11 +209,24 @@ const ContractRepository = () => {
     setIsEditing(false);
     setCurrentContractId(null);
     setFormData({
-      title: '', vendor: '', type: 'SaaS License', value: '', end_date: '', owner: '', status: 'Active', compliance: 90
+      title: '',
+      vendor: '',
+      type: 'SaaS License',
+      value: '',
+      start_date: '',
+      end_date: '',
+      owner: '',
+      status: 'Active',
+      compliance: 90,
+      description: '',
+      auto_renewal: 'N/A',
+      payment_terms: 'N/A',
+      governing_law: 'N/A',
+      liability_cap: 'N/A'
     });
   };
 
-  // Helper color logic selector for UI compliance meters
+  // Helper color logic selector for progress meters
   const getComplianceColor = (val) => {
     const numericVal = parseInt(val, 10) || 0;
     if (numericVal >= 90) return '#10b981'; 
@@ -231,12 +251,12 @@ const ContractRepository = () => {
       <div className="header-row">
         <div>
           <h1 className="title-main">Contract Repository</h1>
-          <p className="subtitle-count">{contracts.length} contracts total</p>
+          <p className="subtitle-count">{Array.isArray(contracts) ? contracts.length : 0} contracts total</p>
         </div>
         <div className="action-button-group">
           <button className="btn-export" onClick={handleExport}>
-    📄 Export
-</button>
+            📄 Export
+          </button>
           <button
             className="btn-create"
             onClick={() => {
@@ -247,10 +267,16 @@ const ContractRepository = () => {
                 vendor: '',
                 type: 'SaaS License',
                 value: '',
+                start_date: '',
                 end_date: '',
                 owner: '',
                 status: 'Active',
-                compliance: 90
+                compliance: 90,
+                description: '',
+                auto_renewal: 'N/A',
+                payment_terms: 'N/A',
+                governing_law: 'N/A',
+                liability_cap: 'N/A'
               });
               setIsModalOpen(true);
             }}
@@ -294,7 +320,6 @@ const ContractRepository = () => {
           <table className="data-table">
             <thead>
               <tr className="table-header-row">
-                <th className="table-header check-col"><input type="checkbox" /></th>
                 <th className="table-header">ID</th>
                 <th className="table-header">Title / Vendor</th>
                 <th className="table-header">Type</th>
@@ -307,68 +332,75 @@ const ContractRepository = () => {
               </tr>
             </thead>
             <tbody>
-              {contracts.map((item) => (
-                <tr key={item.id} className="table-row">
-                  <td className="cell-data check-col"><input type="checkbox" /></td>
-                  <td className="cell-mono">{item.id}</td>
-                  
-                  <td 
-                    className="cell-data" 
-                    onClick={() => setSelectedContract(item)} 
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className="contract-title" style={{ color: '#1e3a8a', fontWeight: '600' }}>
-                      {item.title}
-                    </div>
-                    <div className="contract-vendor">{item.vendor}</div>
-                  </td>
-
-                  <td className="cell-data type-text">{item.type}</td>
-                  <td className="cell-data value-text">
-                    {typeof item.value === 'number' ? `$${item.value.toFixed(2)}M` : item.value}
-                  </td>
-                  <td className="cell-data date-text">{item.end_date}</td>
-                  <td className="cell-data owner-text">{item.owner || 'N/A'}</td>
-                  <td className="cell-data">
-                    <span className={`status-badge ${
-                      item.status === 'Active' ? 'active-status' : 
-                      item.status === 'Renewal Due' ? 'renewal-status' : 
-                      item.status === 'Expired' ? 'expired-status' : 'review-status'
-                    }`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="cell-data compliance-cell">
-                    <div className="compliance-wrapper">
-                      <div className="progress-bar-bg">
-                        <div 
-                          className="progress-bar-fill" 
-                          style={{ 
-                            width: `${parseInt(item.compliance, 10) || 0}`, 
-                            backgroundColor: getComplianceColor(item.compliance) 
-                          }}
-                        />
+              {Array.isArray(contracts) && contracts.length > 0 ? (
+                contracts.map((item) => (
+                  <tr key={item.id} className="table-row">
+                    <td className="cell-mono">{item.id}</td>
+                    
+                    <td 
+                      className="cell-data" 
+                      onClick={() => setSelectedContract(item)} 
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="contract-title" style={{ color: '#1e3a8a', fontWeight: '600' }}>
+                        {item.title}
                       </div>
-                      <span className="compliance-text">
-                        {item.compliance.toString().includes('%') ? item.compliance : `${item.compliance}%`}
+                      <div className="contract-vendor">{item.vendor}</div>
+                    </td>
+
+                    <td className="cell-data type-text">{item.type}</td>
+                    <td className="cell-data value-text">
+                      {typeof item.value === 'number' ? `$${item.value.toFixed(2)}M` : item.value}
+                    </td>
+                    <td className="cell-data date-text">{item.end_date}</td>
+                    <td className="cell-data owner-text">{item.owner || 'N/A'}</td>
+                    <td className="cell-data">
+                      <span className={`status-badge ${
+                        item.status === 'Active' ? 'active-status' : 
+                        item.status === 'Renewal Due' ? 'renewal-status' : 
+                        item.status === 'Expired' ? 'expired-status' : 'review-status'
+                      }`}>
+                        {item.status}
                       </span>
-                    </div>
-                  </td>
-                  <td className="cell-data actions-col">
-                    <div className="actions-wrapper">
-                      <button 
-                        className="action-icon-btn" 
-                        title="View"
-                        onClick={() => setSelectedContract(item)}
-                      >
-                        👁️
-                      </button>
-                      <button className="action-icon-btn" title="Edit" onClick={() => openEditModal(item)}>✏️</button>
-                      <button className="action-icon-btn delete" title="Delete" onClick={() => handleDeleteContract(item.id)}>🗑️</button>
-                    </div>
+                    </td>
+                    <td className="cell-data compliance-cell">
+                      <div className="compliance-wrapper">
+                        <div className="progress-bar-bg">
+                          <div 
+                            className="progress-bar-fill" 
+                            style={{ 
+                              width: `${parseInt(item.compliance, 10) || 0}%`, 
+                              backgroundColor: getComplianceColor(item.compliance) 
+                            }}
+                          />
+                        </div>
+                        <span className="compliance-text">
+                          {item.compliance}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="cell-data actions-col">
+                      <div className="actions-wrapper">
+                        <button 
+                          className="action-icon-btn" 
+                          title="View"
+                          onClick={() => setSelectedContract(item)}
+                        >
+                          👁️
+                        </button>
+                        <button className="action-icon-btn" title="Edit" onClick={() => openEditModal(item)}>✏️</button>
+                        <button className="action-icon-btn delete" title="Delete" onClick={() => handleDeleteContract(item.id)}>🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="9" style={{ textAlign: "center", padding: "20px", color: "#6b7280" }}>
+                    No contracts found.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         )}
@@ -408,24 +440,27 @@ const ContractRepository = () => {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Contract Value</label>
-                    <input type="text" name="value" required className="form-input" placeholder="e.g. $1.20M" value={formData.value} onChange={handleInputChange} />
+                    <label className="form-label">Contract Value (Millions)</label>
+                    <input type="text" name="value" required className="form-input" placeholder="e.g. 1.20" value={formData.value} onChange={handleInputChange} />
                   </div>
                 </div>
 
                 <div className="form-row-half">
                   <div className="form-group">
+                    <label className="form-label">Start Date</label>
+                    <input type="date" name="start_date" required className="form-input" value={formData.start_date} onChange={handleInputChange} />
+                  </div>
+                  <div className="form-group">
                     <label className="form-label">End Date</label>
-                    
                     <input type="date" name="end_date" required className="form-input" value={formData.end_date} onChange={handleInputChange} />
                   </div>
+                </div>
+
+                <div className="form-row-half">
                   <div className="form-group">
                     <label className="form-label">Contract Owner</label>
                     <input type="text" name="owner" required className="form-input" placeholder="e.g. Sarah Chen" value={formData.owner} onChange={handleInputChange} />
                   </div>
-                </div>
-
-                <div className="form-row-half">
                   <div className="form-group">
                     <label className="form-label">Status</label>
                     <select name="status" className="form-select" value={formData.status} onChange={handleInputChange}>
@@ -435,9 +470,45 @@ const ContractRepository = () => {
                       <option>Expired</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Compliance Score (%)</label>
+                  <input type="number" name="compliance" min="0" max="100" className="form-input" value={formData.compliance} onChange={handleInputChange} />
+                </div>
+
+                {/* --- ADDED DETAILED DYNAMIC FIELDS FOR METRICS --- */}
+                <div className="form-group">
+                  <label className="form-label">Contract Summary Description</label>
+                  <textarea 
+                    name="description" 
+                    rows="3" 
+                    className="form-input" 
+                    placeholder="Enter short outline details of contract requirements..." 
+                    value={formData.description} 
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="form-row-half">
                   <div className="form-group">
-                    <label className="form-label">Compliance Score (%)</label>
-                    <input type="number" name="compliance" min="0" max="100" className="form-input" value={formData.compliance} onChange={handleInputChange} />
+                    <label className="form-label">Auto-Renewal Clause</label>
+                    <input type="text" name="auto_renewal" className="form-input" placeholder="e.g. Yearly automatic" value={formData.auto_renewal} onChange={handleInputChange} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Payment Terms</label>
+                    <input type="text" name="payment_terms" className="form-input" placeholder="e.g. Net 30" value={formData.payment_terms} onChange={handleInputChange} />
+                  </div>
+                </div>
+
+                <div className="form-row-half">
+                  <div className="form-group">
+                    <label className="form-label">Governing Law</label>
+                    <input type="text" name="governing_law" className="form-input" placeholder="e.g. California, USA" value={formData.governing_law} onChange={handleInputChange} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Liability Cap</label>
+                    <input type="text" name="liability_cap" className="form-input" placeholder="e.g. 100% contract value" value={formData.liability_cap} onChange={handleInputChange} />
                   </div>
                 </div>
 

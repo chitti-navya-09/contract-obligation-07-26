@@ -1,39 +1,32 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from src.database.core import Base, engine
-from src.api import api_router
+from src.todos.controller import router as contracts_router
 
-
-Base.metadata.create_all(
-    bind=engine
-)
-
+# Sync PostgreSQL tables on startup
+try:
+    Base.metadata.create_all(bind=engine)
+    print("Database synced successfully!")
+except Exception as e:
+    print(f"Database sync failed: {e}")
 
 app = FastAPI(
-    title="Contract Obligation Tracking API"
+    title="Contract Management API",
+    version="1.0.0"
 )
 
-
+# Bulletproof CORS setup for local development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173"
-    ],
+    allow_origins=["*"],  # Allows any origin (localhost, 127.0.0.1, etc.)
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
-
-app.include_router(
-    api_router
-)
-
+# Routes mounted at http://127.0.0.1:8000/api/contracts
+app.include_router(contracts_router, prefix="/api")
 
 @app.get("/")
-def home():
-
-    return {
-        "message":"Backend running"
-    }
+def read_root():
+    return {"message": "API is running successfully!"}

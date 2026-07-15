@@ -9,7 +9,7 @@ const ContractDetails = ({ contract, onBack, onEditClick }) => {
   const handleDownload = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("Contract Details", 14, 20);
+    doc.text("Contract Report", 14, 20);
 
     autoTable(doc, {
         startY: 30,
@@ -19,33 +19,19 @@ const ContractDetails = ({ contract, onBack, onEditClick }) => {
             ["Title", contract.title || ''],
             ["Vendor", contract.vendor || ''],
             ["Type", contract.type || ''],
-            ["Value", typeof contract.value === 'number' ? `$${contract.value.toFixed(2)}M` : contract.value || ''],
-            ["Start Date", contract.start_date || ''],
+            ["Value", contract.value || ''],
+            ["Start Date", contract.startDate || ''],
             ["End Date", contract.end_date || ''],
             ["Owner", contract.owner || ''],
             ["Status", contract.status || ''],
-            ["Compliance", contract.compliance !== undefined ? `${contract.compliance}%` : ''],
-            ["Description", contract.description || ''],
-            ["Auto Renewal", contract.auto_renewal || ''],
-            ["Payment Terms", contract.payment_terms || ''],
-            ["Governing Law", contract.governing_law || ''],
-            ["Liability Cap", contract.liability_cap || '']
+            ["Compliance Total", `${contract.compliance || 0}%`]
         ]
     });
 
-    doc.save(`${contract.title || 'contract'}.pdf`);
+    doc.save(`Contract_${contract.id || 'Details'}.pdf`);
   };
 
-  if (!contract) return <div className="loading-state">Loading contract details...</div>;
-
-  // --- Dynamic Sub-Metrics (Option 1) ---
-  // We extract the single backend compliance integer. If not present, default to 0.
-  const baseCompliance = contract.compliance !== undefined ? parseInt(contract.compliance, 10) : 0;
-
-  // Derive the sub-metrics relative to the backend value so they look natural and dynamic
-  const docCompliance = baseCompliance; 
-  const oblCompliance = Math.max(0, Math.min(100, baseCompliance - 2)); // slight realistic variance
-  const renCompliance = Math.max(0, Math.min(100, baseCompliance + 3));
+  if (!contract) return <div className="loading-state">Loading contract info...</div>;
 
   return (
     <div className="details-container">
@@ -63,25 +49,20 @@ const ContractDetails = ({ contract, onBack, onEditClick }) => {
             <span className={`status-badge-pill ${contract.status ? contract.status.toLowerCase().replace(' ', '-') : ''}`}>
               {contract.status || 'Unknown'}
             </span>
-            <span className="mono-id-tag">ID: {contract.id}</span>
+            <span className="mono-id-tag">{contract.id}</span>
           </div>
-          <h1 className="contract-display-title">{contract.title || 'Untitled Contract'}</h1>
-          <p className="vendor-type-subtext">{contract.vendor || 'No Vendor'} • {contract.type || 'No Type'}</p>
+          <h1 className="contract-display-title">{contract.title || 'Untitled'}</h1>
+          <p className="vendor-type-subtext">{contract.vendor} • {contract.type}</p>
         </div>
 
         <div className="right-action-metric">
-          <div className="action-top-row" style={{ display: 'flex', gap: '10px' }}>
-            <button className="btn-edit-action" onClick={() => onEditClick(contract)} style={{ padding: '8px 14px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
-              ✏️ Edit
-            </button>
+          <div className="action-top-row">
             <button className="btn-download" onClick={handleDownload}>
-              📄 Download PDF
+              📄 Export Report
             </button>
           </div>
           <div className="value-metric-block">
-            <div className="metric-val">
-              {typeof contract.value === 'number' ? `$${contract.value.toFixed(2)}M` : contract.value || '$0.00'}
-            </div>
+            <div className="metric-val">{contract.value || '$0.00'}</div>
             <div className="metric-label">Total Contract Value</div>
           </div>
         </div>
@@ -91,7 +72,7 @@ const ContractDetails = ({ contract, onBack, onEditClick }) => {
       <div className="metadata-grid-stripe">
         <div className="meta-block">
           <span className="meta-label">Start Date</span>
-          <span className="meta-value">{contract.start_date || 'N/A'}</span>
+          <span className="meta-value">{contract.startDate || 'N/A'}</span>
         </div>
         <div className="meta-block">
           <span className="meta-label">End Date</span>
@@ -102,8 +83,8 @@ const ContractDetails = ({ contract, onBack, onEditClick }) => {
           <span className="meta-value">{contract.owner || 'N/A'}</span>
         </div>
         <div className="meta-block">
-          <span className="meta-label">Compliance</span>
-          <span className="meta-value">{contract.compliance !== undefined ? `${contract.compliance}%` : 'N/A'}</span>
+          <span className="meta-label">Global Compliance</span>
+          <span className="meta-value">{contract.compliance ? `${contract.compliance}%` : '0%'}</span>
         </div>
       </div>
 
@@ -123,17 +104,19 @@ const ContractDetails = ({ contract, onBack, onEditClick }) => {
       {/* Dynamic Content Panel Layout */}
       <div className="details-content-split">
         <div className="left-split-panel">
+          
+          {/* OVERVIEW TAB */}
           {activeTab === 'Overview' && (
             <>
               <div className="info-content-card">
                 <h3 className="card-box-title">Contract Summary</h3>
-                <p className="card-box-paragraph" style={{ whiteSpace: 'pre-wrap' }}>
-                  {contract.description || "No description provided for this contract."}
+                <p className="card-box-paragraph">
+                  {contract.summary || "No executive summary provided in database records."}
                 </p>
               </div>
 
               <div className="info-content-card">
-                <h3 className="card-box-title">Key Terms</h3>
+                <h3 className="card-box-title">Key Legal Terms</h3>
                 <table className="terms-stripped-table">
                   <tbody>
                     <tr>
@@ -158,35 +141,67 @@ const ContractDetails = ({ contract, onBack, onEditClick }) => {
             </>
           )}
 
+          {/* OBLIGATIONS TAB */}
           {activeTab === 'Obligations' && (
             <div className="info-content-card">
-              <h3 className="card-box-title">Active Obligations</h3>
-              {/* Dynamic fallbacks instead of static placeholder lists */}
-              <p className="card-box-paragraph">
-                {contract.obligations && contract.obligations.length > 0 
-                  ? contract.obligations.join(", ") 
-                  : `No active delivery schedules or obligations registered for ${contract.title || 'this contract'}.`}
-              </p>
+              <h3 className="card-box-title">Active Database Obligations</h3>
+              {contract.obligations && contract.obligations.length > 0 ? (
+                <ul className="dynamic-data-list">
+                  {contract.obligations.map((item, index) => (
+                    <li key={index} className="dynamic-list-item">🔹 {item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="card-box-paragraph">No tracked delivery obligations associated with this record.</p>
+              )}
             </div>
           )}
 
+          {/* DOCUMENTS TAB */}
           {activeTab === 'Documents' && (
             <div className="info-content-card">
-              <h3 className="card-box-title">Associated Attachments</h3>
-              <p className="card-box-paragraph">
-                {contract.documents && contract.documents.length > 0 
-                  ? contract.documents.join(", ") 
-                  : "No PDF files or contract extension documents uploaded yet."}
-              </p>
+              <h3 className="card-box-title">Associated File Vault</h3>
+              {contract.documents && contract.documents.length > 0 ? (
+                <div className="document-vault-grid">
+                  {contract.documents.map((doc, index) => (
+                    <div key={index} className="document-item-row">
+                      <span>📁 <strong>{doc.name}</strong></span>
+                      <span className="subtext-date">Uploaded: {doc.uploadedAt}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="card-box-paragraph">No external files attached to this contract block.</p>
+              )}
             </div>
           )}
 
+          {/* HISTORY AUDIT TAB */}
           {activeTab === 'History' && (
             <div className="info-content-card">
-              <h3 className="card-box-title">Audit Log History</h3>
-              <p className="card-box-paragraph">
-                Contract record initialized on {contract.start_date || 'N/A'}. No subsequent state changes have been logged.
-              </p>
+              <h3 className="card-box-title">System Audit Log History</h3>
+              {contract.history && contract.history.length > 0 ? (
+                <table className="terms-stripped-table">
+                  <thead>
+                    <tr>
+                      <th>Action Event</th>
+                      <th>Performed By</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contract.history.map((log, index) => (
+                      <tr key={index}>
+                        <td><strong>{log.action}</strong></td>
+                        <td>{log.user}</td>
+                        <td>{log.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="card-box-paragraph">No background structural logs trackable.</p>
+              )}
             </div>
           )}
         </div>
@@ -194,7 +209,7 @@ const ContractDetails = ({ contract, onBack, onEditClick }) => {
         {/* Right Circular Compliance Panel Section */}
         <div className="right-split-panel">
           <div className="info-content-card compliance-widget">
-            <h3 className="card-box-title">Compliance Breakdown</h3>
+            <h3 className="card-box-title">Compliance Metrics</h3>
             
             <div className="circular-progress-box">
               <svg className="progress-svg-dims" viewBox="0 0 100 100">
@@ -204,25 +219,25 @@ const ContractDetails = ({ contract, onBack, onEditClick }) => {
                   cx="50" cy="50" r="40" 
                   style={{ 
                     strokeDasharray: `${2 * Math.PI * 40}`, 
-                    strokeDashoffset: `${2 * Math.PI * 40 * (1 - baseCompliance / 100)}` 
+                    strokeDashoffset: `${2 * Math.PI * 40 * (1 - (parseInt(contract.compliance) || 0) / 100)}` 
                   }}
                 />
               </svg>
-              <div className="absolute-percentage-center">{baseCompliance}%</div>
+              <div className="absolute-percentage-center">{contract.compliance || 0}%</div>
             </div>
 
             <div className="compliance-sub-metrics">
               <div className="sub-strip-item">
-                <div className="sub-strip-meta"><span>Documentation</span><span>{docCompliance}%</span></div>
-                <div className="sub-progress-bg"><div className="sub-progress-fill" style={{ width: `${docCompliance}%` }} /></div>
+                <div className="sub-strip-meta"><span>Documentation</span><span>{contract.compliance_doc || 0}%</span></div>
+                <div className="sub-progress-bg"><div className="sub-progress-fill" style={{ width: `${contract.compliance_doc || 0}%` }} /></div>
               </div>
               <div className="sub-strip-item">
-                <div className="sub-strip-meta"><span>Obligations</span><span>{oblCompliance}%</span></div>
-                <div className="sub-progress-bg"><div className="sub-progress-fill" style={{ width: `${oblCompliance}%` }} /></div>
+                <div className="sub-strip-meta"><span>Obligations</span><span>{contract.compliance_obl || 0}%</span></div>
+                <div className="sub-progress-bg"><div className="sub-progress-fill" style={{ width: `${contract.compliance_obl || 0}%` }} /></div>
               </div>
               <div className="sub-strip-item">
-                <div className="sub-strip-meta"><span>Renewals</span><span>{renCompliance}%</span></div>
-                <div className="sub-progress-bg"><div className="sub-progress-fill" style={{ width: `${renCompliance}%` }} /></div>
+                <div className="sub-strip-meta"><span>Renewals Tracking</span><span>{contract.compliance_ren || 0}%</span></div>
+                <div className="sub-progress-bg"><div className="sub-progress-fill" style={{ width: `${contract.compliance_ren || 0}%` }} /></div>
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.todos.controller import router as contract_router
+from src.contracts.controller import router as contract_router
 
 
 api_router = APIRouter()
