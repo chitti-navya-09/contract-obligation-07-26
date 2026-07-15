@@ -36,18 +36,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Auto-seed compliance records if database is empty
-db = SessionLocal()
-try:
-    if db.query(Compliance).count() == 0:
-        print("No compliance records found. Auto-seeding...")
-        db.close()
-        seed_db()
-    else:
-        db.close()
-except Exception as e:
-    print("Auto-seed verification failed:", e)
-    db.close()
 
 app.include_router(router, prefix=settings.API_PREFIX)
 app.include_router(renewals_controller.router, prefix=settings.API_PREFIX)
