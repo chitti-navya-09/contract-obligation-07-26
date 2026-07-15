@@ -1,29 +1,5 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-
-from src.core.config import DATABASE_URL
-
-
-engine = create_engine(
-    DATABASE_URL
-)
-
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
-
-
-Base = declarative_base()
-
+"""Database session and connection pool setup. Hidden from domain entities."""
 
 def get_db():
-    db = SessionLocal()
-
-    try:
-        yield db
-
-    finally:
-        db.close()
+    """Placeholder DB dependency. Yields nothing until a real DB is wired in."""
+    yield None
