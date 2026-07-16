@@ -87,6 +87,28 @@ app.get("/api/reports/mockData", (req, res) => {
   res.json(reportMockData);
 });
 
+const users = [];
+
+app.post('/api/auth/signup', (req, res) => {
+  const { name, email, password } = req.body;
+  const userExists = users.find(u => u.email === email);
+  if (userExists) {
+    return res.status(400).json({ error: 'Email might be in use' });
+  }
+  const newUser = { id: Date.now(), name, email, password };
+  users.push(newUser);
+  res.status(201).json({ message: 'User created successfully', user: { id: newUser.id, name, email } });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  const user = users.find(u => u.email === email && u.password === password);
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+  res.json({ message: 'Login successful', access_token: 'fake-jwt-token-123' });
+});
+
 const PORT = 5000;
 
 app.listen(PORT, () => {
