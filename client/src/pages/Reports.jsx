@@ -1,17 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
-const mockData = [
-  { name: 'Jan', value: 4200 },
-  { name: 'Feb', value: 3800 },
-  { name: 'Mar', value: 5100 },
-  { name: 'Apr', value: 4700 },
-  { name: 'May', value: 6300 },
-  { name: 'Jun', value: 5900 },
-];
-
 const Reports = () => {
+  const [mockData, setMockData] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/reports/mockData')
+      .then(res => res.json())
+      .then(data => setMockData(data))
+      .catch(console.error);
+  }, []);
+
   const handleDownload = (type) => {
     if (type === 'pdf') {
       const doc = new jsPDF();

@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LegalDashboard from '../features/dashboard/LegalDashboard';
 import ActivityChart from '../components/ActivityChart';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  // Mock Data for the beautiful UI preview
-  const recentContracts = [
-    { id: 'CTR-2026-001', vendor: 'Acme Corp', type: 'NDA', status: 'Active', date: 'Jul 12, 2026' },
-    { id: 'CTR-2026-002', vendor: 'TechFlow Inc', type: 'MSA', status: 'Pending', date: 'Jul 10, 2026' },
-    { id: 'CTR-2026-003', vendor: 'Global Logistics', type: 'SLA', status: 'Active', date: 'Jul 05, 2026' },
-    { id: 'CTR-2026-004', vendor: 'CloudSystems', type: 'Vendor', status: 'Expired', date: 'Jun 28, 2026' },
-  ];
+  const [recentContracts, setRecentContracts] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/dashboard/recent')
+      .then(res => res.json())
+      .then(data => setRecentContracts(data))
+      .catch(console.error);
+  }, []);
 
   return (
     <div>

@@ -41,6 +41,52 @@ app.get("/api/contracts", (req, res) => {
   res.json(contracts);
 });
 
+const obligations = [
+  { id: 'OBL-001', contract: 'Acme Corp NDA', description: 'Submit Q3 Financials', dueDate: 'Jul 15, 2026', status: 'Pending', priority: 'High' },
+  { id: 'OBL-002', contract: 'TechFlow MSA', description: 'Renew SLA terms', dueDate: 'Jul 20, 2026', status: 'In Progress', priority: 'Medium' },
+  { id: 'OBL-003', contract: 'Global Logistics SLA', description: 'Quarterly compliance audit', dueDate: 'Jun 30, 2026', status: 'Completed', priority: 'High' },
+  { id: 'OBL-004', contract: 'CloudSystems Vendor', description: 'Update security certificates', dueDate: 'Jul 02, 2026', status: 'Overdue', priority: 'Critical' }
+];
+
+const recentContracts = [
+  { id: 'CTR-2026-001', vendor: 'Acme Corp', type: 'NDA', status: 'Active', date: 'Jul 12, 2026' },
+  { id: 'CTR-2026-002', vendor: 'TechFlow Inc', type: 'MSA', status: 'Pending', date: 'Jul 10, 2026' },
+  { id: 'CTR-2026-003', vendor: 'Global Logistics', type: 'SLA', status: 'Active', date: 'Jul 05, 2026' },
+  { id: 'CTR-2026-004', vendor: 'CloudSystems', type: 'Vendor', status: 'Expired', date: 'Jun 28, 2026' }
+];
+
+const auditLogs = [
+  { time: '2026-07-12 09:42 AM', user: 'Admin User', action: 'Login', target: 'System', ip: '192.168.1.45' },
+  { time: '2026-07-11 14:22 PM', user: 'Jane Doe', action: 'Uploaded Contract', target: 'CTR-2026-001', ip: '10.0.0.12' },
+  { time: '2026-07-10 11:05 AM', user: 'John Smith', action: 'Approved', target: 'CTR-2026-002', ip: '172.16.0.4' },
+  { time: '2026-07-09 16:45 PM', user: 'System', action: 'Automated Scan', target: 'All Active', ip: 'localhost' }
+];
+
+const reportMockData = [
+  { name: 'Jan', value: 4200 },
+  { name: 'Feb', value: 3800 },
+  { name: 'Mar', value: 5100 },
+  { name: 'Apr', value: 4700 },
+  { name: 'May', value: 6300 },
+  { name: 'Jun', value: 5900 }
+];
+
+app.get("/api/obligations", (req, res) => {
+  res.json(obligations);
+});
+
+app.get("/api/dashboard/recent", (req, res) => {
+  res.json(recentContracts);
+});
+
+app.get("/api/audit-logs", (req, res) => {
+  res.json(auditLogs);
+});
+
+app.get("/api/reports/mockData", (req, res) => {
+  res.json(reportMockData);
+});
+
 const PORT = 5000;
 
 app.listen(PORT, () => {
