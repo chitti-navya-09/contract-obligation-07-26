@@ -27,6 +27,9 @@ const Login = () => {
 
       const data = await response.json();
       localStorage.setItem('token', data.access_token);
+      if (data.user && data.user.name) {
+        localStorage.setItem('userName', data.user.name);
+      }
       navigate('/dashboard'); // Redirect to dashboard on success
     } catch (err) {
       setError(err.message);

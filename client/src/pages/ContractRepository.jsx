@@ -5,6 +5,7 @@ const ContractRepository = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [contracts, setContracts] = useState([]);
+  const [viewContract, setViewContract] = useState(null);
 
   useEffect(() => {
     fetch('/api/contracts/')
@@ -13,13 +14,13 @@ const ContractRepository = () => {
       .catch(console.error);
   }, []);
 
-  const handleDownload = (contractId) => {
-    const content = `Contract Details for ${contractId}`;
+  const handleDownload = (contract) => {
+    const content = `Contract Details\n\nID: ${contract.id}\nVendor: ${contract.vendor}\nType: ${contract.type}\nValue: ${contract.value}\nOwner: ${contract.owner}\nStatus: ${contract.status}`;
     const blob = new Blob([content], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${contractId}.pdf`;
+    a.download = `${contract.id}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -29,13 +30,14 @@ const ContractRepository = () => {
   const handleAddContract = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const ownerName = localStorage.getItem('userName') || 'Admin User';
     const newContract = {
       id: formData.get('id'),
       vendor: formData.get('vendor'),
       type: formData.get('type'),
       value: formData.get('value'),
       status: 'Pending',
-      owner: 'Admin User'
+      owner: ownerName
     };
     try {
       const res = await fetch('/api/contracts/', {
@@ -118,10 +120,10 @@ const ContractRepository = () => {
                   </span>
                 </td>
                 <td>
-                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '12px' }} title="View Details">
+                  <button onClick={() => setViewContract(contract)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '12px' }} title="View Details">
                     <i className="fa-solid fa-eye"></i>
                   </button>
-                  <button onClick={() => handleDownload(contract.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Download PDF">
+                  <button onClick={() => handleDownload(contract)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Download PDF">
                     <i className="fa-solid fa-download"></i>
                   </button>
                 </td>
@@ -170,6 +172,23 @@ const ContractRepository = () => {
           </div>
         </form>
       </Modal>
+
+      {/* View Contract Modal */}
+      {viewContract && (
+        <Modal isOpen={true} onClose={() => setViewContract(null)} title="Contract Details">
+          <div style={{ padding: '16px 0', fontSize: '15px', color: 'var(--text-primary)' }}>
+            <p style={{ margin: '8px 0' }}><strong>ID:</strong> {viewContract.id}</p>
+            <p style={{ margin: '8px 0' }}><strong>Vendor:</strong> {viewContract.vendor}</p>
+            <p style={{ margin: '8px 0' }}><strong>Type:</strong> {viewContract.type}</p>
+            <p style={{ margin: '8px 0' }}><strong>Value:</strong> {viewContract.value}</p>
+            <p style={{ margin: '8px 0' }}><strong>Owner:</strong> {viewContract.owner}</p>
+            <p style={{ margin: '8px 0' }}><strong>Status:</strong> {viewContract.status}</p>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+            <button onClick={() => setViewContract(null)} className="premium-button" style={{ width: 'auto', padding: '10px 20px', marginTop: 0 }}>Close</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

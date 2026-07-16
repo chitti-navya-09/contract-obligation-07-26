@@ -7,30 +7,9 @@ app.use(cors());
 app.use(express.json());
 
 const contracts = [
-  {
-    id: "CNT001",
-    title: "Software Development Agreement",
-    client: "ABC Pvt Ltd",
-    status: "Active",
-    startDate: "01-07-2026",
-    endDate: "30-06-2027"
-  },
-  {
-    id: "CNT002",
-    title: "Cloud Service Agreement",
-    client: "XYZ Technologies",
-    status: "Pending",
-    startDate: "15-07-2026",
-    endDate: "14-07-2027"
-  },
-  {
-    id: "CNT003",
-    title: "Maintenance Contract",
-    client: "Global Solutions",
-    status: "Completed",
-    startDate: "10-01-2026",
-    endDate: "09-07-2026"
-  }
+  { id: 'CTR-2026-001', vendor: 'Acme Corp', type: 'NDA', value: '$50,000', owner: 'Admin User', status: 'Active' },
+  { id: 'CTR-2026-002', vendor: 'TechFlow Inc', type: 'MSA', value: '$120,000', owner: 'Jane Doe', status: 'Pending' },
+  { id: 'CTR-2026-003', vendor: 'Global Logistics', type: 'SLA', value: '$25,000', owner: 'John Smith', status: 'Active' }
 ];
 
 app.get("/", (req, res) => {
@@ -39,6 +18,12 @@ app.get("/", (req, res) => {
 
 app.get("/api/contracts", (req, res) => {
   res.json(contracts);
+});
+
+app.post("/api/contracts", (req, res) => {
+  const newContract = req.body;
+  contracts.push(newContract);
+  res.status(201).json(newContract);
 });
 
 const obligations = [
@@ -106,7 +91,7 @@ app.post('/api/auth/login', (req, res) => {
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
-  res.json({ message: 'Login successful', access_token: 'fake-jwt-token-123' });
+  res.json({ message: 'Login successful', access_token: 'fake-jwt-token-123', user: { name: user.name, email: user.email } });
 });
 
 const PORT = 5000;

@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState('Admin User');
+
+  useEffect(() => {
+    const storedName = localStorage.getItem('userName');
+    if (storedName) {
+      setUserName(storedName);
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -31,7 +39,7 @@ const Navbar = () => {
             AD
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-slate-700 leading-none">Admin User</span>
+            <span className="text-sm font-bold text-slate-700 leading-none">{userName}</span>
             <span className="text-[10px] text-emerald-500 font-semibold uppercase tracking-wider">Online</span>
           </div>
         </div>
