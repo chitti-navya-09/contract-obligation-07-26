@@ -1,4 +1,4 @@
-# Client
+# Contract Obligation Tracking Assistant
 
 React frontend for the project. Install dependencies and start the app with:
 

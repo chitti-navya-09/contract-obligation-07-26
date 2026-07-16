@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Signup from "./pages/Signup";
+import ContractDetails from "./pages/ContractDetails";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import "./assets/global.css";
 
@@ -46,6 +47,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Home />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contract-details"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ContractDetails />
                 </Layout>
               </ProtectedRoute>
             }
