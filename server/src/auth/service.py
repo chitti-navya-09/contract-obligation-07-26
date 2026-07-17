@@ -1,3 +1,4 @@
+
 from datetime import datetime, timedelta
 from typing import Optional
 from passlib.context import CryptContext
@@ -25,3 +26,4 @@ class AuthService:
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
+
