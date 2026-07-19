@@ -15,11 +15,17 @@ def login(data: LoginRequest):
     result = login_user(data)
     if result:
         return result
-    raise HTTPException(status_code=400, detail="Invalid credentials")
+    raise HTTPException(status_code=401, detail="Invalid credentials")
 
-@router.post("/signup", status_code=201)
-def signup(data: SignupRequest):
+@router.post("/register", status_code=201)
+def register(data: SignupRequest):
+    if data.password != data.confirm_password:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
     return signup_user(data)
+
+@router.post("/logout")
+def logout():
+    return {"message": "Logged out successfully", "status": "success"}
 
 @router.post("/reset-password")
 def reset_password(data: ResetPasswordRequest):
