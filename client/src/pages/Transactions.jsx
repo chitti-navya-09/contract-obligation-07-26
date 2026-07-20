@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -29,6 +30,11 @@ const Transactions = () => {
     URL.revokeObjectURL(url);
   };
 
+  const chartData = transactions.map(t => ({
+    date: t.date,
+    amount: parseFloat(t.amount.replace(/[^0-9.-]+/g, "")) || 0
+  }));
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
@@ -39,6 +45,19 @@ const Transactions = () => {
         <button onClick={handleExport} className="premium-button" style={{ width: 'auto', padding: '12px 24px' }}>
           <i className="fa-solid fa-download" style={{ marginRight: '8px' }}></i> Export Ledger
         </button>
+      </div>
+
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-6 mb-8 h-80">
+        <h2 className="text-xl font-bold text-gray-200 mb-4">Transaction Trends</h2>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <XAxis dataKey="date" stroke="#9ca3af" />
+            <YAxis stroke="#9ca3af" />
+            <Tooltip contentStyle={{ backgroundColor: '#1E3A8A', border: 'none', borderRadius: '8px', color: '#fff' }} />
+            <Line type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
 
       <div className="premium-table-container">

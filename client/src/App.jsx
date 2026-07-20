@@ -4,6 +4,7 @@ import PageContainer from './components/layout/PageContainer';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import ContractRepository from './pages/ContractRepository';
 import ObligationTracker from './pages/ObligationTracker';
@@ -14,6 +15,7 @@ import AuditLogs from './pages/AuditLogs';
 import Settings from './pages/Settings';
 import Transactions from './pages/Transactions';
 import TaxEstimators from './pages/TaxEstimators';
+import UserManagement from './pages/UserManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 import './assets/theme.css';
 
@@ -24,6 +26,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/" element={<Navigate to="/login" />} />
         
         {/* Protected layout wraps all internal pages */}
@@ -38,6 +41,7 @@ function App() {
           <Route path="/settings" element={<PageContainer><Settings /></PageContainer>} />
           <Route path="/transactions" element={<PageContainer><Transactions /></PageContainer>} />
           <Route path="/tax-estimators" element={<PageContainer><TaxEstimators /></PageContainer>} />
+          <Route path="/users" element={<PageContainer><UserManagement /></PageContainer>} />
         </Route>
       </Routes>
     </Router>

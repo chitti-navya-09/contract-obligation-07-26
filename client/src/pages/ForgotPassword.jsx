@@ -27,6 +27,8 @@ const ForgotPassword = () => {
         setIsSubmitted(true);
         if (data.preview_url) {
           setPreviewUrl(data.preview_url);
+        } else if (data.reset_link) {
+          setPreviewUrl(data.reset_link); // We'll just reuse previewUrl to hold the link
         }
       } else {
         setError(data.detail || "Failed to send reset link.");
@@ -83,10 +85,10 @@ const ForgotPassword = () => {
                   Test Mode Active
                 </p>
                 <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                  Since you don't have a real SMTP provider configured, we intercepted the email using <strong>Ethereal Email</strong>.
+                  For demonstration purposes, you can click the direct reset link below to set a new password:
                 </p>
-                <a href={previewUrl} target="_blank" rel="noreferrer" className="premium-button" style={{ display: 'inline-block', textDecoration: 'none', padding: '10px 20px', width: 'auto', fontSize: '14px' }}>
-                  Open Ethereal Inbox
+                <a href={previewUrl} className="premium-button" style={{ display: 'inline-block', textDecoration: 'none', padding: '10px 20px', width: 'auto', fontSize: '14px' }}>
+                  Click to Reset Password
                 </a>
               </div>
             )}
