@@ -3,8 +3,11 @@
 -- 1. Users Table (Matches existing SQLAlchemy model)
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
     email VARCHAR(255) UNIQUE NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'User',
+    is_active INTEGER DEFAULT 1,
     reset_token VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

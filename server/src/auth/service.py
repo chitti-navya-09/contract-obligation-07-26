@@ -1,10 +1,14 @@
 
+import os
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from typing import Optional
 from passlib.context import CryptContext
 import jwt
 
-SECRET_KEY = "super-secret-key-please-change-in-production"
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback-dev-secret-key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

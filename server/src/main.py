@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api import api_router
-from src.logging import configure_logging
+from src.logger import configure_logging
 from src.rate_limiter import init_rate_limiter
 
 configure_logging()

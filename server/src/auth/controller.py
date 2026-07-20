@@ -9,7 +9,7 @@ from src.database.core import get_db
 from src.users.service import UserService
 from src.auth.service import AuthService
 from src.users.models import User
-from src.auth.models import SignupRequest
+from src.auth.models import SignupRequest, LoginRequest
 from src.utils.email import send_reset_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -32,9 +32,9 @@ def health():
     return {"status": "ok"}
 
 @router.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = user_service.get_user_by_email(db, email=form_data.username)
-    if not user or not auth_service.verify_password(form_data.password, user.hashed_password):
+def login(req: LoginRequest, db: Session = Depends(get_db)):
+    user = user_service.get_user_by_email(db, email=req.email)
+    if not user or not auth_service.verify_password(req.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -52,7 +52,7 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     hashed_password = auth_service.get_password_hash(data.password)
-    user_data = User(email=data.email, hashed_password=hashed_password, role=data.role, is_active=True)
+    user_data = User(email=data.email, name=data.name, hashed_password=hashed_password, role=data.role, is_active=1)
     db.add(user_data)
     db.commit()
     db.refresh(user_data)
