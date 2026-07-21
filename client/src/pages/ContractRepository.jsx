@@ -47,7 +47,7 @@ const ContractRepository = () => {
   const handleAddContract = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const ownerName = localStorage.getItem('userName') || 'Admin User';
+    const ownerName = localStorage.getItem('userName');
     const newContract = {
       id: formData.get('id'),
       vendor: formData.get('vendor'),
@@ -81,7 +81,7 @@ const ContractRepository = () => {
       if (lines.length < 2) return alert('File is empty or invalid format.');
       
       const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
-      const ownerName = localStorage.getItem('userName') || 'Admin User';
+      const ownerName = localStorage.getItem('userName');
       
       const newContracts = [];
       

@@ -70,11 +70,10 @@ const Sidebar = () => {
       <div className="mt-auto border-t border-white/10">
         <Link to="/settings" className="pt-4 pb-4 flex items-center px-4 hover:bg-white/5 transition-colors no-underline text-white">
           <div className="w-10 h-10 rounded-full bg-[#10B981] text-white flex items-center justify-center font-bold mr-3 shadow-md">
-            AD
+            {(localStorage.getItem('userName') || 'U').substring(0, 2).toUpperCase()}
           </div>
           <div>
-            <div className="text-sm font-semibold">Admin User</div>
-            <div className="text-xs text-gray-300">admin@company.com</div>
+            <div className="text-sm font-semibold">{localStorage.getItem('userName')}</div>
           </div>
         </Link>
         
