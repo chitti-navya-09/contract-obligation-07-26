@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import PageContainer from './components/layout/PageContainer';
+import PageContainer from './layout/PageContainer';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -16,6 +16,7 @@ import Settings from './pages/Settings';
 import Transactions from './pages/Transactions';
 import TaxEstimators from './pages/TaxEstimators';
 import UserManagement from './pages/UserManagement';
+import Renewals from './pages/Renewals';
 import ProtectedRoute from './components/ProtectedRoute';
 import './assets/theme.css';
 
@@ -42,6 +43,7 @@ function App() {
           <Route path="/transactions" element={<PageContainer><Transactions /></PageContainer>} />
           <Route path="/tax-estimators" element={<PageContainer><TaxEstimators /></PageContainer>} />
           <Route path="/users" element={<PageContainer><UserManagement /></PageContainer>} />
+          <Route path="/renewals" element={<PageContainer><Renewals /></PageContainer>} />
         </Route>
       </Routes>
     </Router>

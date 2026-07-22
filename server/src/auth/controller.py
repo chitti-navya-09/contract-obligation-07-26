@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+from src.database.db import get_db
 from src.auth.models import LoginRequest, SignupRequest
 from src.auth.service import login_user, signup_user
 from pydantic import BaseModel
@@ -11,17 +13,17 @@ class ResetPasswordRequest(BaseModel):
     email: str
 
 @router.post("/login")
-def login(data: LoginRequest):
-    result = login_user(data)
+def login(data: LoginRequest, db: Session = Depends(get_db)):
+    result = login_user(data, db)
     if result:
         return result
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
 @router.post("/register", status_code=201)
-def register(data: SignupRequest):
+def register(data: SignupRequest, db: Session = Depends(get_db)):
     if data.password != data.confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
-    return signup_user(data)
+    return signup_user(data, db)
 
 @router.post("/logout")
 def logout():

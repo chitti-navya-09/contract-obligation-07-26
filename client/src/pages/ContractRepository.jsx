@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Modal from '../components/Modals/Modal';
 import { jsPDF } from 'jspdf';
+import { useFetchContracts } from '../hooks/useFetchContracts';
 
 const ContractRepository = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -8,20 +9,14 @@ const ContractRepository = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [contracts, setContracts] = useState([]);
+  const { data: contracts, setData: setContracts } = useFetchContracts('/api/contracts/');
   const [viewContract, setViewContract] = useState(null);
 
-  useEffect(() => {
-    fetch('/api/contracts/')
-      .then(res => res.json())
-      .then(data => setContracts(data))
-      .catch(console.error);
-  }, []);
 
   const filteredContracts = contracts.filter(contract => {
-    const matchesSearch = contract.vendor.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          contract.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          contract.owner.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = String(contract.vendor || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          String(contract.id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          String(contract.owner || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === '' || contract.status === statusFilter;
     const matchesType = typeFilter === '' || contract.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
@@ -196,7 +191,7 @@ const ContractRepository = () => {
                 <td>{contract.value}</td>
                 <td>{contract.owner}</td>
                 <td>
-                  <span className={`badge ${contract.status.toLowerCase()}`}>
+                  <span className={`badge ${String(contract.status || '').toLowerCase()}`}>
                     {contract.status}
                   </span>
                 </td>

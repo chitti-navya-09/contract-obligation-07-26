@@ -79,7 +79,7 @@ const Transactions = () => {
                 <td style={{ fontWeight: 500 }}>{trx.description}</td>
                 <td style={{ fontWeight: 600 }}>{trx.amount}</td>
                 <td>
-                  <span className={`badge ${trx.status.toLowerCase()}`}>
+                  <span className={`badge ${String(trx.status || '').toLowerCase()}`}>
                     {trx.status}
                   </span>
                 </td>

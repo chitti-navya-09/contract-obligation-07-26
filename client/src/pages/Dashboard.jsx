@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import LegalDashboard from '../features/dashboard/LegalDashboard';
 import ActivityChart from '../components/ActivityChart';
+import { useFetchContracts } from '../hooks/useFetchContracts';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [recentContracts, setRecentContracts] = useState([]);
+  const { data: recentContracts } = useFetchContracts('/api/dashboard/recent');
 
-  useEffect(() => {
-    fetch('/api/dashboard/recent')
-      .then(res => res.json())
-      .then(data => setRecentContracts(data))
-      .catch(console.error);
-  }, []);
 
   return (
     <div>
@@ -50,7 +45,7 @@ const Dashboard = () => {
                 <td>{contract.vendor}</td>
                 <td>{contract.type}</td>
                 <td>
-                  <span className={`badge ${contract.status.toLowerCase()}`}>
+                  <span className={`badge ${String(contract.status || '').toLowerCase()}`}>
                     {contract.status}
                   </span>
                 </td>

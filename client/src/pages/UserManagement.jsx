@@ -52,7 +52,7 @@ const UserManagement = () => {
 
   const handleUpdateUser = (e) => {
     e.preventDefault();
-    fetch(`/api/users/${editingUser.id}`, {
+    fetch(`/api/users/${editingUser.user_id || editingUser.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -88,18 +88,16 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in text-white relative">
+    <div>
       
       {/* Header Section */}
-      <div className="flex justify-between items-center bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl shadow-xl">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-            User Management
-          </h1>
-          <p className="text-gray-400 mt-2">Manage roles, permissions, and system access.</p>
+          <h1 style={{ margin: 0, fontSize: '28px', color: 'var(--primary-color)' }}>User Management</h1>
+          <p style={{ margin: '8px 0 0 0', color: 'var(--text-secondary)' }}>Manage roles, permissions, and system access.</p>
         </div>
-        <button onClick={handleAddUser} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 rounded-xl font-semibold shadow-lg hover:shadow-blue-500/30 transition-all duration-300 flex items-center gap-2 transform hover:-translate-y-1">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onClick={handleAddUser} className="premium-button" style={{ width: 'auto', padding: '10px 20px' }}>
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
           </svg>
           Add New User
@@ -107,105 +105,102 @@ const UserManagement = () => {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-white/5 border-b border-white/10 text-gray-300 text-sm uppercase tracking-wider">
-                <th className="p-5 font-semibold">User</th>
-                <th className="p-5 font-semibold">Role</th>
-                <th className="p-5 font-semibold">Status</th>
-                <th className="p-5 font-semibold">Last Login</th>
-                <th className="p-5 font-semibold text-center">Actions</th>
+      <div className="premium-table-container">
+        <table className="premium-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th style={{ textAlign: 'center' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>Loading users...</td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
-              {loading ? (
-                <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-400">Loading users...</td>
+            ) : (
+              users.map(user => (
+                <tr key={user.id} className="hover:bg-slate-50 transition-colors group">
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(to bottom right, var(--primary-color), var(--secondary-color))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                        {user.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--primary-color)' }}>{user.name}</div>
+                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{user.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`badge ${String(user.role || '').toLowerCase()}`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${String(user.status || '').toLowerCase()}`}>
+                      {user.status}
+                    </span>
+                  </td>
+                  <td style={{ color: 'var(--text-secondary)' }}>
+                    {user.lastLogin}
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <div className="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => handleEditClick(user)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                      <button onClick={() => handleDeactivate(user.user_id || user.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Deactivate">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              ) : (
-                users.map(user => (
-                  <tr key={user.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="p-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold shadow-inner group-hover:scale-110 transition-transform">
-                          {user.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-100">{user.name}</div>
-                          <div className="text-sm text-gray-400">{user.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-5">
-                      <span className={`px-3 py-1 text-xs font-medium border rounded-full ${getRoleBadge(user.role)}`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="p-5">
-                      <span className={`px-3 py-1 text-xs font-medium border rounded-full flex items-center gap-1 w-max ${getStatusBadge(user.status)}`}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="p-5 text-gray-400 text-sm">
-                      {user.lastLogin}
-                    </td>
-                    <td className="p-5 text-center">
-                      <div className="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => handleEditClick(user)} className="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors" title="Edit">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                        </button>
-                        <button onClick={() => handleDeactivate(user.id)} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors" title="Deactivate">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
       
       {/* Edit Modal */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1E3A8A] rounded-2xl p-6 w-full max-w-md shadow-2xl border border-white/10 animate-fade-in">
-            <h2 className="text-2xl font-bold mb-4">Edit User</h2>
-            <form onSubmit={handleUpdateUser} className="space-y-4 text-left">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ backgroundColor: 'var(--background-white)', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '450px', boxShadow: 'var(--shadow-lg)', border: '1px solid #e5e7eb' }} className="animate-fade-in">
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px', color: 'var(--primary-color)' }}>Edit User</h2>
+            <form onSubmit={handleUpdateUser} style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
               <div>
-                <label className="block text-sm text-gray-300 mb-1">Name</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Name</label>
                 <input 
                   type="text" 
                   value={editingUser.name} 
                   onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-400"
+                  className="premium-input"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-300 mb-1">Email</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Email</label>
                 <input 
                   type="email" 
                   value={editingUser.email} 
                   onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-400"
+                  className="premium-input"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-300 mb-1">Role</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Role</label>
                 <select 
                   value={editingUser.role} 
                   onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-400 [&>option]:bg-[#1E3A8A]"
+                  className="premium-input"
                 >
                   <option value="Admin">Admin</option>
                   <option value="Manager">Manager</option>
@@ -214,22 +209,22 @@ const UserManagement = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-300 mb-1">Status</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Status</label>
                 <select 
                   value={editingUser.status} 
                   onChange={(e) => setEditingUser({...editingUser, status: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-400 [&>option]:bg-[#1E3A8A]"
+                  className="premium-input"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                   <option value="Pending">Pending</option>
                 </select>
               </div>
-              <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setEditingUser(null)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors">
+              <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
+                <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, padding: '12px', backgroundColor: '#e5e7eb', color: 'var(--text-primary)', borderRadius: '8px', fontWeight: 600 }}>
                   Cancel
                 </button>
-                <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 rounded-lg font-semibold shadow-lg transition-all">
+                <button type="submit" className="premium-button" style={{ flex: 1, padding: '12px', borderRadius: '8px' }}>
                   Save Changes
                 </button>
               </div>
