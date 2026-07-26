@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('Admin User');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
 
   useEffect(() => {
     const storedName = localStorage.getItem('userName');
@@ -49,6 +51,19 @@ const Navbar = ({ toggleSidebar }) => {
       </div>
       
       <div className="flex items-center gap-4 md:gap-6">
+        {/* Theme Toggle */}
+        <div 
+          className="relative cursor-pointer text-gray-500 hover:text-[#1E3A8A] dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+          onClick={toggleTheme}
+          title="Toggle Bright/Night Light"
+        >
+          {isDarkMode ? (
+            <i className="fa-solid fa-moon text-xl"></i>
+          ) : (
+            <i className="fa-solid fa-sun text-xl"></i>
+          )}
+        </div>
+
         {/* Notification Bell */}
         <div className="relative cursor-pointer text-gray-500 hover:text-[#1E3A8A] transition-colors" onClick={() => navigate('/notifications')}>
           <i className="fa-regular fa-bell text-xl"></i>
