@@ -2,16 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import LegalDashboard from '../features/dashboard/LegalDashboard';
 import ActivityChart from '../components/ActivityChart';
+import { useFetchContracts } from '../hooks/useFetchContracts';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  // Mock Data for the beautiful UI preview
-  const recentContracts = [
-    { id: 'CTR-2026-001', vendor: 'Acme Corp', type: 'NDA', status: 'Active', date: 'Jul 12, 2026' },
-    { id: 'CTR-2026-002', vendor: 'TechFlow Inc', type: 'MSA', status: 'Pending', date: 'Jul 10, 2026' },
-    { id: 'CTR-2026-003', vendor: 'Global Logistics', type: 'SLA', status: 'Active', date: 'Jul 05, 2026' },
-    { id: 'CTR-2026-004', vendor: 'CloudSystems', type: 'Vendor', status: 'Expired', date: 'Jun 28, 2026' },
-  ];
+  const { data: recentContracts } = useFetchContracts('/api/dashboard/recent');
+
 
   return (
     <div>
@@ -49,7 +45,7 @@ const Dashboard = () => {
                 <td>{contract.vendor}</td>
                 <td>{contract.type}</td>
                 <td>
-                  <span className={`badge ${contract.status.toLowerCase()}`}>
+                  <span className={`badge ${String(contract.status || '').toLowerCase()}`}>
                     {contract.status}
                   </span>
                 </td>
