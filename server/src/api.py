@@ -21,6 +21,7 @@ def load_demo_data(db: Session = Depends(get_db)):
     from datetime import date, timedelta
     import uuid
     # Delete existing demo rows
+    db.query(Renewal).delete()
     db.query(Obligation).delete()
     db.query(Contract).delete()
     
@@ -52,25 +53,45 @@ def load_demo_data(db: Session = Depends(get_db)):
 
 @api_router.get("/reports/mockData")
 def get_reports(db: Session = Depends(get_db)):
-    # Group contracts value by month or just mock dynamically from DB
-    return [
-        { "name": "Jan", "value": 4200 },
-        { "name": "Feb", "value": 3800 },
-        { "name": "Mar", "value": 5100 },
-        { "name": "Apr", "value": 4700 },
-        { "name": "May", "value": 6300 },
-        { "name": "Jun", "value": 5900 }
-    ]
+    from collections import defaultdict
+    contracts = db.query(Contract).all()
+    monthly_totals = defaultdict(float)
+    
+    for c in contracts:
+        if c.date:
+            month_name = c.date.strftime("%b")
+            monthly_totals[month_name] += c.value or 0
+    
+    # Ensure at least some months have data if db is empty or just return the existing data
+    if not monthly_totals:
+        return [
+            { "name": "Jan", "value": 0 },
+            { "name": "Feb", "value": 0 },
+            { "name": "Mar", "value": 0 },
+            { "name": "Apr", "value": 0 },
+            { "name": "May", "value": 0 },
+            { "name": "Jun", "value": 0 }
+        ]
+        
+    result = [{"name": m, "value": v} for m, v in monthly_totals.items()]
+    # Optional: sort by month, but dictionary order or keeping it as is might be fine
+    return result
 
 @api_router.get("/reports/details")
 def get_report_details(db: Session = Depends(get_db)):
-    total_val = sum([c.value for c in db.query(Contract).all()])
+    total_val = sum([c.value or 0 for c in db.query(Contract).all()])
     renewals_count = db.query(Renewal).count()
+    contracts = db.query(Contract).all()
+    
+    csv_header = "id,name,value\n"
+    csv_rows = [f"{c.id},{c.vendor},{c.value or 0}" for c in contracts]
+    csv_data = csv_header + "\n".join(csv_rows)
+    
     return {
         "totalValue": f"${total_val:,.2f}",
         "renewals": str(renewals_count),
         "compliance": "98.5%",
-        "csvData": "id,name,value\n1,Contract A,4200\n2,Contract B,3800"
+        "csvData": csv_data
     }
 
 @api_router.get("/audit-logs")
