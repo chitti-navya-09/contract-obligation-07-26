@@ -4,6 +4,8 @@ const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
+  const [addingUser, setAddingUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchUsers = () => {
     fetch('/api/users')
@@ -31,19 +33,26 @@ const UserManagement = () => {
       .catch(console.error);
   };
 
-  const handleAddUser = () => {
-    const newUser = {
-      name: "New User",
-      email: "new.user@company.com",
-      role: "User"
-    };
+  const handleAddUserSubmit = (e) => {
+    e.preventDefault();
     fetch('/api/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newUser)
+      body: JSON.stringify(addingUser)
     })
-    .then(() => fetchUsers())
+    .then(() => {
+      setAddingUser(null);
+      fetchUsers();
+    })
     .catch(console.error);
+  };
+
+  const handleAddClick = () => {
+    setAddingUser({
+      name: "",
+      email: "",
+      role: "User"
+    });
   };
 
   const handleEditClick = (user) => {
@@ -87,6 +96,11 @@ const UserManagement = () => {
     }
   };
 
+  const filteredUsers = users.filter(user => 
+    (user.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (user.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div>
       
@@ -96,12 +110,27 @@ const UserManagement = () => {
           <h1 style={{ margin: 0, fontSize: '28px', color: 'var(--primary-color)' }}>User Management</h1>
           <p style={{ margin: '8px 0 0 0', color: 'var(--text-secondary)' }}>Manage roles, permissions, and system access.</p>
         </div>
-        <button onClick={handleAddUser} className="premium-button" style={{ width: 'auto', padding: '10px 20px' }}>
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Add New User
-        </button>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <input 
+              type="text" 
+              placeholder="Search users..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="premium-input"
+              style={{ paddingLeft: '36px', minWidth: '250px' }}
+            />
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ position: 'absolute', left: '10px', top: '12px' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <button onClick={handleAddClick} className="premium-button" style={{ width: 'auto', padding: '10px 20px' }}>
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add New User
+          </button>
+        </div>
       </div>
 
       {/* Users Table */}
@@ -121,9 +150,13 @@ const UserManagement = () => {
               <tr>
                 <td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>Loading users...</td>
               </tr>
+            ) : filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>No users found.</td>
+              </tr>
             ) : (
-              users.map(user => (
-                <tr key={user.id} className="hover:bg-slate-50 transition-colors group">
+              filteredUsers.map(user => (
+                <tr key={user.id || user.user_id} className="hover:bg-slate-50 transition-colors group">
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(to bottom right, var(--primary-color), var(--secondary-color))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
@@ -226,6 +259,58 @@ const UserManagement = () => {
                 </button>
                 <button type="submit" className="premium-button" style={{ flex: 1, padding: '12px', borderRadius: '8px' }}>
                   Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Add User Modal */}
+      {addingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ backgroundColor: 'var(--background-white)', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '450px', boxShadow: 'var(--shadow-lg)', border: '1px solid #e5e7eb' }} className="animate-fade-in">
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px', color: 'var(--primary-color)' }}>Add New User</h2>
+            <form onSubmit={handleAddUserSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Name</label>
+                <input 
+                  type="text" 
+                  value={addingUser.name} 
+                  onChange={(e) => setAddingUser({...addingUser, name: e.target.value})}
+                  className="premium-input"
+                  required
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Email</label>
+                <input 
+                  type="email" 
+                  value={addingUser.email} 
+                  onChange={(e) => setAddingUser({...addingUser, email: e.target.value})}
+                  className="premium-input"
+                  required
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Role</label>
+                <select 
+                  value={addingUser.role} 
+                  onChange={(e) => setAddingUser({...addingUser, role: e.target.value})}
+                  className="premium-input"
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="Manager">Manager</option>
+                  <option value="User">User</option>
+                  <option value="Auditor">Auditor</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
+                <button type="button" onClick={() => setAddingUser(null)} style={{ flex: 1, padding: '12px', backgroundColor: '#e5e7eb', color: 'var(--text-primary)', borderRadius: '8px', fontWeight: 600 }}>
+                  Cancel
+                </button>
+                <button type="submit" className="premium-button" style={{ flex: 1, padding: '12px', borderRadius: '8px' }}>
+                  Add User
                 </button>
               </div>
             </form>
