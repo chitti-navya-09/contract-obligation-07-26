@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { DashboardIcon, ContractsIcon, ObligationsIcon, ComplianceIcon, SettingsIcon, ReportsIcon } from '../components/DashboardIcons';
+import { useTheme } from '../context/ThemeContext';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
+  const { isDarkMode } = useTheme();
 
   const isActive = (path) => {
     return location.pathname.startsWith(path) ? 'bg-white/10 text-white border-l-4 border-emerald-400' : 'text-gray-300 hover:bg-white/5 hover:text-white';
@@ -23,7 +25,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-40 w-64 bg-[#1E3A8A] text-white flex flex-col h-full overflow-y-auto transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-40 w-64 ${isDarkMode ? 'bg-[#060B19] border-r border-white/10' : 'bg-[#1E3A8A]'} text-white flex flex-col h-full overflow-y-auto transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
         md:relative md:translate-x-0
       `}>
