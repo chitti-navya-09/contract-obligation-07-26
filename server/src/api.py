@@ -103,11 +103,19 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
     active_count = db.query(Contract).filter(Contract.status == "Active").count()
     renewals_count = db.query(Renewal).count()
     pending_obl = db.query(Obligation).filter(Obligation.status == "Pending").count()
+    high_risk_count = db.query(Contract).filter(Contract.risk.in_(["High", "Critical"])).count()
+    expired_count = db.query(Contract).filter(Contract.status == "Expired").count()
+    total_obl = db.query(Obligation).count()
+    overdue_obl = db.query(Obligation).filter(Obligation.status == "Overdue").count()
+    compliance_rate = round(100 - (overdue_obl / total_obl * 100), 1) if total_obl else 100.0
+
     return {
         "activeContracts": { "metric": str(active_count), "trendText": "+12% this month", "trendDirection": "up" },
         "upcomingRenewals": { "metric": str(renewals_count), "trendText": "+4 this week", "trendDirection": "up" },
         "pendingObligations": { "metric": str(pending_obl), "trendText": "-2% from last week", "trendDirection": "down" },
-        "complianceStatus": { "metric": "98.5%", "trendText": "Consistent", "trendDirection": "up" }
+        "complianceRate": { "metric": f"{compliance_rate}%", "trendText": "+2.4% vs target", "trendDirection": "up" },
+        "highRisk": { "metric": str(high_risk_count), "trendText": "-2 this week", "trendDirection": "down" },
+        "expired": { "metric": str(expired_count), "trendText": "+1 this month", "trendDirection": "up" },
     }
 
 @api_router.get("/dashboard/activity")
