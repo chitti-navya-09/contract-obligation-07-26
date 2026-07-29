@@ -22,6 +22,9 @@ class Contract(Base):
     value = Column(Float)
     owner = Column(String)
     date = Column(Date)
+    # NEW: needed for the dashboard's Risk Distribution / Department Performance widgets
+    risk = Column(String, default="Low")           # Low | Medium | High | Critical
+    department = Column(String, default="Legal")   # Legal | Procurement | HR | Finance | Operations | IT
     obligations = relationship("Obligation", back_populates="contract")
     renewals = relationship("Renewal", back_populates="contract")
 
@@ -70,4 +73,3 @@ class TaxEstimator(Base):
     deductions = Column(String)
     netIncome = Column(String)
     breakdown = Column(String)
-
