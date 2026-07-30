@@ -4,8 +4,9 @@ from src.auth.controller import router as auth_router
 from src.contracts.controller import router as contracts_router
 from src.dashboard.controller import router as dashboard_router
 from src.obligation.controller import router as obligation_router
+from src.audit.controller import router as audit_router
 from src.database.db import get_db
-from src.database.models import User, Contract, Obligation, Renewal, Transaction, AuditLog, TaxEstimator
+from src.database.models import User, Contract, Obligation, Renewal, Transaction, TaxEstimator
 from pydantic import BaseModel
 import uuid
 from datetime import datetime
@@ -15,6 +16,7 @@ api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(contracts_router, prefix="/contracts", tags=["contracts"])
 api_router.include_router(dashboard_router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(obligation_router, prefix="/obligations", tags=["obligations"])
+api_router.include_router(audit_router, prefix="/audit-logs", tags=["audit-logs"])
 
 @api_router.post("/demo/load")
 def load_demo_data(db: Session = Depends(get_db)):
@@ -62,7 +64,6 @@ def get_reports(db: Session = Depends(get_db)):
             month_name = c.date.strftime("%b")
             monthly_totals[month_name] += c.value or 0
     
-    # Ensure at least some months have data if db is empty or just return the existing data
     if not monthly_totals:
         return [
             { "name": "Jan", "value": 0 },
@@ -74,7 +75,6 @@ def get_reports(db: Session = Depends(get_db)):
         ]
         
     result = [{"name": m, "value": v} for m, v in monthly_totals.items()]
-    # Optional: sort by month, but dictionary order or keeping it as is might be fine
     return result
 
 @api_router.get("/reports/details")
@@ -93,10 +93,6 @@ def get_report_details(db: Session = Depends(get_db)):
         "compliance": "98.5%",
         "csvData": csv_data
     }
-
-@api_router.get("/audit-logs")
-def get_audit_logs(db: Session = Depends(get_db)):
-    return db.query(AuditLog).all()
 
 @api_router.get("/dashboard/stats")
 def get_dashboard_stats(db: Session = Depends(get_db)):
@@ -122,17 +118,13 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
 def get_dashboard_activity(db: Session = Depends(get_db)):
     from datetime import date, timedelta
     
-    # Generate last 6 months using pure datetime
     today = date.today()
     months = []
     
-    # Basic logic to go back month by month
     curr_date = today
     for _ in range(6):
         months.insert(0, curr_date.strftime("%b"))
-        # go to first of month
         first = curr_date.replace(day=1)
-        # go back one day to previous month
         curr_date = first - timedelta(days=1)
         
     activity_map = {m: {"month": m, "drafts": 0, "executed": 0} for m in months}
@@ -143,7 +135,6 @@ def get_dashboard_activity(db: Session = Depends(get_db)):
             continue
         m_str = c.date.strftime("%b")
         if m_str in activity_map:
-            # Simple heuristic based on mock statuses
             if c.status.lower() in ["draft", "pending", "pending signature"]:
                 activity_map[m_str]["drafts"] += 1
             else:
