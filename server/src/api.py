@@ -4,6 +4,7 @@ from src.auth.controller import router as auth_router
 from src.contracts.controller import router as contracts_router
 from src.dashboard.controller import router as dashboard_router
 from src.obligation.controller import router as obligation_router
+from src.ai.controller import router as ai_router
 from src.database.db import get_db
 from src.database.models import User, Contract, Obligation, Renewal, Transaction, AuditLog, TaxEstimator
 from pydantic import BaseModel
@@ -15,6 +16,7 @@ api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(contracts_router, prefix="/contracts", tags=["contracts"])
 api_router.include_router(dashboard_router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(obligation_router, prefix="/obligations", tags=["obligations"])
+api_router.include_router(ai_router, tags=["ai"])
 
 @api_router.post("/demo/load")
 def load_demo_data(db: Session = Depends(get_db)):
