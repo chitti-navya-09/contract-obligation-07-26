@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Date
+from sqlalchemy.orm import relationship
 from datetime import datetime
-
-Base = declarative_base()
+from .db import Base
 
 class UserSession(Base):
     __tablename__ = "user_sessions"
@@ -13,9 +12,6 @@ class UserSession(Base):
     expires_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_active_at = Column(DateTime, default=datetime.utcnow)
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date
-from sqlalchemy.orm import relationship
-from .db import Base
 
 class User(Base):
     __tablename__ = "users"

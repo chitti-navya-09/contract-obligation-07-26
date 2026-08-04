@@ -4,8 +4,8 @@ from src.database.core import get_db
 from src.database.models import User, UserSession
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from src.database.db import get_db
-from src.auth.models import LoginRequest, SignupRequest
+from src.auth.models import LoginRequest, SignupRequest, ResetPasswordRequest
+from src.utils.email import send_reset_email
 from src.auth.service import login_user, signup_user
 from pydantic import BaseModel
 from passlib.context import CryptContext
@@ -156,7 +156,32 @@ def demo_login(db: Session = Depends(get_db)):
 def register(data: SignupRequest, db: Session = Depends(get_db)):
     if data.password != data.confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
-    return signup_user(data, db)
+        
+    existing_user = db.query(User).filter(User.email == data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+        
+    hashed_password = pwd_context.hash(data.password)
+    new_user = User(
+        full_name=data.name or data.email.split('@')[0],
+        email=data.email,
+        hashed_password=hashed_password
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    access_token_expires = timedelta(minutes=30)
+    expire = datetime.utcnow() + access_token_expires
+    to_encode = {"sub": new_user.email, "exp": expire}
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    
+    return {
+        "access_token": encoded_jwt,
+        "token_type": "bearer",
+        "user": {"id": new_user.id, "email": new_user.email, "full_name": new_user.full_name},
+        "message": "User created successfully"
+    }
 
 @router.post("/logout")
 def logout():
