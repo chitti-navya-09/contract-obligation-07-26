@@ -8,6 +8,9 @@ import {
   BarChart3, 
   Users 
 } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { DashboardIcon, ContractsIcon, ObligationsIcon, ComplianceIcon, SettingsIcon, ReportsIcon } from '../components/DashboardIcons';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Sidebar() {
   const navItems = [
@@ -157,9 +160,7 @@ export default function Sidebar() {
     </>
   );
 }
-import { Link, useLocation } from 'react-router-dom';
-import { DashboardIcon, ContractsIcon, ObligationsIcon, ComplianceIcon, SettingsIcon, ReportsIcon } from '../components/DashboardIcons';
-import { useTheme } from '../context/ThemeContext';
+
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
