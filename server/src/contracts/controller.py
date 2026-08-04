@@ -27,5 +27,15 @@ def get_metrics(db: Session = Depends(get_db)):
 
 @router.post("/", status_code=201)
 def add_contract(data: ContractCreate, db: Session = Depends(get_db)):
-    # Simple placeholder for create contract
-    return {"message": "Create contract not fully implemented with DB yet"}
+    new_contract = Contract(
+        contract_id=data.id,
+        vendor=data.vendor,
+        type=data.type,
+        status=data.status,
+        value=float(data.value) if data.value else 0.0,
+        owner=data.owner
+    )
+    db.add(new_contract)
+    db.commit()
+    db.refresh(new_contract)
+    return new_contract

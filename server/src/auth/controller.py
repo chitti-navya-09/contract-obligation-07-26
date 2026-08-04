@@ -98,7 +98,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
 
 @router.post("/demo-login")
 def demo_login(db: Session = Depends(get_db)):
-    from src.database.models import User, Contract, Obligation
+    from src.database.models import User, Contract, Obligation, Renewal
     from datetime import date, timedelta
     
     # Create or retrieve Demo User
@@ -118,6 +118,7 @@ def demo_login(db: Session = Depends(get_db)):
         db.refresh(demo_user)
 
     # Clean existing data for demo environment reset
+    db.query(Renewal).delete()
     db.query(Obligation).delete()
     db.query(Contract).delete()
 

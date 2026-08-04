@@ -10,12 +10,15 @@ export default function PageContainer({ children }) {
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import { useTheme } from '../context/ThemeContext';
+import AIChatbot from '../components/AIChatbot';
 
 const PageContainer = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { isDarkMode } = useTheme();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className={`flex h-screen overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-gray-50 text-slate-900'}`}>
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex flex-col flex-1 w-full overflow-hidden">
@@ -25,6 +28,7 @@ const PageContainer = ({ children }) => {
           {children}
         </main>
       </div>
+      <AIChatbot />
     </div>
   );
 };
